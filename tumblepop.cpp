@@ -160,7 +160,7 @@ int main()
 		lvl[i] = new char[width];
 	}
 
-<<<<<<< HEAD
+
 /////  BOTTOM BLOCKS	
 lvl[8][0] = '#';
 lvl[8][1] = '#';
@@ -211,12 +211,7 @@ lvl[4][17] = '#';
 lvl[5][17] = '#';
 lvl[6][17] = '#';
 lvl[7][17] = '#';
-=======
-	lvl[7][7] = '#';
-	lvl[1][4] = '#';
-     //just checking out
-	
->>>>>>> ed7636223cc22f538bfa47985689f8d081b06acd
+
 	
 ////  RIGHT FORWARD PART
 lvl[3][0] = '#';
