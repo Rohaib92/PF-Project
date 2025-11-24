@@ -162,6 +162,7 @@ int main()
 
 	lvl[7][7] = '#';
 	lvl[1][4] = '#';
+     //just checking out
 	
 	
 	
