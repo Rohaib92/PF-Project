@@ -82,17 +82,17 @@ int main()
 	Texture blockTexture;
 	Sprite blockSprite;
 
-	bgTex.loadFromFile("Data/bg.png");
+	bgTex.loadFromFile("bg.png");
 	bgSprite.setTexture(bgTex);
 	bgSprite.setPosition(0,0);
 
-	blockTexture.loadFromFile("Data/block1.png");
+	blockTexture.loadFromFile("block1.png");
 	blockSprite.setTexture(blockTexture);
 
 	//Music initialisation
 	Music lvlMusic;
 
-	lvlMusic.openFromFile("Data/mus.ogg");
+	lvlMusic.openFromFile("mus.ogg");
 	lvlMusic.setVolume(20);
 	lvlMusic.play();
 	lvlMusic.setLoop(true);
@@ -147,7 +147,7 @@ int main()
 	char top_mid_up = '\0';
 	char top_left_up = '\0';
 
-	PlayerTexture.loadFromFile("Data/player.png");
+	PlayerTexture.loadFromFile("player.png");
 	PlayerSprite.setTexture(PlayerTexture);
 	PlayerSprite.setScale(3,3);
 	PlayerSprite.setPosition(player_x, player_y);
@@ -160,10 +160,66 @@ int main()
 		lvl[i] = new char[width];
 	}
 
-	lvl[7][7] = '#';
-	lvl[1][4] = '#';
+/////  BOTTOM BLOCKS	
+lvl[8][0] = '#';
+lvl[8][1] = '#';
+lvl[8][2] = '#';
+lvl[8][3] = '#';
+lvl[8][4] = '#';
+lvl[8][5] = '#';
+lvl[8][6] = '#';
+lvl[8][7] = '#';
+lvl[8][8] = '#';
+lvl[8][9] = '#';
+lvl[8][10] = '#';
+lvl[8][11] = '#';
+lvl[8][12] = '#';
+lvl[8][13] = '#';
+lvl[8][14] = '#';
+lvl[8][15] = '#';
+lvl[8][16] = '#';
+lvl[8][17] = '#';
+
+////  BOTTOM UPPER PART
+lvl[5][5] = '#';
+lvl[5][6] = '#';
+lvl[5][7] = '#';
+lvl[5][8] = '#';
+lvl[5][9] = '#';
+lvl[5][10] = '#';
+lvl[5][11] = '#';
+lvl[5][12] = '#';
+
+
+////  LEFT SIDE
+lvl[0][0] = '#';
+lvl[1][0] = '#';
+lvl[2][0] = '#';
+lvl[3][0] = '#';
+lvl[4][0] = '#';
+lvl[5][0] = '#';
+lvl[6][0] = '#';
+lvl[7][0] = '#';
+
+////  RIGHT PART
+lvl[0][17] = '#';
+lvl[1][17] = '#';
+lvl[2][17] = '#';
+lvl[3][17] = '#';
+lvl[4][17] = '#';
+lvl[5][17] = '#';
+lvl[6][17] = '#';
+lvl[7][17] = '#';
 	
-	
+////  RIGHT FORWARD PART
+lvl[3][0] = '#';
+lvl[3][1] = '#';
+lvl[3][2] = '#';
+lvl[3][3] = '#';
+
+////  LEFT FORWARD PART
+//lvl[3][17] = '#';
+
 	
 
 	Event ev;
