@@ -255,6 +255,18 @@ lvl[3][17] = '#';
 
 		display_level(window, lvl, bgTex, bgSprite, blockTexture, blockSprite, height, width, cell_size);
 		player_gravity(lvl,offset_y,velocityY,onGround,gravity,terminal_Velocity, player_x, player_y, cell_size, PlayerHeight, PlayerWidth);
+		
+///***		// Moving the character left and right using arrow keys
+
+		if(Keyboard::isKeyPressed(Keyboard::Key::Right)){
+		 player_x += speed;
+		 PlayerSprite.setScale(-3,3); // player face on right as player is already facing left
+		 }
+		  if(Keyboard::isKeyPressed(Keyboard::Key::Left)){
+		   player_x -= speed;   // player face on left
+		   PlayerSprite.setScale(3,3);
+		   }
+///***		
 		PlayerSprite.setPosition(player_x, player_y);
 		window.draw(PlayerSprite);
 
