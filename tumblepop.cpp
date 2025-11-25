@@ -62,6 +62,65 @@ void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGroun
 	}
 }
 
+// LEFT COLLISION
+void playerLeftCollision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
+{
+offset_x = player_x;
+offset_x -= speed;
+
+char left_top = lvl[(int)(player_y) / cell_size][(int)(offset_x) / cell_size];
+char left_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x) / cell_size];
+char left_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x) / cell_size];
+
+if (left_top == '#' || left_mid == '#' || left_bottom == '#')
+{
+// Collision - don't move
+}
+else
+{
+player_x = offset_x;
+}
+}
+
+// RIGHT COLLISION
+void playerRightCollision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
+{
+offset_x = player_x;
+offset_x += speed;
+
+char right_top = lvl[(int)(player_y) / cell_size][(int)(offset_x + Pwidth) / cell_size];
+char right_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x + Pwidth) / cell_size];
+char right_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x + Pwidth) / cell_size];
+
+if (right_top == '#' || right_mid == '#' || right_bottom == '#')
+{
+// Collision - don't move
+}
+else
+{
+player_x = offset_x;
+}
+}
+
+// CEILING COLLISION
+void playerCeilingCollision(char** lvl, float& offset_y, float& velocityY, float& player_x, float& player_y, const int cell_size, int& Pwidth)
+{
+offset_y = player_y;
+offset_y += velocityY;
+
+char top_left = lvl[(int)(offset_y) / cell_size][(int)(player_x) / cell_size];
+char top_mid = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth/2) / cell_size];
+char top_right = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth) / cell_size];
+
+if (top_left == '#' || top_mid == '#' || top_right == '#')
+{
+velocityY = 0;
+}
+else
+{
+player_y = offset_y;
+}
+}
 
 int main()
 {
@@ -182,14 +241,13 @@ lvl[8][16] = '#';
 lvl[8][17] = '#';
 
 ////  BOTTOM UPPER PART
-lvl[5][5] = '#';
 lvl[5][6] = '#';
 lvl[5][7] = '#';
 lvl[5][8] = '#';
 lvl[5][9] = '#';
 lvl[5][10] = '#';
 lvl[5][11] = '#';
-lvl[5][12] = '#';
+
 
 
 ////  LEFT SIDE
@@ -278,15 +336,14 @@ lvl[0][17] = '#';
 ///***		// Moving the character left and right using arrow keys
 
 		if(Keyboard::isKeyPressed(Keyboard::Key::Right)){
-		 player_x += speed;
-		 // Add 5 to player position move 5 pixels to right
+		 playerRightCollision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
 		 PlayerSprite.setScale(-3,3);
 	         //player png is 32x34 pixels but the game is 96x102 sowe  increze player png by 3 to match game collisions
 		 // the sign controls the direction of sprite facing
 		  // player face on right as player is already facing left
 		 }
 		  if(Keyboard::isKeyPressed(Keyboard::Key::Left)){
-		   player_x -= speed;   // player face on left
+		   playerLeftCollision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
 		   PlayerSprite.setScale(3,3);
 		   }
 		
