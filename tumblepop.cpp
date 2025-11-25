@@ -63,6 +63,66 @@ void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGroun
 	}
 }
 
+// LEFT COLLISION
+void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
+{
+offset_x = player_x;
+offset_x -= speed;
+
+char left_top = lvl[(int)(player_y) / cell_size][(int)(offset_x) / cell_size];
+char left_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x) / cell_size];
+char left_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x) / cell_size];
+
+if (left_top == '#' || left_mid == '#' || left_bottom == '#')
+{
+// Collision - don't move
+}
+else
+{
+player_x = offset_x;
+}
+}
+
+// RIGHT COLLISION
+void player_right_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
+{
+offset_x = player_x;
+offset_x += speed;
+
+char right_top = lvl[(int)(player_y) / cell_size][(int)(offset_x + Pwidth) / cell_size];
+char right_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x + Pwidth) / cell_size];
+char right_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x + Pwidth) / cell_size];
+
+if (right_top == '#' || right_mid == '#' || right_bottom == '#')
+{
+// Collision - don't move
+}
+else
+{
+player_x = offset_x;
+}
+}
+
+// CEILING COLLISION
+void player_ceiling_collision(char** lvl, float& offset_y, float& velocityY, float& player_x, float& player_y, const int cell_size, int& Pwidth)
+{
+offset_y = player_y;
+offset_y += velocityY;
+
+char top_left = lvl[(int)(offset_y) / cell_size][(int)(player_x) / cell_size];
+char top_mid = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth/2) / cell_size];
+char top_right = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth) / cell_size];
+
+if (top_left == '#' || top_mid == '#' || top_right == '#')
+{
+velocityY = 0;
+}
+else
+{
+player_y = offset_y;
+}
+}
+
 
 int main()
 {
@@ -160,7 +220,15 @@ int main()
 	{
 		lvl[i] = new char[width];
 	}
-
+// *** ADD THIS CODE HERE ***
+for (int i = 0; i < height; i += 1)
+{
+    for (int j = 0; j < width; j += 1)
+    {
+        lvl[i][j] = ' ';  // Set all cells to empty space
+    }
+}
+// *** END OF ADDED CODE ***
 
 /////  BOTTOM BLOCKS	
 lvl[8][0] = '#';
@@ -183,14 +251,13 @@ lvl[8][16] = '#';
 lvl[8][17] = '#';
 
 ////  BOTTOM UPPER PART
-lvl[5][5] = '#';
 lvl[5][6] = '#';
 lvl[5][7] = '#';
 lvl[5][8] = '#';
 lvl[5][9] = '#';
 lvl[5][10] = '#';
 lvl[5][11] = '#';
-lvl[5][12] = '#';
+
 
 
 ////  LEFT SIDE
@@ -255,7 +322,7 @@ int ghost_dir[5];
 Sprite ghostSprite[5];
 
 Texture ghostTexture;
-ghostTexture.loadFromFile("ghost.png");
+ghostTexture.loadFromFile("gost.png");
 //spawning ghostts
 srand(time(0));
 
@@ -318,18 +385,26 @@ for(int i = 0; i < ghosts; i++)
 ///***		// Moving the character left and right using arrow keys
 
 		if(Keyboard::isKeyPressed(Keyboard::Key::Right )){
-		 player_x += speed;
+		 player_right_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
 		 PlayerSprite.setScale(-3,3); // player face on right as player is already facing left
 		 }
 		  if(Keyboard::isKeyPressed(Keyboard::Key::Left)){
-		   player_x -= speed;   // player face on left
+		   player_left_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
 		   PlayerSprite.setScale(3,3);
 		   }
+		   
+		   // Check ceiling collision when moving upward
+if(velocityY < 0)
+{
+player_ceiling_collision(lvl, offset_y, velocityY, player_x, player_y, cell_size, PlayerWidth);
+}
 		   
 ///***		
 if(Keyboard::isKeyPressed(Keyboard::Key::Space))
 		{
+		if(onGround){
 			velocityY=jumpStrength;
+			}
 			
 			
 		}
