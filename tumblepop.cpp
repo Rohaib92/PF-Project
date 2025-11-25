@@ -225,7 +225,26 @@ lvl[3][15] = '#';
 lvl[3][16] = '#';
 lvl[3][17] = '#';
 
-	
+///  UPPER PART 
+lvl[0][0] = '#';
+lvl[0][1] = '#';
+lvl[0][2] = '#';
+lvl[0][3] = '#';
+lvl[0][4] = '#';
+lvl[0][5] = '#';
+lvl[0][6] = '#';
+lvl[0][7] = '#';
+lvl[0][8] = '#';
+lvl[0][9] = '#';
+lvl[0][10] = '#';
+lvl[0][11] = '#';
+lvl[0][12] = '#';
+lvl[0][13] = '#';
+lvl[0][14] = '#';
+lvl[0][15] = '#';
+lvl[0][16] = '#';
+lvl[0][17] = '#';
+
 
 	Event ev;
 	//main loop
@@ -267,6 +286,12 @@ lvl[3][17] = '#';
 		   PlayerSprite.setScale(3,3);
 		   }
 ///***		
+               
+               /// using space-bar for jump
+               if(Keyboard::isKeyPressed(Keyboard::Key::Space))
+		{
+			velocityY=jumpStrength; // declared at line 106
+		}
 		PlayerSprite.setPosition(player_x, player_y);
 		window.draw(PlayerSprite);
 
