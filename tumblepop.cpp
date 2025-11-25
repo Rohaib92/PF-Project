@@ -279,19 +279,27 @@ lvl[0][17] = '#';
 
 		if(Keyboard::isKeyPressed(Keyboard::Key::Right)){
 		 player_x += speed;
-		 PlayerSprite.setScale(-3,3); // player face on right as player is already facing left
+		 // Add 5 to player position move 5 pixels to right
+		 PlayerSprite.setScale(-3,3);
+	         //player png is 32x34 pixels but the game is 96x102 sowe  increze player png by 3 to match game collisions
+		 // the sign controls the direction of sprite facing
+		  // player face on right as player is already facing left
 		 }
 		  if(Keyboard::isKeyPressed(Keyboard::Key::Left)){
 		   player_x -= speed;   // player face on left
 		   PlayerSprite.setScale(3,3);
 		   }
-///***		
+		
                
                /// using space-bar for jump
                if(Keyboard::isKeyPressed(Keyboard::Key::Space))
 		{
-			velocityY=jumpStrength; // declared at line 106
+			velocityY=jumpStrength; 
+	// jumpstrength declared at line 106 and is initialzed with -20 where - sign indictes moving upward
+	//  whreeas velocityY is the vertical speed in Y-direction initially was set 0 check line 122
 		}
+///***
+		
 		PlayerSprite.setPosition(player_x, player_y);
 		window.draw(PlayerSprite);
 
