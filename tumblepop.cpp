@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <ctime>
 #include <cmath>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -62,65 +63,6 @@ void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGroun
 	}
 }
 
-// LEFT COLLISION
-void playerLeftCollision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
-{
-offset_x = player_x;
-offset_x -= speed;
-
-char left_top = lvl[(int)(player_y) / cell_size][(int)(offset_x) / cell_size];
-char left_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x) / cell_size];
-char left_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x) / cell_size];
-
-if (left_top == '#' || left_mid == '#' || left_bottom == '#')
-{
-// Collision - don't move
-}
-else
-{
-player_x = offset_x;
-}
-}
-
-// RIGHT COLLISION
-void playerRightCollision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
-{
-offset_x = player_x;
-offset_x += speed;
-
-char right_top = lvl[(int)(player_y) / cell_size][(int)(offset_x + Pwidth) / cell_size];
-char right_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x + Pwidth) / cell_size];
-char right_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x + Pwidth) / cell_size];
-
-if (right_top == '#' || right_mid == '#' || right_bottom == '#')
-{
-// Collision - don't move
-}
-else
-{
-player_x = offset_x;
-}
-}
-
-// CEILING COLLISION
-void playerCeilingCollision(char** lvl, float& offset_y, float& velocityY, float& player_x, float& player_y, const int cell_size, int& Pwidth)
-{
-offset_y = player_y;
-offset_y += velocityY;
-
-char top_left = lvl[(int)(offset_y) / cell_size][(int)(player_x) / cell_size];
-char top_mid = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth/2) / cell_size];
-char top_right = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth) / cell_size];
-
-if (top_left == '#' || top_mid == '#' || top_right == '#')
-{
-velocityY = 0;
-}
-else
-{
-player_y = offset_y;
-}
-}
 
 int main()
 {
@@ -241,13 +183,14 @@ lvl[8][16] = '#';
 lvl[8][17] = '#';
 
 ////  BOTTOM UPPER PART
+lvl[5][5] = '#';
 lvl[5][6] = '#';
 lvl[5][7] = '#';
 lvl[5][8] = '#';
 lvl[5][9] = '#';
 lvl[5][10] = '#';
 lvl[5][11] = '#';
-
+lvl[5][12] = '#';
 
 
 ////  LEFT SIDE
@@ -302,6 +245,45 @@ lvl[0][14] = '#';
 lvl[0][15] = '#';
 lvl[0][16] = '#';
 lvl[0][17] = '#';
+// ================= GHOST SETUP =================
+const int ghosts = 5;
+
+float ghost_x[5];
+float ghost_y[5];
+float ghost_speed[5];
+int ghost_dir[5];
+Sprite ghostSprite[5];
+
+Texture ghostTexture;
+ghostTexture.loadFromFile("ghost.png");
+//spawning ghostts
+srand(time(0));
+
+for(int i = 0; i < ghosts; i++)
+{
+	while(true)
+	{
+		int tx = rand() % width;
+		int ty = rand() % (height - 1);
+
+		if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
+		{
+			ghost_x[i] = tx * cell_size;
+			ghost_y[i] = ty * cell_size;
+			break;
+		}
+	}
+
+	ghost_speed[i] = 1;
+	ghost_dir[i] = (rand() % 2 == 0) ? -1 : 1;
+
+	ghostSprite[i].setTexture(ghostTexture);
+	ghostSprite[i].setScale(2.5f, 2.5f);   // increase ghost size
+
+	ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
+}
+// 
+
 
 
 	Event ev;
@@ -335,32 +317,51 @@ lvl[0][17] = '#';
 		
 ///***		// Moving the character left and right using arrow keys
 
-		if(Keyboard::isKeyPressed(Keyboard::Key::Right)){
-		 playerRightCollision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
-		 PlayerSprite.setScale(-3,3);
-	         //player png is 32x34 pixels but the game is 96x102 sowe  increze player png by 3 to match game collisions
-		 // the sign controls the direction of sprite facing
-		  // player face on right as player is already facing left
+		if(Keyboard::isKeyPressed(Keyboard::Key::Right )){
+		 player_x += speed;
+		 PlayerSprite.setScale(-3,3); // player face on right as player is already facing left
 		 }
 		  if(Keyboard::isKeyPressed(Keyboard::Key::Left)){
-		   playerLeftCollision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
+		   player_x -= speed;   // player face on left
 		   PlayerSprite.setScale(3,3);
 		   }
-		
-               
-               /// using space-bar for jump
-               if(Keyboard::isKeyPressed(Keyboard::Key::Space))
+		   
+///***		
+if(Keyboard::isKeyPressed(Keyboard::Key::Space))
 		{
-			velocityY=jumpStrength; 
-	// jumpstrength declared at line 106 and is initialzed with -20 where - sign indictes moving upward
-	//  whreeas velocityY is the vertical speed in Y-direction initially was set 0 check line 122
+			velocityY=jumpStrength;
+			
+			
 		}
-///***
-		
+               
+              
 		PlayerSprite.setPosition(player_x, player_y);
 		window.draw(PlayerSprite);
+		//  GHOST MOVEMENT 
+for(int i = 0; i < 5; i++)
+{
+	float nextX = ghost_x[i] + ghost_speed[i] * ghost_dir[i];
+
+	int frontTileX = (nextX + (ghost_dir[i] == 1 ? 32 : 0)) / cell_size;
+	int footTileY = (ghost_y[i] + 64) / cell_size;
+
+	if(lvl[footTileY][frontTileX] != '#')
+	{
+		ghost_dir[i] *= -1;
+	}
+	else
+	{
+		ghost_x[i] = nextX;
+	}
+
+	ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
+	window.draw(ghostSprite[i]);
+}
+// ================================================
+
 
 		window.display();
+		
 	}
 
 	//stopping music and deleting level array
