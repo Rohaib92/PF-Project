@@ -64,21 +64,24 @@ void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGroun
 }
 
 // LEFT COLLISION
+// this function move the player left until the blacks comes
 void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
 {
-offset_x = player_x;
-offset_x -= speed;
+offset_x = player_x; // current position is at 500
+offset_x -= speed;   // moves by 5 pixels like 500-5=295
 
 char left_top = lvl[(int)(player_y) / cell_size][(int)(offset_x) / cell_size];
 char left_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x) / cell_size];
 char left_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x) / cell_size];
 
+// check if it hits any of the block if yes then
 if (left_top == '#' || left_mid == '#' || left_bottom == '#')
 {
-// Collision - don't move
+offset_x=player_x ; // stays at original position no moving
 }
 else
 {
+// can move left
 player_x = offset_x;
 }
 }
@@ -86,39 +89,46 @@ player_x = offset_x;
 // RIGHT COLLISION
 void player_right_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
 {
-offset_x = player_x;
-offset_x += speed;
+offset_x = player_x; // origianl position at 500
+offset_x += speed;  // next position +5
 
 char right_top = lvl[(int)(player_y) / cell_size][(int)(offset_x + Pwidth) / cell_size];
 char right_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x + Pwidth) / cell_size];
 char right_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x + Pwidth) / cell_size];
 
+// check if player hits the blocks
 if (right_top == '#' || right_mid == '#' || right_bottom == '#')
 {
-// Collision - don't move
+// if yes dont move stay on origional posiiton
+offset_x=player_x ;
+
 }
 else
 {
+// if no collision contionue moving
 player_x = offset_x;
 }
 }
 
-// CEILING COLLISION
+// CEILING COLLISION this prevents from going far beyound the upper part ceiling one
 void player_ceiling_collision(char** lvl, float& offset_y, float& velocityY, float& player_x, float& player_y, const int cell_size, int& Pwidth)
 {
 offset_y = player_y;
-offset_y += velocityY;
+offset_y += velocityY;  // velocity is neg when moving upward
 
 char top_left = lvl[(int)(offset_y) / cell_size][(int)(player_x) / cell_size];
 char top_mid = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth/2) / cell_size];
 char top_right = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth) / cell_size];
 
+// if any of the three points matches means player head hits the celing 
 if (top_left == '#' || top_mid == '#' || top_right == '#')
 {
+// if yes then stop the upward movement and now the player comes down
 velocityY = 0;
 }
 else
 {
+// if no collision then player can continue moving up
 player_y = offset_y;
 }
 }
@@ -220,15 +230,17 @@ int main()
 	{
 		lvl[i] = new char[width];
 	}
-// *** ADD THIS CODE HERE ***
-for (int i = 0; i < height; i += 1)
-{
-    for (int j = 0; j < width; j += 1)
-    {
-        lvl[i][j] = ' ';  // Set all cells to empty space
-    }
-}
-// *** END OF ADDED CODE ***
+	
+       //lvl can contain any garbage value so the collision deteection can become unpredictable 
+       // so we make  an aray and go thriugh rows and colum and set each of the part emprty 
+      for(int i = 0; i < height; i += 1)
+       {
+         for (int j = 0; j < width; j += 1)
+           {
+             lvl[i][j] = ' ';  
+           }
+       }
+
 
 /////  BOTTOM BLOCKS	
 lvl[8][0] = '#';
@@ -386,18 +398,21 @@ for(int i = 0; i < ghosts; i++)
 
 		if(Keyboard::isKeyPressed(Keyboard::Key::Right )){
 		 player_right_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
-		 PlayerSprite.setScale(-3,3); // player face on right as player is already facing left
+		 PlayerSprite.setScale(-3,3); 
+		 // the player png pixels are 32x34 but game is 96x102 so we need to increase it by 3
+		 // player face on right as player is already facing left thats why we use neg sign to flip its face
 		 }
 		  if(Keyboard::isKeyPressed(Keyboard::Key::Left)){
 		   player_left_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
-		   PlayerSprite.setScale(3,3);
+		   PlayerSprite.setScale(3,3); // player faces left
 		   }
 		   
 		   // Check ceiling collision when moving upward
-if(velocityY < 0)
-{
-player_ceiling_collision(lvl, offset_y, velocityY, player_x, player_y, cell_size, PlayerWidth);
-}
+		   // alo velocity is neg when moving upward
+                  if(velocityY<0)
+                   {
+                   player_ceiling_collision(lvl, offset_y, velocityY, player_x, player_y, cell_size, PlayerWidth);
+                    }
 		   
 ///***		
 if(Keyboard::isKeyPressed(Keyboard::Key::Space))
