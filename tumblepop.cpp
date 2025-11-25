@@ -255,7 +255,7 @@ int ghost_dir[5];
 Sprite ghostSprite[5];
 
 Texture ghostTexture;
-ghostTexture.loadFromFile("ghost.png");
+ghostTexture.loadFromFile("gost.png");
 //spawning ghostts
 srand(time(0));
 
