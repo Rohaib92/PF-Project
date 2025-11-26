@@ -222,6 +222,35 @@ int main()
 	PlayerSprite.setTexture(PlayerTexture);
 	PlayerSprite.setScale(3,3);
 	PlayerSprite.setPosition(player_x, player_y);
+	
+	
+	// Vacuum system
+bool vacuumActive = false;
+int vacuumDirection = 0; // 0=left, 1=up, 2=right, 3=down
+
+// Vacuum textures and sprites for each direction
+Texture vacuumLeftTex, vacuumUpTex, vacuumRightTex, vacuumDownTex;
+Sprite vacuumLeftSprite, vacuumUpSprite, vacuumRightSprite, vacuumDownSprite;
+
+// Load vacuum textures (add this after loading PlayerTexture)
+vacuumLeftTex.loadFromFile("player.png");  // default player with vacuum left
+vacuumUpTex.loadFromFile("vacuum top.png");
+vacuumRightTex.loadFromFile("right vacuum.png");
+vacuumDownTex.loadFromFile("vacuum bottom.png");
+
+// Setup vacuum sprites
+vacuumLeftSprite.setTexture(vacuumLeftTex);
+vacuumLeftSprite.setScale(3, 3);
+
+vacuumUpSprite.setTexture(vacuumUpTex);
+vacuumUpSprite.setScale(3, 3);
+
+vacuumRightSprite.setTexture(vacuumRightTex);
+vacuumRightSprite.setScale(3, 3);
+
+vacuumDownSprite.setTexture(vacuumDownTex);
+vacuumDownSprite.setScale(3, 3);
+
 
 
 	//creating level array
@@ -423,10 +452,59 @@ if(Keyboard::isKeyPressed(Keyboard::Key::Space))
 			
 			
 		}
+		
+		// ============= VACUUM CONTROL WITH WASD =============
+if(Keyboard::isKeyPressed(Keyboard::Key::W)) {
+    vacuumActive = true;
+    vacuumDirection = 1; // Up
+}
+else if(Keyboard::isKeyPressed(Keyboard::Key::A)) {
+    vacuumActive = true;
+    vacuumDirection = 0; // Left
+}
+else if(Keyboard::isKeyPressed(Keyboard::Key::S)) {
+    vacuumActive = true;
+    vacuumDirection = 3; // Down
+}
+else if(Keyboard::isKeyPressed(Keyboard::Key::D)) {
+    vacuumActive = true;
+    vacuumDirection = 2; // Right
+}
+else {
+    vacuumActive = false; // No vacuum key pressed
+}
+// ========================================
                
               
-		PlayerSprite.setPosition(player_x, player_y);
-		window.draw(PlayerSprite);
+		// ============= DRAW PLAYER OR VACUUM =============
+if(vacuumActive) {
+    // Draw vacuum sprite based on direction
+    switch(vacuumDirection) {
+        case 0: // Left
+            vacuumLeftSprite.setPosition(player_x, player_y);
+            window.draw(vacuumLeftSprite);
+            break;
+        case 1: // Up
+            vacuumUpSprite.setPosition(player_x, player_y);
+            window.draw(vacuumUpSprite);
+            break;
+        case 2: // Right
+            vacuumRightSprite.setPosition(player_x, player_y);
+            window.draw(vacuumRightSprite);
+            break;
+        case 3: // Down
+            vacuumDownSprite.setPosition(player_x, player_y);
+            window.draw(vacuumDownSprite);
+            break;
+    }
+}
+else {
+    // Draw normal player sprite when vacuum is not active
+    PlayerSprite.setPosition(player_x, player_y);
+    window.draw(PlayerSprite);
+}
+
+
 		//  GHOST MOVEMENT 
 for(int i = 0; i < 5; i++)
 {
