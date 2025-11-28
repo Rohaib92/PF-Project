@@ -132,8 +132,6 @@ else
 player_y = offset_y;
 }
 }
-
-
 int main()
 {
 
@@ -160,43 +158,108 @@ int main()
 	blockTexture.loadFromFile("block1.png");
 	blockSprite.setTexture(blockTexture);
 
-	//Music initialisation
-	Music lvlMusic;
-
-	lvlMusic.openFromFile("mus.ogg");
-	lvlMusic.setVolume(20);
-	lvlMusic.play();
-	lvlMusic.setLoop(true);
-
+	
+	
 	//player data
-	float player_x = 500;
-	float player_y = 150;
+float player_x = 500;
+float player_y = 150;
 
-	float speed = 5;
+float speed = 5;
 
-	const float jumpStrength = -20; // Initial jump velocity
-	const float gravity = 1;  // Gravity acceleration
+const float jumpStrength = -15;
+const float gravity = 1;
+bool onGround = false;
+
+float offset_x = 0;
+float offset_y = 0;
+float velocityY = 0;
+
+float terminal_Velocity = 20;
+
+int PlayerHeight = 102;
+int PlayerWidth = 96;
+
+Texture PlayerTexture;
+Sprite PlayerSprite;
+
+Music menuMusic;
+Music lvlMusic;
+menuMusic.openFromFile("bgmus.ogg");
+menuMusic.setLoop(true);
+menuMusic.setVolume(40);
+
+lvlMusic.openFromFile("mus.ogg");
+lvlMusic.setLoop(true);
+lvlMusic.setVolume(40);
+
+
+
+
+// ===== PLAYER SELECTION MENU =====
+const int playerOptionsCount = 2;   // number of characters
+Texture playerOptions[playerOptionsCount];
+Sprite playerOptionSprite[playerOptionsCount];
+
+// Load textures for each character
+playerOptions[0].loadFromFile("player1.png");
+playerOptions[1].loadFromFile("player2.png");
+
+// Set positions and scale for menu display
+for(int i = 0; i < playerOptionsCount; i++)
+{
+    playerOptionSprite[i].setTexture(playerOptions[i]);
+    playerOptionSprite[i].setScale(3,3);
+    playerOptionSprite[i].setPosition(300 + i*300, 300); // spacing
+    
+    }
+
+// Selection variables
+int selectedIndex = 0;
+bool playerChosen = false;
+menuMusic.play();
+
+ while(!playerChosen && window.isOpen())
+    {
+        Event ev;
+        while(window.pollEvent(ev))
+        {
+            if(ev.type == Event::Closed)
+                window.close();
+            if(ev.type == Event::KeyPressed)
+            {
+                if(ev.key.code == Keyboard::Right)
+                    selectedIndex = (selectedIndex + 1) % playerOptionsCount;
+                if(ev.key.code == Keyboard::Left)
+                    selectedIndex = (selectedIndex - 1 + playerOptionsCount) % playerOptionsCount;
+                if(ev.key.code == Keyboard::Enter){
+                    playerChosen = true;
+                       menuMusic.stop();
+                       }
+            }
+        }
+        
+PlayerTexture = playerOptions[selectedIndex];
+PlayerSprite.setTexture(PlayerTexture);
+PlayerSprite.setScale(3,3);
+PlayerSprite.setPosition(player_x, player_y);
+
+        window.clear();
+        for(int i = 0; i < playerOptionsCount; i++)
+        {
+            if(i == selectedIndex)
+                playerOptionSprite[i].setColor(Color::Yellow);
+            else
+                playerOptionSprite[i].setColor(Color::White);
+            window.draw(playerOptionSprite[i]);
+        }
+        window.display();
+    }
 
 	bool isJumping = false;  // Track if jumping
 
 	bool up_collide = false;
 	bool left_collide = false;
 	bool right_collide = false;
-
-	Texture PlayerTexture;
-	Sprite PlayerSprite;
-
-	bool onGround = false;
-
-	float offset_x = 0;
-	float offset_y = 0;
-	float velocityY = 0;
-
-	float terminal_Velocity = 20;
-
-	int PlayerHeight = 102;
-	int PlayerWidth = 96;
-
 	bool up_button = false;
 
 	char top_left = '\0';
@@ -217,11 +280,6 @@ int main()
 	char top_right_up = '\0';
 	char top_mid_up = '\0';
 	char top_left_up = '\0';
-
-	PlayerTexture.loadFromFile("player.png");
-	PlayerSprite.setTexture(PlayerTexture);
-	PlayerSprite.setScale(3,3);
-	PlayerSprite.setPosition(player_x, player_y);
 	
 	
 	// Vacuum system
@@ -233,7 +291,7 @@ Texture vacuumLeftTex, vacuumUpTex, vacuumRightTex, vacuumDownTex;
 Sprite vacuumLeftSprite, vacuumUpSprite, vacuumRightSprite, vacuumDownSprite;
 
 // Load vacuum textures (add this after loading PlayerTexture)
-vacuumLeftTex.loadFromFile("player.png");  // default player with vacuum left
+vacuumLeftTex.loadFromFile("player1.png");  // default player with vacuum left
 vacuumUpTex.loadFromFile("vacuum top.png");
 vacuumRightTex.loadFromFile("right vacuum.png");
 vacuumDownTex.loadFromFile("vacuum bottom.png");
@@ -259,7 +317,8 @@ vacuumDownSprite.setScale(3, 3);
 	{
 		lvl[i] = new char[width];
 	}
-	
+	lvlMusic.play();
+	lvlMusic.setLoop(true);
        //lvl can contain any garbage value so the collision deteection can become unpredictable 
        // so we make  an aray and go thriugh rows and colum and set each of the part emprty 
       for(int i = 0; i < height; i += 1)
@@ -354,13 +413,13 @@ lvl[0][15] = '#';
 lvl[0][16] = '#';
 lvl[0][17] = '#';
 // ================= GHOST SETUP =================
-const int ghosts = 5;
+const int ghosts = 8;
 
-float ghost_x[5];
-float ghost_y[5];
-float ghost_speed[5];
-int ghost_dir[5];
-Sprite ghostSprite[5];
+float ghost_x[8];
+float ghost_y[8];
+float ghost_speed[8];
+int ghost_dir[8];
+Sprite ghostSprite[8];
 
 Texture ghostTexture;
 ghostTexture.loadFromFile("gost.png");
@@ -386,13 +445,47 @@ for(int i = 0; i < ghosts; i++)
 	ghost_dir[i] = (rand() % 2 == 0) ? -1 : 1;
 
 	ghostSprite[i].setTexture(ghostTexture);
-	ghostSprite[i].setScale(2.5f, 2.5f);   // increase ghost size
+	ghostSprite[i].setScale(2, 2);   // increase ghost size
 
 	ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
 }
-// 
+// skeletons
+const int skel = 8;
 
+float skel_x[8];
+float skel_y[8];
+float skel_speed[8];
+int skel_dir[8];
+Sprite skelSprite[8];
 
+Texture skelTexture;
+skelTexture.loadFromFile("skeleton.png");
+//spawning skeleltom
+srand(time(0));
+
+for(int i = 0; i < skel; i++)
+{
+	while(true)
+	{
+		int tx = rand() % width;
+		int ty = rand() % (height - 1);
+
+		if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
+		{
+			skel_x[i] = tx * cell_size;
+			skel_y[i] = ty * cell_size;
+			break;
+		}
+	}
+
+	skel_speed[i] = 1;
+	skel_dir[i] = (rand() % 2 == 0) ? -1 : 1;
+
+	skelSprite[i].setTexture(skelTexture);
+	skelSprite[i].setScale(2, 2);   // increase ghost size
+
+	skelSprite[i].setPosition(skel_x[i], skel_y[i]);
+}
 
 	Event ev;
 	//main loop
@@ -499,39 +592,45 @@ if(vacuumActive) {
     }
 }
 else {
-    // Draw normal player sprite when vacuum is not active
-    PlayerSprite.setPosition(player_x, player_y);
-    window.draw(PlayerSprite);
+// Draw normal player sprite when vacuum is not active
+PlayerSprite.setPosition(player_x, player_y);
+window.draw(PlayerSprite);
 }
-
-
 		//  GHOST MOVEMENT 
-for(int i = 0; i < 5; i++)
+for(int i = 0; i < 8; i++)
 {
-	float nextX = ghost_x[i] + ghost_speed[i] * ghost_dir[i];
-
-	int frontTileX = (nextX + (ghost_dir[i] == 1 ? 32 : 0)) / cell_size;
-	int footTileY = (ghost_y[i] + 64) / cell_size;
-
-	if(lvl[footTileY][frontTileX] != '#')
-	{
-		ghost_dir[i] *= -1;
-	}
-	else
-	{
-		ghost_x[i] = nextX;
-	}
-
-	ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
-	window.draw(ghostSprite[i]);
+float nextX = ghost_x[i] + ghost_speed[i] * ghost_dir[i];
+int frontTileX = (nextX + (ghost_dir[i] == 1 ? 32 : 0)) / cell_size;
+int footTileY = (ghost_y[i] + 64) / cell_size;
+if(lvl[footTileY][frontTileX] != '#')
+{
+ghost_dir[i] *= -1;
+}
+else
+{
+ghost_x[i] = nextX;
+}
+ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
+window.draw(ghostSprite[i]);	
+//skeleton movemement
+}
+for(int j=0; j<4; j++)
+{
+float nextp = skel_x[j] + skel_speed[j] * skel_dir[j];
+int frontskelX = (nextp + skel_dir[j] ==1 ? 32 : 0) /cell_size;
+int backskelY = (skel_y[j] + 64) / cell_size;
+if(lvl[backskelY][frontskelX] != '#')
+{
+skel_dir[j] *= -1;
+}
+else
+skel_x[j] = nextp;
+skelSprite[j].setPosition(skel_x[j]  ,skel_y[j]);
+window.draw(skelSprite[j]);
 }
 // ================================================
-
-
-		window.display();
-		
+window.display();
 	}
-
 	//stopping music and deleting level array
 	lvlMusic.stop();
 	for (int i = 0; i < height; i++)

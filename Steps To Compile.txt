@@ -8,8 +8,8 @@ Requirements For Compiling (Only need to be run once):
 
 Compilation Commands (In Order):
 	
-	1) g++ -c tumblepop.cpp
-	2) g++ tumblepop.o -o sfml-app -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system
+	g++ -c tumblepop.cpp
+ g++ tumblepop.o -o sfml-app -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system
 
 Running The Game:
 	
