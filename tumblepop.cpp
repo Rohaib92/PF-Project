@@ -14,53 +14,53 @@ int screen_y = 896;
 
 void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size)
 {
-	window.draw(bgSprite);
+window.draw(bgSprite);
 
-	for (int i = 0; i < height; i += 1)
-	{
-		for (int j = 0; j < width; j += 1)
-		{
+for (int i = 0; i < height; i += 1)
+{
+for (int j = 0; j < width; j += 1)
+{
 
-			if (lvl[i][j] == '#')
-			{
-				blockSprite.setPosition(j * cell_size, i * cell_size);
-				window.draw(blockSprite);
-			}
-		}
-	}
+if (lvl[i][j] == '#')
+{
+blockSprite.setPosition(j * cell_size, i * cell_size);
+window.draw(blockSprite);
+}
+}
+}
 
 }
 
 void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth)
 {
-	offset_y = player_y;
+offset_y = player_y;
 
-	offset_y += velocityY;
+offset_y += velocityY;
 
-	char bottom_left_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x ) / cell_size];
-	char bottom_right_down = lvl[(int)(offset_y  + Pheight) / cell_size][(int)(player_x + Pwidth) / cell_size];
-	char bottom_mid_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x + Pwidth / 2) / cell_size];
+char bottom_left_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x ) / cell_size];
+char bottom_right_down = lvl[(int)(offset_y  + Pheight) / cell_size][(int)(player_x + Pwidth) / cell_size];
+char bottom_mid_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x + Pwidth / 2) / cell_size];
 
-	if (bottom_left_down == '#' || bottom_mid_down == '#' || bottom_right_down == '#')
-	{
-		onGround = true;
-	}
-	else
-	{
-		player_y = offset_y;
-		onGround = false;
-	}
+if (bottom_left_down == '#' || bottom_mid_down == '#' || bottom_right_down == '#')
+{
+onGround = true;
+}
+else
+{
+player_y = offset_y;
+onGround = false;
+}
 
-	if (!onGround)
-	{
-		velocityY += gravity;
-		if (velocityY >= terminal_Velocity) velocityY = terminal_Velocity;
-	}
+if (!onGround)
+{
+velocityY += gravity;
+if (velocityY >= terminal_Velocity) velocityY = terminal_Velocity;
+}
 
-	else
-	{
-		velocityY = 0;
-	}
+else
+{
+velocityY = 0;
+}
 }
 
 // LEFT COLLISION
@@ -120,7 +120,7 @@ char top_left = lvl[(int)(offset_y) / cell_size][(int)(player_x) / cell_size];
 char top_mid = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth/2) / cell_size];
 char top_right = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth) / cell_size];
 
-// if any of the three points matches means player head hits the celing 
+// if any of the three points matches means player head hits the celing
 if (top_left == '#' || top_mid == '#' || top_right == '#')
 {
 // if yes then stop the upward movement and now the player comes down
@@ -135,32 +135,32 @@ player_y = offset_y;
 int main()
 {
 
-	RenderWindow window(VideoMode(screen_x, screen_y), "Tumble-POP", Style::Resize);
-	window.setVerticalSyncEnabled(true);
-	window.setFramerateLimit(60);
+RenderWindow window(VideoMode(screen_x, screen_y), "Tumble-POP", Style::Resize);
+window.setVerticalSyncEnabled(true);
+window.setFramerateLimit(60);
 
-	//level specifics
-	const int cell_size = 64;
-	const int height = 14;
-	const int width = 18;
-	char** lvl;
+//level specifics
+const int cell_size = 64;
+const int height = 14;
+const int width = 18;
+char** lvl;
 
-	//level and background textures and sprites
-	Texture bgTex;
-	Sprite bgSprite;
-	Texture blockTexture;
-	Sprite blockSprite;
+//level and background textures and sprites
+Texture bgTex;
+Sprite bgSprite;
+Texture blockTexture;
+Sprite blockSprite;
 
-	bgTex.loadFromFile("bg.png");
-	bgSprite.setTexture(bgTex);
-	bgSprite.setPosition(0,0);
+bgTex.loadFromFile("bg.png");
+bgSprite.setTexture(bgTex);
+bgSprite.setPosition(0,0);
 
-	blockTexture.loadFromFile("block1.png");
-	blockSprite.setTexture(blockTexture);
+blockTexture.loadFromFile("block1.png");
+blockSprite.setTexture(blockTexture);
 
-	
-	
-	//player data
+
+
+//player data
 float player_x = 500;
 float player_y = 150;
 
@@ -210,7 +210,7 @@ for(int i = 0; i < playerOptionsCount; i++)
     playerOptionSprite[i].setTexture(playerOptions[i]);
     playerOptionSprite[i].setScale(3,3);
     playerOptionSprite[i].setPosition(300 + i*300, 300); // spacing
-    
+   
     }
 
 // Selection variables
@@ -237,7 +237,7 @@ menuMusic.play();
                        }
             }
         }
-        
+       
 PlayerTexture = playerOptions[selectedIndex];
 PlayerSprite.setTexture(PlayerTexture);
 PlayerSprite.setScale(3,3);
@@ -255,34 +255,34 @@ PlayerSprite.setPosition(player_x, player_y);
         window.display();
     }
 
-	bool isJumping = false;  // Track if jumping
+bool isJumping = false;  // Track if jumping
 
-	bool up_collide = false;
-	bool left_collide = false;
-	bool right_collide = false;
-	bool up_button = false;
+bool up_collide = false;
+bool left_collide = false;
+bool right_collide = false;
+bool up_button = false;
 
-	char top_left = '\0';
-	char top_right = '\0';
-	char top_mid = '\0';
+char top_left = '\0';
+char top_right = '\0';
+char top_mid = '\0';
 
-	char left_mid = '\0';
-	char right_mid = '\0';
+char left_mid = '\0';
+char right_mid = '\0';
 
-	char bottom_left = '\0';
-	char bottom_right = '\0';
-	char bottom_mid = '\0';
+char bottom_left = '\0';
+char bottom_right = '\0';
+char bottom_mid = '\0';
 
-	char bottom_left_down = '\0';
-	char bottom_right_down = '\0';
-	char bottom_mid_down = '\0';
+char bottom_left_down = '\0';
+char bottom_right_down = '\0';
+char bottom_mid_down = '\0';
 
-	char top_right_up = '\0';
-	char top_mid_up = '\0';
-	char top_left_up = '\0';
-	
-	
-	// Vacuum system
+char top_right_up = '\0';
+char top_mid_up = '\0';
+char top_left_up = '\0';
+
+
+// Vacuum system
 bool vacuumActive = false;
 int vacuumDirection = 0; // 0=left, 1=up, 2=right, 3=down
 
@@ -311,16 +311,16 @@ vacuumDownSprite.setScale(3, 3);
 
 
 
-	//creating level array
-	lvl = new char* [height];
-	for (int i = 0; i < height; i += 1)
-	{
-		lvl[i] = new char[width];
-	}
-	lvlMusic.play();
-	lvlMusic.setLoop(true);
-       //lvl can contain any garbage value so the collision deteection can become unpredictable 
-       // so we make  an aray and go thriugh rows and colum and set each of the part emprty 
+//creating level array
+lvl = new char* [height];
+for (int i = 0; i < height; i += 1)
+{
+lvl[i] = new char[width];
+}
+lvlMusic.play();
+lvlMusic.setLoop(true);
+       //lvl can contain any garbage value so the collision deteection can become unpredictable
+       // so we make  an aray and go thriugh rows and colum and set each of the part emprty
       for(int i = 0; i < height; i += 1)
        {
          for (int j = 0; j < width; j += 1)
@@ -330,7 +330,7 @@ vacuumDownSprite.setScale(3, 3);
        }
 
 
-/////  BOTTOM BLOCKS	
+/////  BOTTOM BLOCKS
 lvl[8][0] = '#';
 lvl[8][1] = '#';
 lvl[8][2] = '#';
@@ -380,7 +380,7 @@ lvl[5][17] = '#';
 lvl[6][17] = '#';
 lvl[7][17] = '#';
 
-	
+
 ////  RIGHT FORWARD PART
 lvl[3][0] = '#';
 lvl[3][1] = '#';
@@ -393,7 +393,7 @@ lvl[3][15] = '#';
 lvl[3][16] = '#';
 lvl[3][17] = '#';
 
-///  UPPER PART 
+///  UPPER PART
 lvl[0][0] = '#';
 lvl[0][1] = '#';
 lvl[0][2] = '#';
@@ -419,6 +419,8 @@ float ghost_x[8];
 float ghost_y[8];
 float ghost_speed[8];
 int ghost_dir[8];
+float ghost_velocityY[8];
+bool ghost_onGround[8];
 Sprite ghostSprite[8];
 
 Texture ghostTexture;
@@ -428,35 +430,39 @@ srand(time(0));
 
 for(int i = 0; i < ghosts; i++)
 {
-	while(true)
-	{
-		int tx = rand() % width;
-		int ty = rand() % (height - 1);
+while(true)
+{
+int tx = rand() % width;
+int ty = rand() % (height - 1);
 
-		if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
-		{
-			ghost_x[i] = tx * cell_size;
-			ghost_y[i] = ty * cell_size;
-			break;
-		}
-	}
+if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
+{
+ghost_x[i] = tx * cell_size;
+ghost_y[i] = ty * cell_size;
+break;
+}
+}
 
-	ghost_speed[i] = 1;
-	ghost_dir[i] = (rand() % 2 == 0) ? -1 : 1;
+ghost_speed[i] = 1;
+ghost_dir[i] = (rand() % 2 == 0) ? -1 : 1;
+ghost_velocityY[i]=0;
+ghost_onGround[i]=false;
 
-	ghostSprite[i].setTexture(ghostTexture);
-	ghostSprite[i].setScale(2, 2);   // increase ghost size
+ghostSprite[i].setTexture(ghostTexture);
+ghostSprite[i].setScale(2, 2);   // increase ghost size
 
-	ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
+ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
 }
 // skeletons
-const int skel = 8;
+const int skel = 4;
 
-float skel_x[8];
-float skel_y[8];
-float skel_speed[8];
-int skel_dir[8];
-Sprite skelSprite[8];
+float skel_x[4];
+float skel_y[4];
+float skel_speed[4];
+int skel_dir[4];
+float skel_velocityY[4];
+bool skel_onGround[4];
+Sprite skelSprite[4];
 
 Texture skelTexture;
 skelTexture.loadFromFile("skeleton.png");
@@ -465,88 +471,89 @@ srand(time(0));
 
 for(int i = 0; i < skel; i++)
 {
-	while(true)
-	{
-		int tx = rand() % width;
-		int ty = rand() % (height - 1);
+while(true)
+{
+int tx = rand() % width;
+int ty = rand() % (height - 1);
 
-		if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
-		{
-			skel_x[i] = tx * cell_size;
-			skel_y[i] = ty * cell_size;
-			break;
-		}
-	}
-
-	skel_speed[i] = 1;
-	skel_dir[i] = (rand() % 2 == 0) ? -1 : 1;
-
-	skelSprite[i].setTexture(skelTexture);
-	skelSprite[i].setScale(2, 2);   // increase ghost size
-
-	skelSprite[i].setPosition(skel_x[i], skel_y[i]);
+if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
+{
+skel_x[i] = tx * cell_size;
+skel_y[i] = ty * cell_size;
+break;
+}
 }
 
-	Event ev;
-	//main loop
-	while (window.isOpen())
-	{
+skel_speed[i] = 1;
+skel_dir[i] = (rand() % 2 == 0) ? -1 : 1;
+skel_velocityY[i]=0;
+skel_onGround[i]=false;
+skelSprite[i].setTexture(skelTexture);
+skelSprite[i].setScale(2, 2);   // increase ghost size
 
-		while (window.pollEvent(ev))
-		{
-			if (ev.type == Event::Closed) 
-			{
-				window.close();
-			}
+skelSprite[i].setPosition(skel_x[i], skel_y[i]);
+}
 
-			if (ev.type == Event::KeyPressed)
-			{
-			}
+Event ev;
+//main loop
+while (window.isOpen())
+{
 
-		}
+while (window.pollEvent(ev))
+{
+if (ev.type == Event::Closed)
+{
+window.close();
+}
 
-		//presing escape to close
-		if (Keyboard::isKeyPressed(Keyboard::Escape))
-		{
-			window.close();
-		}
+if (ev.type == Event::KeyPressed)
+{
+}
 
-		window.clear();
+}
 
-		display_level(window, lvl, bgTex, bgSprite, blockTexture, blockSprite, height, width, cell_size);
-		player_gravity(lvl,offset_y,velocityY,onGround,gravity,terminal_Velocity, player_x, player_y, cell_size, PlayerHeight, PlayerWidth);
-		
-///***		// Moving the character left and right using arrow keys
+//presing escape to close
+if (Keyboard::isKeyPressed(Keyboard::Escape))
+{
+window.close();
+}
 
-		if(Keyboard::isKeyPressed(Keyboard::Key::Right )){
-		 player_right_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
-		 PlayerSprite.setScale(-3,3); 
-		 // the player png pixels are 32x34 but game is 96x102 so we need to increase it by 3
-		 // player face on right as player is already facing left thats why we use neg sign to flip its face
-		 }
-		  if(Keyboard::isKeyPressed(Keyboard::Key::Left)){
-		   player_left_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
-		   PlayerSprite.setScale(3,3); // player faces left
-		   }
-		   
-		   // Check ceiling collision when moving upward
-		   // alo velocity is neg when moving upward
+window.clear();
+
+display_level(window, lvl, bgTex, bgSprite, blockTexture, blockSprite, height, width, cell_size);
+player_gravity(lvl,offset_y,velocityY,onGround,gravity,terminal_Velocity, player_x, player_y, cell_size, PlayerHeight, PlayerWidth);
+
+///*** // Moving the character left and right using arrow keys
+
+if(Keyboard::isKeyPressed(Keyboard::Key::Right )){
+player_right_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
+PlayerSprite.setScale(-3,3);
+// the player png pixels are 32x34 but game is 96x102 so we need to increase it by 3
+// player face on right as player is already facing left thats why we use neg sign to flip its face
+}
+ if(Keyboard::isKeyPressed(Keyboard::Key::Left)){
+  player_left_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
+  PlayerSprite.setScale(3,3); // player faces left
+  }
+ 
+  // Check ceiling collision when moving upward
+  // alo velocity is neg when moving upward
                   if(velocityY<0)
                    {
                    player_ceiling_collision(lvl, offset_y, velocityY, player_x, player_y, cell_size, PlayerWidth);
                     }
-		   
-///***		
+ 
+///***
 if(Keyboard::isKeyPressed(Keyboard::Key::Space))
-		{
-		if(onGround){
-			velocityY=jumpStrength;
-			}
-			
-			
-		}
-		
-		// ============= VACUUM CONTROL WITH WASD =============
+{
+if(onGround){
+velocityY=jumpStrength;
+}
+
+
+}
+
+// ============= VACUUM CONTROL WITH WASD =============
 if(Keyboard::isKeyPressed(Keyboard::Key::W)) {
     vacuumActive = true;
     vacuumDirection = 1; // Up
@@ -568,8 +575,8 @@ else {
 }
 // ========================================
                
-              
-		// ============= DRAW PLAYER OR VACUUM =============
+             
+// ============= DRAW PLAYER OR VACUUM =============
 if(vacuumActive) {
     // Draw vacuum sprite based on direction
     switch(vacuumDirection) {
@@ -596,49 +603,116 @@ else {
 PlayerSprite.setPosition(player_x, player_y);
 window.draw(PlayerSprite);
 }
-		//  GHOST MOVEMENT 
-for(int i = 0; i < 8; i++)
+// ====== GHOST MOVEMENT WITH GRAVITY ======
+for(int i = 0; i < ghosts; i++)
 {
-float nextX = ghost_x[i] + ghost_speed[i] * ghost_dir[i];
-int frontTileX = (nextX + (ghost_dir[i] == 1 ? 32 : 0)) / cell_size;
-int footTileY = (ghost_y[i] + 64) / cell_size;
-if(lvl[footTileY][frontTileX] != '#')
+    // GRAVITY - Apply falling
+    float nextY = ghost_y[i] + ghost_velocityY[i];
+   
+    // Check ground collision (bottom of ghost)
+    int bottomLeftX = ghost_x[i] / cell_size;
+    int bottomRightX = (ghost_x[i] + 64) / cell_size;
+    int bottomY = (nextY + 64) / cell_size;
+   
+    if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
+    {
+        ghost_onGround[i] = true;
+        ghost_velocityY[i] = 0;
+    }
+    else
+    {
+        ghost_onGround[i] = false;
+        ghost_y[i] = nextY;
+        ghost_velocityY[i] += gravity;
+        if(ghost_velocityY[i] > terminal_Velocity)
+            ghost_velocityY[i] = terminal_Velocity;
+    }
+   
+    // HORIZONTAL MOVEMENT - Only move left/right if on ground
+    if(ghost_onGround[i])
+    {
+        float nextX = ghost_x[i] + ghost_speed[i] * ghost_dir[i];
+       
+        // Check the tile directly in front of the ghost (left or right)
+        int frontTileX = (nextX + (ghost_dir[i] == 1 ? 64 : 0)) / cell_size;
+        int midTileY = (ghost_y[i] + 32) / cell_size;
+       
+        // Turn around if there's a wall ahead
+        if(lvl[midTileY][frontTileX] == '#')
+        {
+            ghost_dir[i] *= -1;
+        }
+        else
+        {
+            ghost_x[i] = nextX;
+        }
+    }
+   
+    ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
+    window.draw(ghostSprite[i]);
+}
+
+// ====== SKELETON MOVEMENT WITH GRAVITY ======
+for(int j = 0; j < skel; j++)
 {
-ghost_dir[i] *= -1;
+    // GRAVITY - Apply falling
+    float nextY = skel_y[j] + skel_velocityY[j];
+   
+    // Check ground collision (bottom of skeleton)
+    int bottomLeftX = skel_x[j] / cell_size;
+    int bottomRightX = (skel_x[j] + 64) / cell_size;
+    int bottomY = (nextY + 64) / cell_size;
+   
+    if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
+    {
+        skel_onGround[j] = true;
+        skel_velocityY[j] = 0;
+    }
+    else
+    {
+        skel_onGround[j] = false;
+        skel_y[j] = nextY;
+        skel_velocityY[j] += gravity;
+        if(skel_velocityY[j] > terminal_Velocity)
+            skel_velocityY[j] = terminal_Velocity;
+    }
+   
+    // HORIZONTAL MOVEMENT - Only move left/right if on ground
+    if(skel_onGround[j])
+    {
+        float nextp = skel_x[j] + skel_speed[j] * skel_dir[j];
+       
+        // Check the tile directly in front of the skeleton (left or right)
+        int frontskelX = (nextp + (skel_dir[j] == 1 ? 64 : 0)) / cell_size;
+        int midTileY = (skel_y[j] + 32) / cell_size;
+       
+        // Turn around if there's a wall ahead
+        if(lvl[midTileY][frontskelX] == '#')
+        {
+            skel_dir[j] *= -1;
+        }
+        else
+        {
+            skel_x[j] = nextp;
+        }
+    }
+   
+    skelSprite[j].setPosition(skel_x[j], skel_y[j]);
+    window.draw(skelSprite[j]);
 }
-else
-{
-ghost_x[i] = nextX;
-}
-ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
-window.draw(ghostSprite[i]);	
-//skeleton movemement
-}
-for(int j=0; j<4; j++)
-{
-float nextp = skel_x[j] + skel_speed[j] * skel_dir[j];
-int frontskelX = (nextp + skel_dir[j] ==1 ? 32 : 0) /cell_size;
-int backskelY = (skel_y[j] + 64) / cell_size;
-if(lvl[backskelY][frontskelX] != '#')
-{
-skel_dir[j] *= -1;
-}
-else
-skel_x[j] = nextp;
-skelSprite[j].setPosition(skel_x[j]  ,skel_y[j]);
-window.draw(skelSprite[j]);
-}
+
 // ================================================
 window.display();
-	}
-	//stopping music and deleting level array
-	lvlMusic.stop();
-	for (int i = 0; i < height; i++)
-	{
-		delete[] lvl[i];
-	}
-	delete[] lvl;
-
-	return 0;
 }
+//stopping music and deleting level array
+lvlMusic.stop();
+for (int i = 0; i < height; i++)
+{
+delete[] lvl[i];
+}
+delete[] lvl;
+
+return 0;
+}
+
 
