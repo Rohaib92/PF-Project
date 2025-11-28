@@ -603,42 +603,34 @@ else {
 PlayerSprite.setPosition(player_x, player_y);
 window.draw(PlayerSprite);
 }
-// ====== GHOST MOVEMENT WITH GRAVITY ======
+// ====== GHOST MOVEMENT (NO FALLING - TURN AT EDGES) ======
 for(int i = 0; i < ghosts; i++)
 {
-    // GRAVITY - Apply falling
-    float nextY = ghost_y[i] + ghost_velocityY[i];
-   
-    // Check ground collision (bottom of ghost)
+    // Check if on ground
     int bottomLeftX = ghost_x[i] / cell_size;
     int bottomRightX = (ghost_x[i] + 64) / cell_size;
-    int bottomY = (nextY + 64) / cell_size;
+    int bottomY = (ghost_y[i] + 64) / cell_size;
    
     if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
     {
         ghost_onGround[i] = true;
-        ghost_velocityY[i] = 0;
-    }
-    else
-    {
-        ghost_onGround[i] = false;
-        ghost_y[i] = nextY;
-        ghost_velocityY[i] += gravity;
-        if(ghost_velocityY[i] > terminal_Velocity)
-            ghost_velocityY[i] = terminal_Velocity;
     }
    
-    // HORIZONTAL MOVEMENT - Only move left/right if on ground
+    // HORIZONTAL MOVEMENT - only if on ground
     if(ghost_onGround[i])
     {
         float nextX = ghost_x[i] + ghost_speed[i] * ghost_dir[i];
        
-        // Check the tile directly in front of the ghost (left or right)
+        // Check for wall ahead
         int frontTileX = (nextX + (ghost_dir[i] == 1 ? 64 : 0)) / cell_size;
         int midTileY = (ghost_y[i] + 32) / cell_size;
        
-        // Turn around if there's a wall ahead
-        if(lvl[midTileY][frontTileX] == '#')
+        // Check for edge ahead (no ground in front)
+        int edgeCheckX = (nextX + (ghost_dir[i] == 1 ? 64 : 0)) / cell_size;
+        int edgeCheckY = (ghost_y[i] + 64 + 1) / cell_size;  // Check one pixel below the platform
+       
+        // Turn around if there's a wall ahead OR no ground ahead (edge)
+        if(lvl[midTileY][frontTileX] == '#' || lvl[edgeCheckY][edgeCheckX] != '#')
         {
             ghost_dir[i] *= -1;
         }
@@ -651,8 +643,7 @@ for(int i = 0; i < ghosts; i++)
     ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
     window.draw(ghostSprite[i]);
 }
-
-// ====== SKELETON MOVEMENT WITH GRAVITY ======
+// ====== SKELETON MOVEMENT WITH GRAVITY AND PLATFORM TELEPORT ======
 for(int j = 0; j < skel; j++)
 {
     // GRAVITY - Apply falling
@@ -680,6 +671,29 @@ for(int j = 0; j < skel; j++)
     // HORIZONTAL MOVEMENT - Only move left/right if on ground
     if(skel_onGround[j])
     {
+        // RANDOM TELEPORT TO PLATFORM - 0.5% chance per frame
+        if(rand() % 200 == 0)
+        {
+            // Find a random valid platform position
+            int attempts = 0;
+            while(attempts < 50)  // Try up to 50 times to find a spot
+            {
+                int tx = rand() % width;
+                int ty = rand() % (height - 1);
+               
+                // Check if it's a valid platform (empty space with ground below)
+                if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
+                {
+                    skel_x[j] = tx * cell_size;
+                    skel_y[j] = ty * cell_size;
+                    skel_velocityY[j] = 0;
+                    skel_dir[j] = (rand() % 2 == 0) ? -1 : 1;  // Random direction
+                    break;
+                }
+                attempts++;
+            }
+        }
+       
         float nextp = skel_x[j] + skel_speed[j] * skel_dir[j];
        
         // Check the tile directly in front of the skeleton (left or right)
@@ -700,6 +714,7 @@ for(int j = 0; j < skel; j++)
     skelSprite[j].setPosition(skel_x[j], skel_y[j]);
     window.draw(skelSprite[j]);
 }
+
 
 // ================================================
 window.display();
