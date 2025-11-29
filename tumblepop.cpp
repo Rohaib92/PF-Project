@@ -103,14 +103,14 @@ void handle_vacuum_sucking(
              //checks if ghost is infront of the vacuum
             if (dot > 0.5f)
             {
-                //if the ghost is close enough then capture the ghost means deactivate it
+                //if the ghost is too close  then capture the ghost means deactivate it
                 if (distance_sq < capture_distance_sq)
                 {
                     ghost_active[i] = false;
-                    continue;
+                    continue;//move to next ghost
                 }
 
-                //finally move ghost toward player where suck_strength is the pulling speed
+               // move ghost is not too close but still in vacuum range then pull it using suck_strngth
                 ghost_x[i] -= to_ghost_x * suck_strength;
                 ghost_y[i] -= to_ghost_y * suck_strength;
             }
@@ -156,7 +156,7 @@ void handle_vacuum_sucking(
                     continue;
                 }
  
-               //move the skeleton to the player which is controlled by suck strength
+               //if skeleton if within the range of vacumm then pull it towards the player which is controlled by suck strength
                 skel_x[i] -= to_skel_x * suck_strength;
                 skel_y[i] -= to_skel_y * suck_strength;
             }
