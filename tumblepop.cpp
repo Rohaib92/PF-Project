@@ -67,86 +67,103 @@ void handle_vacuum_sucking(
          }   
     }
 
-    // === Ghost Sucking ===
+    //Ghost sucking mechnism
     for (int i = 0; i < ghosts; i++)
-    {
-        if (!ghost_active[i]) continue; // skip already captured/inactive ghosts
-
-        // center of this ghost (use cell_size to approximate sprite center)
+    {    
+       //this check if ghost is currently active or alive in the game if not it continues and check the next ghost
+        if (!ghost_active[i]) 
+         {
+           continue;
+         } 
+        //next we compute ghost sprite center because vacuum pulss ghost towards center
         float ghost_center_x = ghost_x[i] + cell_size / 2.0f;
         float ghost_center_y = ghost_y[i] + cell_size / 2.0f;
 
+        //this shoss the distance between ghost and player on x-axis
         float dx = ghost_center_x - player_center_x;
+        //this shows the distance between ghost and payer on y-axis
         float dy = ghost_center_y - player_center_y;
 
+        //using pythagorous theorum to find the distance where dx=horizontal distance and dy=vertical distance
         float distance_sq = dx * dx + dy * dy;
 
-        // If within vacuum range and not overlapping exactly (distance > 1)
+        //this shows if ghost range is far then the vacuum range then its ignored and if ghost are on top of player they are also ignored
         if (distance_sq < vacuum_range * vacuum_range && distance_sq > 1.0f)
         {
+           // next taking the squareroot to find the distance again this come from pythagerous theorum
             float distance = sqrt(distance_sq);
 
-            // direction from player to ghost (unit vector)
+            //direction from player to ghost in unit vector form we need this becaoue later we need it to ensure ghost move in correct direction and in correct speed
             float to_ghost_x = dx / distance;
             float to_ghost_y = dy / distance;
 
-            // dot product between vacuum direction and direction to ghost:
-            // if high (>0.5) then ghost is roughly inside the vacuum cone
+            //this is the dot product formula it tells how much ghost is infornt of the camera so only ghost in vacuum direction are pulled 
             float dot = to_ghost_x * dir_x + to_ghost_y * dir_y;
-
+   
+             //checks if ghost is infront of the vacuum
             if (dot > 0.5f)
             {
-                // if close enough, "capture" the ghost (deactivate)
+                //if the ghost is close enough then capture the ghost means deactivate it
                 if (distance_sq < capture_distance_sq)
                 {
                     ghost_active[i] = false;
                     continue;
                 }
 
-                // move ghost toward player by suck_strength pixels
+                //finally move ghost toward player where suck_strength is the pulling speed
                 ghost_x[i] -= to_ghost_x * suck_strength;
                 ghost_y[i] -= to_ghost_y * suck_strength;
             }
         }
     }
 
-    // === Skeleton Sucking === - same logic as ghost
+    //Skeleton sucking mechanism same logic as ghost one
     for (int i = 0; i < skel; i++)
     {
+        //skips skeleton that are already captured 
         if (!skel_active[i]) continue;
 
+        //next compute the center of skeleton sprite to make sure the sucking is directed toward sthe middle of the sprite
         float skel_center_x = skel_x[i] + cell_size / 2.0f;
         float skel_center_y = skel_y[i] + cell_size / 2.0f;
 
+        //find horizontal and vertocal distance from player to the skelton
         float dx = skel_center_x - player_center_x;
         float dy = skel_center_y - player_center_y;
 
+        //find the distance using pythagerous theorum
         float distance_sq = dx * dx + dy * dy;
 
+        //check if the skeleton is within the vacuum range and not above the player
         if (distance_sq < vacuum_range * vacuum_range && distance_sq > 1.0f)
         {
+            //next compute actual distance we didnt find actual distance before just to make more efficiency in game
             float distance = sqrt(distance_sq);
 
+            //next unit vertor direction to tell exactle which direction for skeleton to move
             float to_skel_x = dx / distance;
             float to_skel_y = dy / distance;
-
+ 
+            //dot product between vacuum and direction to skeleton to tell how close the skeleton is 
             float dot = to_skel_x * dir_x + to_skel_y * dir_y;
 
             if (dot > 0.5f)
             {
+            //if sskeleton is very close coming in the vacuum range then captur it and deactive it means that skeleton will dissapear
                 if (distance_sq < capture_distance_sq)
                 {
                     skel_active[i] = false;
                     continue;
                 }
-
+ 
+               //move the skeleton to the player which is controlled by suck strength
                 skel_x[i] -= to_skel_x * suck_strength;
                 skel_y[i] -= to_skel_y * suck_strength;
             }
         }
     }
 }
-// *** END OF FUNCTION ***
+
 
 // Draws the level: background (already drawn externally) and blocks where lvl[][] == '#'
 void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size)
