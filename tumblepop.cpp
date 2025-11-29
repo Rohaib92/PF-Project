@@ -354,17 +354,17 @@ int main()
     playerOptions[0].loadFromFile("player1.png");
     playerOptions[1].loadFromFile("player2.png");
 
-const int bagCount = 2;
-Texture bag[bagCount];
-Sprite bagSprite[bagCount];
-bag[0].loadFromFile("bag1.png");
-bag[1].loadFromFile("bag2.png");
+const int bagOptionsCount = 2;
+Texture bagOptions[bagOptionsCount];
+Sprite bagOptionSprite[bagOptionsCount];
+bagOptions[0].loadFromFile("bag1.png");
+bagOptions[1].loadFromFile("bag2.png");
     // Set positions and scale for menu display
     for(int i = 0; i < playerOptionsCount; i++)
     {
-    bagSprite[i].setTexture(bag[i]);
-    bagSprite[i].setScale(2,2);
-    bagSprite[i].setPosition(300 + i*300+73, 300+41);
+    bagOptionSprite[i].setTexture(bagOptions[i]);
+    bagOptionSprite[i].setScale(2,2);
+    bagOptionSprite[i].setPosition(300 + i*300+73, 300+41);
         playerOptionSprite[i].setTexture(playerOptions[i]);
         playerOptionSprite[i].setScale(3,3);
         playerOptionSprite[i].setPosition(300 + i*300, 300); // spacing
@@ -415,7 +415,7 @@ bag[1].loadFromFile("bag2.png");
             else 
             playerOptionSprite[i].setColor(Color::White);
 
-window.draw(bagSprite[i]);
+window.draw(bagOptionSprite[i]);
             window.draw(playerOptionSprite[i]);
         }
         window.display();
@@ -737,6 +737,7 @@ window.draw(bagSprite[i]);
         {
             // Draw normal player sprite when vacuum is not active
             PlayerSprite.setPosition(player_x, player_y);
+            
             window.draw(PlayerSprite);
         }
 
