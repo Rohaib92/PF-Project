@@ -354,9 +354,17 @@ int main()
     playerOptions[0].loadFromFile("player1.png");
     playerOptions[1].loadFromFile("player2.png");
 
+const int bagCount = 2;
+Texture bag[bagCount];
+Sprite bagSprite[bagCount];
+bag[0].loadFromFile("bag1.png");
+bag[1].loadFromFile("bag2.png");
     // Set positions and scale for menu display
     for(int i = 0; i < playerOptionsCount; i++)
     {
+    bagSprite[i].setTexture(bag[i]);
+    bagSprite[i].setScale(2,2);
+    bagSprite[i].setPosition(300 + i*300+73, 300+41);
         playerOptionSprite[i].setTexture(playerOptions[i]);
         playerOptionSprite[i].setScale(3,3);
         playerOptionSprite[i].setPosition(300 + i*300, 300); // spacing
@@ -404,8 +412,10 @@ int main()
         for(int i = 0; i < playerOptionsCount; i++)
         {
             if(i == selectedIndex) playerOptionSprite[i].setColor(Color::Yellow);
-            else playerOptionSprite[i].setColor(Color::White);
+            else 
+            playerOptionSprite[i].setColor(Color::White);
 
+window.draw(bagSprite[i]);
             window.draw(playerOptionSprite[i]);
         }
         window.display();
