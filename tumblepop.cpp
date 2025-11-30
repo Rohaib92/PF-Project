@@ -663,6 +663,11 @@ bagSprite.setScale(2, 2);
 
     Event ev;
     bool xKeyPressed=false;
+    
+     // ===== SUCKING CAPACITY =====
+    int enemiesSucked = 0;           // Current count of sucked enemies
+    const int maxCapacity = 3;       // Maximum enemies that can be sucked at once
+    
     //main loop
     while (window.isOpen())
     {
@@ -774,9 +779,9 @@ bagSprite.setScale(2, 2);
         // ============= VACUUM SUCKING WITH Space KEY =============
         xKeyPressed = Keyboard::isKeyPressed(Keyboard::Key::Space);
 
-        if(xKeyPressed && vacuumActive)
+        if(xKeyPressed && vacuumActive && enemiesSucked < maxCapacity)
         {
-            // call vacuum handler to pull enemies
+            // call vacuum handler to pull enemies (only if capacity not reached)
             handle_vacuum_sucking(
                 player_x, player_y, PlayerWidth, PlayerHeight,
                 ghost_x, ghost_y, ghost_active, ghosts,
@@ -784,6 +789,8 @@ bagSprite.setScale(2, 2);
                 cell_size, 4.0f, vacuumDirection
             );
         }
+
+
 
         // ============= DRAW PLAYER OR VACUUM =============
         if(vacuumActive)
@@ -825,7 +832,7 @@ bagSprite.setScale(2, 2);
             window.draw(PlayerSprite);
         }
 
-       // *** LASER BEAM DRAWING WHEN X IS PRESSED ***
+       // *** LASER BEAM DRAWING WHEN Space IS PRESSED ***
         if(xKeyPressed && vacuumActive && laserLoaded)
         {
             float laser_x = player_x + PlayerWidth/2;
@@ -852,6 +859,17 @@ bagSprite.setScale(2, 2);
                     break;
             }
             window.draw(laserSprite);
+        }
+
+// ====== COUNT SUCKED ENEMIES ======
+        enemiesSucked = 0;
+        for(int i = 0; i < ghosts; i++)
+        {
+            if(!ghost_active[i]) enemiesSucked++;
+        }
+        for(int i = 0; i < skel; i++)
+        {
+            if(!skel_active[i]) enemiesSucked++;
         }
 
         // ====== GHOST MOVEMENT (NO FALLING - TURN AT EDGES) ======
