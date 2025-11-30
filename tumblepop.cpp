@@ -803,34 +803,30 @@ window.draw(bagOptionSprite[i]);
             window.draw(PlayerSprite);
         }
 
-        // *** LASER BEAM DRAWING WHEN X IS PRESSED ***
+       // *** LASER BEAM DRAWING WHEN X IS PRESSED ***
         if(xKeyPressed && vacuumActive && laserLoaded)
         {
             float laser_x = player_x + PlayerWidth/2;
             float laser_y = player_y + PlayerHeight/2;
 
-            // set laser rotation & scale to align with vacuum direction
+            // Position laser in front of vacuum based on direction (no rotation needed)
             switch(vacuumDirection)
             {
                 case 0: // Left
-                    laserSprite.setRotation(180);
                     laserSprite.setScale(3, 2);
-                    laserSprite.setPosition(laser_x, laser_y);
+                    laserSprite.setPosition(laser_x - 150, laser_y - 20);
                     break;
                 case 1: // Up
-                    laserSprite.setRotation(270);
-                    laserSprite.setScale(3, 2);
-                    laserSprite.setPosition(laser_x, laser_y);
+                    laserSprite.setScale(2, 3);
+                    laserSprite.setPosition(laser_x - 20, laser_y - 150);
                     break;
                 case 2: // Right
-                    laserSprite.setRotation(0);
                     laserSprite.setScale(3, 2);
-                    laserSprite.setPosition(laser_x, laser_y);
+                    laserSprite.setPosition(laser_x + 50, laser_y - 20);
                     break;
                 case 3: // Down
-                    laserSprite.setRotation(90);
-                    laserSprite.setScale(3, 2);
-                    laserSprite.setPosition(laser_x, laser_y);
+                    laserSprite.setScale(2, 3);
+                    laserSprite.setPosition(laser_x - 20, laser_y + 50);
                     break;
             }
             window.draw(laserSprite);
