@@ -736,8 +736,8 @@ bagSprite.setScale(2, 2);
             player_ceiling_collision(lvl, offset_y, velocityY, player_x, player_y, cell_size, PlayerWidth);
         }
 
-        // Jump with space if on ground
-        if(Keyboard::isKeyPressed(Keyboard::Key::Space))
+        // Jump with up if on ground
+        if(Keyboard::isKeyPressed(Keyboard::Key::Up))
         {
             if(onGround)
             {
@@ -771,8 +771,8 @@ bagSprite.setScale(2, 2);
             vacuumActive = false; // No vacuum key pressed
         }
 
-        // ============= VACUUM SUCKING WITH X KEY =============
-        xKeyPressed = Keyboard::isKeyPressed(Keyboard::Key::X);
+        // ============= VACUUM SUCKING WITH Space KEY =============
+        xKeyPressed = Keyboard::isKeyPressed(Keyboard::Key::Space);
 
         if(xKeyPressed && vacuumActive)
         {
@@ -836,7 +836,7 @@ bagSprite.setScale(2, 2);
             {
                 case 0: // Left
                     laserSprite.setScale(3, 2);
-                    laserSprite.setPosition(laser_x - 150, laser_y - 20);
+                    laserSprite.setPosition(laser_x - 110, laser_y - 10);
                     break;
                 case 1: // Up
                     laserSprite.setScale(2, 3);
@@ -844,7 +844,7 @@ bagSprite.setScale(2, 2);
                     break;
                 case 2: // Right
                     laserSprite.setScale(3, 2);
-                    laserSprite.setPosition(laser_x + 50, laser_y - 20);
+                    laserSprite.setPosition(laser_x + 50, laser_y - 10);
                     break;
                 case 3: // Down
                     laserSprite.setScale(2, 3);
