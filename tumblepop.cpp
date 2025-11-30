@@ -333,6 +333,16 @@ int main()
 
     Texture PlayerTexture;
     Sprite PlayerSprite;
+    Texture bagTexture;
+    Sprite bagSprite;
+    bool facingRight = false;
+    // Animation variables
+const int animationFrames = 4;  
+Texture walkTextures[4];        
+int currentFrame = 0;   
+int frameCounter = 0;           
+const int frameDelay = 10;      // (lower = faster)
+bool isWalking = false;         
 
     // Music objects and settings
     Music menuMusic;
@@ -344,6 +354,7 @@ int main()
     lvlMusic.openFromFile("mus.ogg");
     lvlMusic.setLoop(true);
     lvlMusic.setVolume(40);
+    
 
     // ===== PLAYER SELECTION MENU =====
     const int playerOptionsCount = 2;   // number of characters
@@ -354,9 +365,17 @@ int main()
     playerOptions[0].loadFromFile("player1.png");
     playerOptions[1].loadFromFile("player2.png");
 
+const int bagOptionsCount = 2;
+Texture bagOptions[bagOptionsCount];
+Sprite bagOptionSprite[bagOptionsCount];
+bagOptions[0].loadFromFile("bag1.png");
+bagOptions[1].loadFromFile("bag2.png");
     // Set positions and scale for menu display
     for(int i = 0; i < playerOptionsCount; i++)
     {
+    bagOptionSprite[i].setTexture(bagOptions[i]);
+    bagOptionSprite[i].setScale(2,2);
+    bagOptionSprite[i].setPosition(300 + i*300+73, 300+41);
         playerOptionSprite[i].setTexture(playerOptions[i]);
         playerOptionSprite[i].setScale(3,3);
         playerOptionSprite[i].setPosition(300 + i*300, 300); // spacing
@@ -398,14 +417,34 @@ int main()
         PlayerSprite.setTexture(PlayerTexture);
         PlayerSprite.setScale(3,3);
         PlayerSprite.setPosition(player_x, player_y);
+        // Load walking animation frames based on selected player
+if(selectedIndex == 0)
+{
+    walkTextures[0].loadFromFile("player1walk1.png");
+    walkTextures[1].loadFromFile("player1walk2.png");
+    walkTextures[2].loadFromFile("player1walk3.png");
+    walkTextures[3].loadFromFile("player1walk4.png");
+}
+else if(selectedIndex == 1)
+{
+    walkTextures[0].loadFromFile("player2walk1.png");
+    walkTextures[1].loadFromFile("player2walk2.png");
+    walkTextures[2].loadFromFile("player2walk3.png");
+    walkTextures[3].loadFromFile("player2walk4.png");
+}
+        bagTexture = bagOptions[selectedIndex];
+        bagSprite.setTexture(bagTexture);
+bagSprite.setScale(2, 2);
 
         window.clear();
         // highlight selected option
         for(int i = 0; i < playerOptionsCount; i++)
         {
             if(i == selectedIndex) playerOptionSprite[i].setColor(Color::Yellow);
-            else playerOptionSprite[i].setColor(Color::White);
+            else 
+            playerOptionSprite[i].setColor(Color::White);
 
+window.draw(bagOptionSprite[i]);
             window.draw(playerOptionSprite[i]);
         }
         window.display();
@@ -630,19 +669,44 @@ int main()
         display_level(window, lvl, bgTex, bgSprite, blockTexture, blockSprite, height, width, cell_size);
         player_gravity(lvl,offset_y,velocityY,onGround,gravity,terminal_Velocity, player_x, player_y, cell_size, PlayerHeight, PlayerWidth);
 
-        ///*** // Moving the character left and right using arrow keys
+        ///*** // Moving the character left and right using arrow keys'
+        isWalking = false;
         if(Keyboard::isKeyPressed(Keyboard::Key::Right ))
         {
             // attempt to move right with collision check
             player_right_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
-            PlayerSprite.setScale(-3,3); // flip horizontally to face right
+            bagSprite.setScale(-2,2);
+            PlayerSprite.setScale(-3,3); 
+            facingRight = true;// flip horizontally to face right
+            isWalking=true;
         }
+        
         if(Keyboard::isKeyPressed(Keyboard::Key::Left))
         {
             // attempt to move left
             player_left_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
-            PlayerSprite.setScale(3,3); // normal facing left
+            bagSprite.setScale(2,2);
+            PlayerSprite.setScale(3,3);
+            facingRight=false; // normal facing left
+            isWalking = true;
         }
+        if(isWalking)
+        {
+        frameCounter++;
+        if(frameCounter>=frameDelay)
+        {
+        frameCounter=0;
+        currentFrame = (currentFrame+1) % animationFrames; 
+        PlayerSprite.setTexture(walkTextures[currentFrame]);
+        }
+        }
+        else
+        {
+        currentFrame = 0;
+        frameCounter = 0;
+        PlayerSprite.setTexture(PlayerTexture);
+        }
+        
 
         // Ceiling collision when moving up (velocityY < 0)
         if(velocityY<0)
@@ -726,7 +790,16 @@ int main()
         else
         {
             // Draw normal player sprite when vacuum is not active
+            if(facingRight){
+            bagSprite.setPosition(player_x-70+100, player_y+41);
+            PlayerSprite.setPosition(player_x+100, player_y);
+            }
+            else
+            {
+            bagSprite.setPosition(player_x+73, player_y+41);
             PlayerSprite.setPosition(player_x, player_y);
+            }
+            window.draw(bagSprite);
             window.draw(PlayerSprite);
         }
 
