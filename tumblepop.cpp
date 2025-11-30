@@ -370,17 +370,31 @@ Texture bagOptions[bagOptionsCount];
 Sprite bagOptionSprite[bagOptionsCount];
 bagOptions[0].loadFromFile("bag1.png");
 bagOptions[1].loadFromFile("bag2.png");
-    // Set positions and scale for menu display
+    /// Set positions and scale for menu display
     for(int i = 0; i < playerOptionsCount; i++)
     {
-    bagOptionSprite[i].setTexture(bagOptions[i]);
-    bagOptionSprite[i].setScale(2,2);
-    bagOptionSprite[i].setPosition(300 + i*300+73, 300+41);
+        bagOptionSprite[i].setTexture(bagOptions[i]);
+        bagOptionSprite[i].setScale(2,2);
+        bagOptionSprite[i].setPosition(300 + i*300+73, 200+41);  // Changed from 300+41 to 200+41
         playerOptionSprite[i].setTexture(playerOptions[i]);
         playerOptionSprite[i].setScale(3,3);
-        playerOptionSprite[i].setPosition(300 + i*300, 300); // spacing
+        playerOptionSprite[i].setPosition(300 + i*300, 200); // Changed from 300 to 200
     }
 
+    // ===== DESCRIPTION IMAGES =====
+    Texture descTextures[2];
+    Sprite descSprites[2];
+   
+    descTextures[0].loadFromFile("greendesc.png");
+    descTextures[1].loadFromFile("yellowdesc.png");
+   
+    descSprites[0].setTexture(descTextures[0]);
+    descSprites[0].setPosition(200, 300);  // Moved right (280→320) and up (500→400)
+   
+    descSprites[1].setTexture(descTextures[1]);
+    descSprites[1].setPosition(500, 300);  // Moved right (580→620) and up (500→400)
+
+    
     // Selection variables
     int selectedIndex = 0;
     bool playerChosen = false;
@@ -440,12 +454,20 @@ bagSprite.setScale(2, 2);
         // highlight selected option
         for(int i = 0; i < playerOptionsCount; i++)
         {
-            if(i == selectedIndex) playerOptionSprite[i].setColor(Color::Yellow);
-            else 
-            playerOptionSprite[i].setColor(Color::White);
+            if(i == selectedIndex)
+            {
+                playerOptionSprite[i].setColor(Color::Yellow);
+                bagOptionSprite[i].setColor(Color::Yellow);
+            }
+            else
+            {
+                playerOptionSprite[i].setColor(Color::White);
+                bagOptionSprite[i].setColor(Color::White);
+            }
 
-window.draw(bagOptionSprite[i]);
+            window.draw(bagOptionSprite[i]);
             window.draw(playerOptionSprite[i]);
+            window.draw(descSprites[i]);  // This draws the description images
         }
         window.display();
     }
