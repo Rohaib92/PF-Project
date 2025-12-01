@@ -29,7 +29,7 @@ void handle_vacuum_sucking(
     //this shows the maximum distance from which the enemy can be sucked
     const float vacuum_range = 200.0f;    
     //this tells the distance that from where the enemy should disappear after coming how much close to player    
-    const float capture_distance_sq = 500.0f; 
+    const float capture_distance_sq = 10000.0f; 
 
     //this tells the player center 
     float player_center_x = player_x + PlayerWidth / 2.0f;
@@ -107,6 +107,8 @@ void handle_vacuum_sucking(
                 if (distance_sq < capture_distance_sq)
                 {
                     ghost_active[i] = false;
+                    ghost_x[i]= -1000;
+                    ghost_y[i]= -1000;
                     continue;//move to next ghost
                 }
 
@@ -153,6 +155,8 @@ void handle_vacuum_sucking(
                 if (distance_sq < capture_distance_sq)
                 {
                     skel_active[i] = false;
+                    skel_x[i]=-1000;
+                    skel_y[i]=-1000;
                     continue;
                 }
  
@@ -162,6 +166,26 @@ void handle_vacuum_sucking(
             }
         }
     }
+}
+
+// NEW FUNCTION: Check collision between player and enemies
+bool check_player_enemy_collision(
+    float player_x, float player_y, int PlayerWidth, int PlayerHeight,
+    float enemy_x, float enemy_y, int enemy_size)
+{
+    return (player_x < enemy_x + enemy_size &&
+            player_x + PlayerWidth > enemy_x &&
+            player_y < enemy_y + enemy_size &&
+            player_y + PlayerHeight > enemy_y);
+}
+
+// NEW FUNCTION: Respawn player from top
+void respawn_player(float& player_x, float& player_y, float& velocityY, bool& playerDead)
+{
+    player_x = 500;
+    player_y = 150;
+    velocityY = 0;
+    playerDead = false;
 }
 
 
@@ -330,6 +354,12 @@ int main()
 
     int PlayerHeight = 102;
     int PlayerWidth = 96;
+
+ // ===== PLAYER LIVES SYSTEM =====
+    int playerLives = 3;
+    bool playerDead = false;
+    Clock deathClock;
+    const float respawnDelay = 2.0f;
 
     Texture PlayerTexture;
     Sprite PlayerSprite;
@@ -697,6 +727,8 @@ bagSprite.setScale(2, 2);
         player_gravity(lvl,offset_y,velocityY,onGround,gravity,terminal_Velocity, player_x, player_y, cell_size, PlayerHeight, PlayerWidth);
 
         ///*** // Moving the character left and right using arrow keys'
+        if(!playerDead) // Only allow controls if alive
+        {
         isWalking = false;
         if(Keyboard::isKeyPressed(Keyboard::Key::Right ))
         {
@@ -775,11 +807,12 @@ bagSprite.setScale(2, 2);
         {
             vacuumActive = false; // No vacuum key pressed
         }
-
+} //end of player controls if alive
         // ============= VACUUM SUCKING WITH Space KEY =============
         xKeyPressed = Keyboard::isKeyPressed(Keyboard::Key::Space);
 
         if(xKeyPressed && vacuumActive && enemiesSucked < maxCapacity)
+      
         {
             // call vacuum handler to pull enemies (only if capacity not reached)
             handle_vacuum_sucking(
@@ -793,6 +826,8 @@ bagSprite.setScale(2, 2);
 
 
         // ============= DRAW PLAYER OR VACUUM =============
+    if(!playerDead)
+    {
         if(vacuumActive)
         {
             // Draw vacuum sprite based on direction (placed at player's top-left)
@@ -831,7 +866,7 @@ bagSprite.setScale(2, 2);
             window.draw(bagSprite);
             window.draw(PlayerSprite);
         }
-
+}
        // *** LASER BEAM DRAWING WHEN Space IS PRESSED ***
         if(xKeyPressed && vacuumActive && laserLoaded)
         {
@@ -994,7 +1029,83 @@ bagSprite.setScale(2, 2);
             skelSprite[j].setPosition(skel_x[j], skel_y[j]);
             window.draw(skelSprite[j]);
         }
+  
+  // ====== CHECK PLAYER-ENEMY COLLISIONS ======
+if(!playerDead)
+{
+    // Check ghost collisions
+    for(int i = 0; i < ghosts; i++)
+    {
+        if(ghost_active[i])
+        {
+            if(check_player_enemy_collision(player_x, player_y, PlayerWidth, PlayerHeight,
+                                           ghost_x[i], ghost_y[i], 64))
+            {
+                playerDead = true;
+                deathClock.restart();
+                break;
+            }
+        }
+    }
+   
+    // Check skeleton collisions
+    if(!playerDead)
+    {
+        for(int i = 0; i < skel; i++)
+        {
+            if(skel_active[i])
+            {
+                if(check_player_enemy_collision(player_x, player_y, PlayerWidth, PlayerHeight,
+                                               skel_x[i], skel_y[i], 64))
+                {
+                    playerDead = true;
+                    deathClock.restart();
+                    break;
+                }
+            }
+        }
+    }
+}
 
+
+       
+       // ====== HANDLE PLAYER DEATH AND RESPAWN ======
+        if(playerDead)
+        {
+            float elapsedTime = deathClock.getElapsedTime().asSeconds();
+           
+            // Make player blink during death
+            if((int)(elapsedTime * 4) % 2 == 0)
+            {
+                PlayerSprite.setColor(Color(255, 255, 255, 100));
+                bagSprite.setColor(Color(255, 255, 255, 100));
+            }
+            else
+            {
+                PlayerSprite.setColor(Color(255, 255, 255, 255));
+                bagSprite.setColor(Color(255, 255, 255, 255));
+            }
+           
+            if(elapsedTime >= respawnDelay)
+            {
+                playerLives--;
+                if(playerLives > 0)
+                {
+                    respawn_player(player_x, player_y, velocityY, playerDead);
+                    PlayerSprite.setColor(Color(255, 255, 255, 255));
+                    bagSprite.setColor(Color(255, 255, 255, 255));
+                    vacuumActive = false;
+                    enemiesSucked = 0;
+                }
+                else
+                {
+                    // Game Over - close window
+                    window.close();
+                }
+            }
+        }
+
+  
         // Present everything drawn this frame
         window.display();
     }
