@@ -586,8 +586,23 @@ bagSprite.setScale(2, 2);
     bool ghost_onGround[8];
     Sprite ghostSprite[8];
     bool ghost_active[8];  // active flag per ghost
-    Texture ghostTexture;
-    ghostTexture.loadFromFile("gost.png");
+     const int ghostAnimationFrames = 4;
+     Texture ghostWalkTextures[4];
+     int ghostCurrentFrame[8];      // cuuurrent frame for each ghost
+int ghostFrameCounter[8];      // Frame counter for each ghost
+const int ghostFrameDelay = 10; // aniimation speed 
+
+// Load ghost walking animation frames
+ghostWalkTextures[0].loadFromFile("ghost1.png");
+ghostWalkTextures[1].loadFromFile("ghost2.png");
+ghostWalkTextures[2].loadFromFile("ghost3.png");
+ghostWalkTextures[3].loadFromFile("ghost4.png");
+
+
+     
+    
+    
+    
     //spawning ghosts
     srand(time(0)); // seed RNG
 
@@ -612,10 +627,17 @@ bagSprite.setScale(2, 2);
         ghost_velocityY[i]=0;
         ghost_onGround[i]=false;
         ghost_active[i]=true;
-        ghostSprite[i].setTexture(ghostTexture);
+        
+        ghostSprite[i].setTexture(ghostWalkTextures[0]);
         ghostSprite[i].setScale(2, 2);   // increase ghost size
-
+// Flip sprite if starting direction is right
+if(ghost_dir[i] == 1)
+{
+    ghostSprite[i].setScale(-2, 2);
+}
         ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
+        ghostCurrentFrame[i] = 0;
+    ghostFrameCounter[i] = 0;
     }
 
     // SKELETONS - similar setup
@@ -631,6 +653,7 @@ bagSprite.setScale(2, 2);
     bool skel_active[4];
     Texture skelTexture;
     skelTexture.loadFromFile("skeleton.png");
+    
     //spawning skeletons
     srand(time(0)); // re-seed (fine but unnecessary)
 
@@ -872,50 +895,74 @@ bagSprite.setScale(2, 2);
             if(!skel_active[i]) enemiesSucked++;
         }
 
-        // ====== GHOST MOVEMENT (NO FALLING - TURN AT EDGES) ======
-        for(int i = 0; i < ghosts; i++)
+        // ====== GHOST MOVEMENT
+       for(int i = 0; i < ghosts; i++)
+{
+    if(!ghost_active[i]) continue; // skip inactive ghosts
+
+    // Find tile coordinates for ground checks
+    int bottomLeftX = ghost_x[i] / cell_size;
+    int bottomRightX = (ghost_x[i] + 64) / cell_size;
+    int bottomY = (ghost_y[i] + 64) / cell_size;
+
+    // If ghost stands on a block, mark onGround true
+    if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
+    {
+        ghost_onGround[i] = true;
+    }
+
+    // HORIZONTAL MOVEMENT - only if on ground
+    if(ghost_onGround[i])
+    {
+        float nextX = ghost_x[i] + ghost_speed[i] * ghost_dir[i];
+
+        // front tile X coordinate (depending on direction)
+        int frontTileX = (nextX + (ghost_dir[i] == 1 ? 64 : 0)) / cell_size;
+        int midTileY = (ghost_y[i] + 32) / cell_size;
+
+        // edge check: if no ground ahead then turn
+        int edgeCheckX = (nextX + (ghost_dir[i] == 1 ? 64 : 0)) / cell_size;
+        int edgeCheckY = (ghost_y[i] + 64 + 1) / cell_size;
+
+        // Turn around if there's a wall ahead OR no ground ahead (edge)
+        if(lvl[midTileY][frontTileX] == '#' || lvl[edgeCheckY][edgeCheckX] != '#')
         {
-            if(!ghost_active[i]) continue; // skip inactive ghosts
+            ghost_dir[i] *= -1;
+        if(ghost_dir[i] == 1) // Now moving right
+    {
+        ghostSprite[i].setScale(-2, 2);
+        
+    }
+    
+    
+    else // Now moving left
+    {
+        ghostSprite[i].setScale(2, 2);
+                
 
-            // Find tile coordinates for ground checks
-            int bottomLeftX = ghost_x[i] / cell_size;
-            int bottomRightX = (ghost_x[i] + 64) / cell_size;
-            int bottomY = (ghost_y[i] + 64) / cell_size;
-
-            // If ghost stands on a block, mark onGround true
-            if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
-            {
-                ghost_onGround[i] = true;
-            }
-
-            // HORIZONTAL MOVEMENT - only if on ground
-            if(ghost_onGround[i])
-            {
-                float nextX = ghost_x[i] + ghost_speed[i] * ghost_dir[i];
-
-                // front tile X coordinate (depending on direction)
-                int frontTileX = (nextX + (ghost_dir[i] == 1 ? 64 : 0)) / cell_size;
-                int midTileY = (ghost_y[i] + 32) / cell_size;
-
-                // edge check: if no ground ahead then turn
-                int edgeCheckX = (nextX + (ghost_dir[i] == 1 ? 64 : 0)) / cell_size;
-                int edgeCheckY = (ghost_y[i] + 64 + 1) / cell_size;
-
-                // Turn around if there's a wall ahead OR no ground ahead (edge)
-                if(lvl[midTileY][frontTileX] == '#' || lvl[edgeCheckY][edgeCheckX] != '#')
-                {
-                    ghost_dir[i] *= -1;
-                }
-                else
-                {
-                    ghost_x[i] = nextX;
-                }
-            }
-
-            // update sprite position and draw
-            ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
-            window.draw(ghostSprite[i]);
+    }
+    }
+    else
+       
+        {
+            ghost_x[i] = nextX;
         }
+        
+        // ANIMATE GHOST WHILE MOVING
+        ghostFrameCounter[i]++;
+        if(ghostFrameCounter[i] >= ghostFrameDelay)
+        {
+            ghostFrameCounter[i] = 0;
+            ghostCurrentFrame[i] = (ghostCurrentFrame[i] + 1) % ghostAnimationFrames;
+            ghostSprite[i].setTexture(ghostWalkTextures[ghostCurrentFrame[i]]);
+        }
+    }
+
+    // update sprite position and draw
+    ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
+    window.draw(ghostSprite[i]);
+}
+
 
         // ====== SKELETON MOVEMENT WITH GRAVITY AND PLATFORM TELEPORT ======
         for(int j = 0; j < skel; j++)
