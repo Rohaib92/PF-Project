@@ -634,23 +634,27 @@ ghostWalkTextures[3].loadFromFile("ghost4.png");
     
     
     //spawning ghosts
-    srand(time(0)); // seed RNG
+srand(time(0)); // seed RNG
 
-    for(int i = 0; i < ghosts; i++)
+for(int i = 0; i < ghosts; i++)
+{
+    // pick random tile that is empty and has ground below
+    while(true)
     {
-        // pick random tile that is empty and has ground below
-        while(true)
-        {
-            int tx = rand() % width;
-            int ty = rand() % (height - 1);
+        int tx = rand() % width;
+        int ty = rand() % (height - 1);
 
-            if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
-            {
-                ghost_x[i] = tx * cell_size;
-                ghost_y[i] = ty * cell_size;
-                break;
-            }
+        // Player spawns at row 4, platform is at row 5, columns 6-11
+        // Exclude spawning on the player's starting platform
+        bool onPlayerPlatform = (ty == 4 && tx >= 6 && tx <= 11);
+       
+        if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#' && !onPlayerPlatform)
+        {
+            ghost_x[i] = tx * cell_size;
+            ghost_y[i] = ty * cell_size;
+            break;
         }
+    }
 
         ghost_speed[i] = 1;
         ghost_dir[i] = (rand() % 2 == 0) ? -1 : 1; // left or right
@@ -684,24 +688,28 @@ if(ghost_dir[i] == 1)
     Texture skelTexture;
     skelTexture.loadFromFile("skeleton.png");
     
-    //spawning skeletons
-    srand(time(0)); // re-seed (fine but unnecessary)
+  //spawning skeletons
+srand(time(0));
 
-    for(int i = 0; i < skel; i++)
+for(int i = 0; i < skel; i++)
+{
+    // pick random platform tile (empty + ground below)
+    while(true)
     {
-        // pick random platform tile (empty + ground below)
-        while(true)
-        {
-            int tx = rand() % width;
-            int ty = rand() % (height - 1);
+        int tx = rand() % width;
+        int ty = rand() % (height - 1);
 
-            if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
-            {
-                skel_x[i] = tx * cell_size;
-                skel_y[i] = ty * cell_size;
-                break;
-            }
+        // Exclude spawning on the player's starting platform
+        bool onPlayerPlatform = (ty == 4 && tx >= 6 && tx <= 11);
+       
+        if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#' && !onPlayerPlatform)
+        {
+            skel_x[i] = tx * cell_size;
+            skel_y[i] = ty * cell_size;
+            break;
         }
+    }
+
 
         skel_speed[i] = 1;
         skel_dir[i] = (rand() % 2 == 0) ? -1 : 1;
@@ -901,15 +909,15 @@ if(ghost_dir[i] == 1)
             {
                 case 0: // Left
                     laserSprite.setScale(3, 2);
-                    laserSprite.setPosition(laser_x - 110, laser_y - 10);
+                    laserSprite.setPosition(laser_x - 190, laser_y - 20);
                     break;
                 case 1: // Up
                     laserSprite.setScale(2, 3);
                     laserSprite.setPosition(laser_x - 20, laser_y - 150);
                     break;
                 case 2: // Right
-                    laserSprite.setScale(3, 2);
-                    laserSprite.setPosition(laser_x + 50, laser_y - 10);
+                    laserSprite.setScale(-3, 2);
+                    laserSprite.setPosition(laser_x + 190, laser_y - 20);
                     break;
                 case 3: // Down
                     laserSprite.setScale(2, 3);
