@@ -354,6 +354,48 @@ int main()
 
     int PlayerHeight = 102;
     int PlayerWidth = 96;
+    
+    // ===== SCORING SYSTEM =====
+int score = 0;
+int combo = 0;  // Track consecutive kills without taking damage
+float comboMultiplier = 1.0f;
+bool levelComplete = false;
+bool tookDamage = false;  // Track if player took any damage in the level
+
+Font scoreFont;
+Text scoreText;
+Text comboText;
+
+Clock levelTimer;  // Timer for level completion speed
+
+// Load font
+if(!scoreFont.loadFromFile("Roboto-Regular.ttf"))
+{
+    // Font loading failed - handle error if needed
+    cout << "Error loading font!" << endl;
+}
+
+scoreText.setFont(scoreFont);
+scoreText.setCharacterSize(30);
+scoreText.setFillColor(Color::White);
+scoreText.setPosition(20, 10);
+
+comboText.setFont(scoreFont);
+comboText.setCharacterSize(25);
+comboText.setFillColor(Color::Yellow);
+comboText.setPosition(20, 50);
+
+
+levelTimer.restart();  // Start timing the level
+
+
+
+
+
+
+
+
+
 
  // ===== PLAYER LIVES SYSTEM =====
     int playerLives = 3;
@@ -725,6 +767,10 @@ for(int i = 0; i < skel; i++)
     Event ev;
     bool xKeyPressed=false;
     
+    // ===== TRACKING PREVIOUS FRAME DEFEATS =====
+int lastFrameGhostsSucked = 0;
+int lastFrameSkeletonsSucked = 0;
+    
      // ===== SUCKING CAPACITY =====
     int enemiesSucked = 0;           // Current count of sucked enemies
     const int maxCapacity = 3;       // Maximum enemies that can be sucked at once
@@ -854,6 +900,110 @@ for(int i = 0; i < skel; i++)
             );
         }
 
+if(xKeyPressed && vacuumActive && enemiesSucked < maxCapacity)
+     
+        {
+            // call vacuum handler to pull enemies (only if capacity not reached)
+            handle_vacuum_sucking(
+                player_x, player_y, PlayerWidth, PlayerHeight,
+                ghost_x, ghost_y, ghost_active, ghosts,
+                skel_x, skel_y, skel_active, skel,
+                cell_size, 4.0f, vacuumDirection
+            );
+        }
+
+      // ====== COUNT SUCKED ENEMIES AND UPDATE SCORE ======
+enemiesSucked = 0;
+int currentGhostsSucked = 0;
+int currentSkeletonsSucked = 0;
+
+// Count currently defeated enemies by type
+for(int i = 0; i < ghosts; i++)
+{
+    if(!ghost_active[i])
+    {
+        currentGhostsSucked++;
+        enemiesSucked++;
+    }
+}
+for(int i = 0; i < skel; i++)
+{
+    if(!skel_active[i])
+    {
+        currentSkeletonsSucked++;
+        enemiesSucked++;
+    }
+}
+
+// Calculate NEW defeats this frame (compare to last frame)
+int newGhosts = currentGhostsSucked - lastFrameGhostsSucked;
+int newSkeletons = currentSkeletonsSucked - lastFrameSkeletonsSucked;
+int newKills = newGhosts + newSkeletons;
+
+
+
+
+
+     if(newKills > 0)
+{
+    int basePoints = 0;
+   
+    // ===== BASE POINTS PER ENEMY TYPE =====
+    basePoints += newGhosts * 50;        // Ghosts: 50 points each
+    basePoints += newSkeletons * 75;     // Skeletons: 75 points each
+   
+    // ===== MULTI-KILL BONUSES (only for 2+ enemies killed at same time) =====
+    if(newKills == 2)
+    {
+        basePoints += 200;  // Multi-Kill bonus: exactly 2 enemies
+    }
+    else if(newKills >= 3)
+    {
+        basePoints += 500;  // Multi-Kill bonus: 3 or more enemies
+    }
+   
+    // ===== AERIAL DEFEAT BONUS (defeat enemies while in air) =====
+    if(!onGround)
+    {
+        basePoints += 150 * newKills;  // 150 bonus per enemy defeated mid-air
+    }
+   
+    // ===== COMBO STREAK SYSTEM (only builds on multi-kills) =====
+    // Combo only increases for multi-kills (2+ enemies at once)
+    if(newKills >= 2)
+    {
+        combo += newKills;
+    }
+    else
+    {
+        // Single kill doesn't build combo, but doesn't break it either
+        combo += 1;
+    }
+   
+    // Calculate combo multiplier based on streak
+    if(combo >= 8)
+    {
+        comboMultiplier = 3.0f;  // 8+ streak: 3x multiplier
+    }
+    else if(combo >= 5)
+    {
+        comboMultiplier = 2.0f;  // 5-7 streak: 2x multiplier
+    }
+    else if(combo >= 3)
+    {
+        comboMultiplier = 1.5f;  // 3-4 streak: 1.5x multiplier
+    }
+    else
+    {
+        comboMultiplier = 1.0f;  // 1-2 kills: No multiplier
+    }
+   
+    // Apply combo multiplier to final score
+    int finalPoints = (int)(basePoints * comboMultiplier);
+    score += finalPoints;     }
+// Update trackers for next frame
+lastFrameGhostsSucked = currentGhostsSucked;
+lastFrameSkeletonsSucked = currentSkeletonsSucked;
 
 
         // ============= DRAW PLAYER OR VACUUM =============
@@ -927,16 +1077,9 @@ for(int i = 0; i < skel; i++)
             window.draw(laserSprite);
         }
 
-// ====== COUNT SUCKED ENEMIES ======
-        enemiesSucked = 0;
-        for(int i = 0; i < ghosts; i++)
-        {
-            if(!ghost_active[i]) enemiesSucked++;
-        }
-        for(int i = 0; i < skel; i++)
-        {
-            if(!skel_active[i]) enemiesSucked++;
-        }
+
+
+
 
         // ====== GHOST MOVEMENT
        for(int i = 0; i < ghosts; i++)
@@ -1094,12 +1237,16 @@ if(!playerDead)
         if(ghost_active[i])
         {
             if(check_player_enemy_collision(player_x, player_y, PlayerWidth, PlayerHeight,
-                                           ghost_x[i], ghost_y[i], 64))
-            {
-                playerDead = true;
-                deathClock.restart();
-                break;
-            }
+                               ghost_x[i], ghost_y[i], 64))
+{
+    playerDead = true;
+    deathClock.restart();
+    score -= 50;  // PENALTY: Take Damage
+    if(score < 0) score = 0;
+    combo = 0;  // Reset combo on damage
+    comboMultiplier = 1.0f;
+    break;
+}
         }
     }
    
@@ -1110,13 +1257,17 @@ if(!playerDead)
         {
             if(skel_active[i])
             {
-                if(check_player_enemy_collision(player_x, player_y, PlayerWidth, PlayerHeight,
-                                               skel_x[i], skel_y[i], 64))
-                {
-                    playerDead = true;
-                    deathClock.restart();
-                    break;
-                }
+               if(check_player_enemy_collision(player_x, player_y, PlayerWidth, PlayerHeight,
+                               skel_x[i], skel_y[i], 64))
+{
+    playerDead = true;
+    deathClock.restart();
+    score -= 50;  // PENALTY: Take Damage
+    if(score < 0) score = 0;
+    combo = 0;  // Reset combo on damage
+    comboMultiplier = 1.0f;
+    break;
+}
             }
         }
     }
@@ -1144,6 +1295,7 @@ if(!playerDead)
             if(elapsedTime >= respawnDelay)
             {
                 playerLives--;
+                
                 if(playerLives > 0)
                 {
                     respawn_player(player_x, player_y, velocityY, playerDead);
@@ -1154,12 +1306,25 @@ if(!playerDead)
                 }
                 else
                 {
+                // PENALTY: Death (all 3 lives lost)
+    score -= 200;
+    if(score < 0) score = 0;
                     // Game Over - close window
                     window.close();
                 }
             }
         }
 
+// Update and draw score
+scoreText.setString("Score: " + to_string(score) + "  Lives: " + to_string(playerLives));
+window.draw(scoreText);
+
+// Draw combo if active
+if(combo > 0)
+{
+    comboText.setString("Combo: " + to_string(combo) + "x");
+    window.draw(comboText);
+}
   
         // Present everything drawn this frame
         window.display();
