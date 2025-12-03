@@ -410,9 +410,13 @@ levelTimer.restart();  // Start timing the level
     bool facingRight = false;
     // Animation variables
 const int animationFrames = 4;  
-Texture walkTextures[4];        
-int currentFrame = 0;   
-int frameCounter = 0;           
+const int bagFrames = 4;
+Texture walkTextures[4]; 
+Texture bagTextures[4];       
+int currentFrame = 0;  
+int currentBagFrame =0; 
+int frameCounter = 0;  
+int bagFrameCounter = 0;         
 const int frameDelay = 10;      // (lower = faster)
 bool isWalking = false;         
 
@@ -510,6 +514,11 @@ if(selectedIndex == 0)
     walkTextures[1].loadFromFile("player1walk2.png");
     walkTextures[2].loadFromFile("player1walk3.png");
     walkTextures[3].loadFromFile("player1walk4.png");
+    bagTextures[0].loadFromFile("bagpone1.png");
+    bagTextures[1].loadFromFile("bagpone2.png");
+    bagTextures[2].loadFromFile("bagpone3.png");
+     bagTextures[3].loadFromFile("bagpone4.png");
+    
 }
 else if(selectedIndex == 1)
 {
@@ -517,6 +526,10 @@ else if(selectedIndex == 1)
     walkTextures[1].loadFromFile("player2walk2.png");
     walkTextures[2].loadFromFile("player2walk3.png");
     walkTextures[3].loadFromFile("player2walk4.png");
+    bagTextures[0].loadFromFile("bagptwo1.png");
+    bagTextures[1].loadFromFile("bagptwo2.png");
+    bagTextures[2].loadFromFile("bagptwo3.png");
+     bagTextures[3].loadFromFile("bagptwo4.png");
 }
         bagTexture = bagOptions[selectedIndex];
         bagSprite.setTexture(bagTexture);
@@ -728,8 +741,21 @@ if(ghost_dir[i] == 1)
     Sprite skelSprite[4];
     bool skel_active[4];
     Texture skelTexture;
-    skelTexture.loadFromFile("skeleton.png");
+    const int skelAnimationFrames = 4;
+     Texture skelWalkTextures[4];
+     int skelCurrentFrame[8];      // cuuurrent frame for each skel
+int skelFrameCounter[8];      // Frame counter for each skel
+const int skelFrameDelay = 10; // aniimation speed 
+
     
+    
+    
+    skelWalkTextures[0].loadFromFile("skel1.png");
+skelWalkTextures[1].loadFromFile("skel2.png");
+skelWalkTextures[2].loadFromFile("skel3.png");
+skelWalkTextures[3].loadFromFile("skel4.png");
+
+
   //spawning skeletons
 srand(time(0));
 
@@ -758,8 +784,17 @@ for(int i = 0; i < skel; i++)
         skel_velocityY[i]=0;
         skel_onGround[i]=false;
         skel_active[i]=true;
-        skelSprite[i].setTexture(skelTexture);
-        skelSprite[i].setScale(2, 2);
+        skelSprite[i].setTexture(skelWalkTextures[0]);
+        skelSprite[i].setScale(2, 2);   // increase ghost size
+// Flip sprite if starting direction is right
+if(skel_dir[i] == 1)
+{
+    ghostSprite[i].setScale(-2, 2);
+}
+        skelSprite[i].setPosition(skel_x[i], skel_y[i]);
+        skelCurrentFrame[i] = 0;
+    skelFrameCounter[i] = 0;
+    
 
         skelSprite[i].setPosition(skel_x[i], skel_y[i]);
     }
@@ -1004,6 +1039,12 @@ int newKills = newGhosts + newSkeletons;
 // Update trackers for next frame
 lastFrameGhostsSucked = currentGhostsSucked;
 lastFrameSkeletonsSucked = currentSkeletonsSucked;
+int bagFrame = 0;
+      if (enemiesSucked >= 3) bagFrame = 2;
+      else if (enemiesSucked > 0) bagFrame = enemiesSucked;
+
+      bagSprite.setTexture(bagTextures[bagFrame]);
+
 
 
         // ============= DRAW PLAYER OR VACUUM =============
@@ -1150,83 +1191,74 @@ lastFrameSkeletonsSucked = currentSkeletonsSucked;
 }
 
 
-        // ====== SKELETON MOVEMENT WITH GRAVITY AND PLATFORM TELEPORT ======
-        for(int j = 0; j < skel; j++)
+
+
+        for(int i = 0; i < skel; i++)
+{
+    if(!skel_active[i]) continue; // skip inactive ghosts
+
+    // Find tile coordinates for ground checks
+    int bottomLeftX = skel_x[i] / cell_size;
+    int bottomRightX = (skel_x[i] + 64) / cell_size;
+    int bottomY = (skel_y[i] + 64) / cell_size;
+
+    // If ghost stands on a block, mark onGround true
+    if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
+    {
+        skel_onGround[i] = true;
+    }
+
+    // HORIZONTAL MOVEMENT - only if on ground
+    if(skel_onGround[i])
+    {
+        float nextX = skel_x[i] + skel_speed[i] * skel_dir[i];
+
+        // front tile X coordinate (depending on direction)
+        int frontTileX = (nextX + (skel_dir[i] == 1 ? 64 : 0)) / cell_size;
+        int midTileY = (skel_y[i] + 32) / cell_size;
+
+        // edge check: if no ground ahead then turn
+        int edgeCheckX = (nextX + (skel_dir[i] == 1 ? 64 : 0)) / cell_size;
+        int edgeCheckY = (skel_y[i] + 64 + 1) / cell_size;
+
+        // Turn around if there's a wall ahead OR no ground ahead (edge)
+        if(lvl[midTileY][frontTileX] == '#' || lvl[edgeCheckY][edgeCheckX] != '#')
         {
-            if(!skel_active[j]) continue;  // skip inactive skeletons
+            skel_dir[i] *= -1;
+        if(skel_dir[i] == 1) // Now moving right
+    {
+        skelSprite[i].setScale(-2, 2);
+        
+    }
+    
+    
+    else // Now moving left
+    {
+        skelSprite[i].setScale(2, 2);
+                
 
-            // GRAVITY - predict next vertical position
-            float nextY = skel_y[j] + skel_velocityY[j];
-
-            // Check ground collision (bottom of skeleton)
-            int bottomLeftX = skel_x[j] / cell_size;
-            int bottomRightX = (skel_x[j] + 64) / cell_size;
-            int bottomY = (nextY + 64) / cell_size;
-
-            if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
-            {
-                // landed on platform
-                skel_onGround[j] = true;
-                skel_velocityY[j] = 0;
-            }
-            else
-            {
-                // falling
-                skel_onGround[j] = false;
-                skel_y[j] = nextY;
-                skel_velocityY[j] += gravity;
-                if(skel_velocityY[j] > terminal_Velocity)
-                {
-                    skel_velocityY[j] = terminal_Velocity;
-                }
-            }
-
-            // HORIZONTAL MOVEMENT - only move left/right if on ground
-            if(skel_onGround[j])
-            {
-                // RANDOM TELEPORT TO PLATFORM - rare chance per frame
-                if(rand() % 200 == 0)
-                {
-                    // Find a random valid platform position (attempts limit prevents infinite loop)
-                    int attempts = 0;
-                    while(attempts < 50)
-                    {
-                        int tx = rand() % width;
-                        int ty = rand() % (height - 1);
-
-                        // Check if it's a valid platform (empty space with ground below)
-                        if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
-                        {
-                            skel_x[j] = tx * cell_size;
-                            skel_y[j] = ty * cell_size;
-                            skel_velocityY[j] = 0;
-                            skel_dir[j] = (rand() % 2 == 0) ? -1 : 1;
-                            break;
-                        }
-                        attempts++;
-                    }
-                }
-
-                float nextp = skel_x[j] + skel_speed[j] * skel_dir[j];
-
-                // Check the tile directly in front of the skeleton (left or right)
-                int frontskelX = (nextp + (skel_dir[j] == 1 ? 64 : 0)) / cell_size;
-                int midTileY = (skel_y[j] + 32) / cell_size;
-
-                // Turn around if there's a wall ahead
-                if(lvl[midTileY][frontskelX] == '#')
-                {
-                    skel_dir[j] *= -1;
-                }
-                else
-                {
-                    skel_x[j] = nextp;
-                }
-            }
-
-            skelSprite[j].setPosition(skel_x[j], skel_y[j]);
-            window.draw(skelSprite[j]);
+    }
+    }
+    else
+       
+        {
+            skel_x[i] = nextX;
         }
+        
+        // ANIMATE GHOST WHILE MOVING
+        skelFrameCounter[i]++;
+        if(skelFrameCounter[i] >= skelFrameDelay)
+        {
+            skelFrameCounter[i] = 0;
+            skelCurrentFrame[i] = (skelCurrentFrame[i] + 1) % skelAnimationFrames;
+            skelSprite[i].setTexture(skelWalkTextures[skelCurrentFrame[i]]);
+        }
+    }
+
+    // update sprite position and draw
+    skelSprite[i].setPosition(skel_x[i], skel_y[i]);
+    window.draw(skelSprite[i]);
+}
   
   // ====== CHECK PLAYER-ENEMY COLLISIONS ======
 if(!playerDead)
