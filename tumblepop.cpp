@@ -368,12 +368,26 @@ int main()
     Sprite bagSprite;
     bool facingRight = false;
     // Animation variables
+<<<<<<< HEAD
     const int animationFrames = 4;
     Texture walkTextures[4];
     int currentFrame = 0;
     int frameCounter = 0;
     const int frameDelay = 10; // (lower = faster)
     bool isWalking = false;
+=======
+const int animationFrames = 4;  
+const int bagFrames = 4;
+Texture walkTextures[4]; 
+Texture bagTextures[4];       
+int currentFrame = 0;  
+int currentBagFrame =0; 
+int frameCounter = 0;  
+int bagFrameCounter = 0;         
+const int frameDelay = 10;      // (lower = faster)
+bool isWalking = false;         
+
+>>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
     // Music objects and settings
     Music menuMusic;
     Music lvlMusic;
@@ -437,6 +451,7 @@ int main()
         PlayerSprite.setScale(3,3);
         PlayerSprite.setPosition(player_x, player_y);
         // Load walking animation frames based on selected player
+<<<<<<< HEAD
         if(selectedIndex == 0) {
             walkTextures[0].loadFromFile("player1walk1.png");
             walkTextures[1].loadFromFile("player1walk2.png");
@@ -449,6 +464,31 @@ int main()
             walkTextures[2].loadFromFile("player2walk3.png");
             walkTextures[3].loadFromFile("player2walk4.png");
         }
+=======
+if(selectedIndex == 0)
+{
+    walkTextures[0].loadFromFile("player1walk1.png");
+    walkTextures[1].loadFromFile("player1walk2.png");
+    walkTextures[2].loadFromFile("player1walk3.png");
+    walkTextures[3].loadFromFile("player1walk4.png");
+    bagTextures[0].loadFromFile("bagpone1.png");
+    bagTextures[1].loadFromFile("bagpone2.png");
+    bagTextures[2].loadFromFile("bagpone3.png");
+     bagTextures[3].loadFromFile("bagpone4.png");
+    
+}
+else if(selectedIndex == 1)
+{
+    walkTextures[0].loadFromFile("player2walk1.png");
+    walkTextures[1].loadFromFile("player2walk2.png");
+    walkTextures[2].loadFromFile("player2walk3.png");
+    walkTextures[3].loadFromFile("player2walk4.png");
+    bagTextures[0].loadFromFile("bagptwo1.png");
+    bagTextures[1].loadFromFile("bagptwo2.png");
+    bagTextures[2].loadFromFile("bagptwo3.png");
+     bagTextures[3].loadFromFile("bagptwo4.png");
+}
+>>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
         bagTexture = bagOptions[selectedIndex];
         bagSprite.setTexture(bagTexture);
         bagSprite.setScale(2, 2);
@@ -597,6 +637,7 @@ int main()
     Sprite skelSprite[4];
     bool skel_active[4];
     Texture skelTexture;
+<<<<<<< HEAD
     skelTexture.loadFromFile("skeleton.png");
     //spawning skeletons
     srand(time(0));
@@ -612,14 +653,65 @@ int main()
                 skel_y[i] = ty * cell_size;
                 break;
             }
+=======
+    const int skelAnimationFrames = 4;
+     Texture skelWalkTextures[4];
+     int skelCurrentFrame[8];      // cuuurrent frame for each skel
+int skelFrameCounter[8];      // Frame counter for each skel
+const int skelFrameDelay = 10; // aniimation speed 
+
+    
+    
+    
+    skelWalkTextures[0].loadFromFile("skel1.png");
+skelWalkTextures[1].loadFromFile("skel2.png");
+skelWalkTextures[2].loadFromFile("skel3.png");
+skelWalkTextures[3].loadFromFile("skel4.png");
+
+
+  //spawning skeletons
+srand(time(0));
+
+for(int i = 0; i < skel; i++)
+{
+    // pick random platform tile (empty + ground below)
+    while(true)
+    {
+        int tx = rand() % width;
+        int ty = rand() % (height - 1);
+
+        // Exclude spawning on the player's starting platform
+        bool onPlayerPlatform = (ty == 4 && tx >= 6 && tx <= 11);
+       
+        if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#' && !onPlayerPlatform)
+        {
+            skel_x[i] = tx * cell_size;
+            skel_y[i] = ty * cell_size;
+            break;
+>>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
         }
         skel_speed[i] = 1;
         skel_dir[i] = (rand() % 2 == 0) ? -1 : 1;
         skel_velocityY[i]=0;
         skel_onGround[i]=false;
         skel_active[i]=true;
+<<<<<<< HEAD
         skelSprite[i].setTexture(skelTexture);
         skelSprite[i].setScale(2, 2);
+=======
+        skelSprite[i].setTexture(skelWalkTextures[0]);
+        skelSprite[i].setScale(2, 2);   // increase ghost size
+// Flip sprite if starting direction is right
+if(skel_dir[i] == 1)
+{
+    ghostSprite[i].setScale(-2, 2);
+}
+        skelSprite[i].setPosition(skel_x[i], skel_y[i]);
+        skelCurrentFrame[i] = 0;
+    skelFrameCounter[i] = 0;
+    
+
+>>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
         skelSprite[i].setPosition(skel_x[i], skel_y[i]);
     }
     const int MAX_PROJECTILES = 20;
@@ -932,6 +1024,7 @@ for(int i = 0; i < skel; i++)
 int newGhosts = totalGhostsDefeated - lastFrameGhostsSucked;
 int newSkeletons = totalSkeletonsDefeated - lastFrameSkeletonsSucked;
 int newKills = newGhosts + newSkeletons;
+<<<<<<< HEAD
         if(newKills > 0) {
             int basePoints = 0;
             // ===== BASE POINTS PER ENEMY TYPE =====
@@ -1036,6 +1129,81 @@ lastFrameSkeletonsSucked = totalSkeletonsDefeated;
                 }
             }
         }
+=======
+
+
+
+
+
+     if(newKills > 0)
+{
+    int basePoints = 0;
+   
+    // ===== BASE POINTS PER ENEMY TYPE =====
+    basePoints += newGhosts * 50;        // Ghosts: 50 points each
+    basePoints += newSkeletons * 75;     // Skeletons: 75 points each
+   
+    // ===== MULTI-KILL BONUSES (only for 2+ enemies killed at same time) =====
+    if(newKills == 2)
+    {
+        basePoints += 200;  // Multi-Kill bonus: exactly 2 enemies
+    }
+    else if(newKills >= 3)
+    {
+        basePoints += 500;  // Multi-Kill bonus: 3 or more enemies
+    }
+   
+    // ===== AERIAL DEFEAT BONUS (defeat enemies while in air) =====
+    if(!onGround)
+    {
+        basePoints += 150 * newKills;  // 150 bonus per enemy defeated mid-air
+    }
+   
+    // ===== COMBO STREAK SYSTEM (only builds on multi-kills) =====
+    // Combo only increases for multi-kills (2+ enemies at once)
+    if(newKills >= 2)
+    {
+        combo += newKills;
+    }
+    else
+    {
+        // Single kill doesn't build combo, but doesn't break it either
+        combo += 1;
+    }
+   
+    // Calculate combo multiplier based on streak
+    if(combo >= 8)
+    {
+        comboMultiplier = 3.0f;  // 8+ streak: 3x multiplier
+    }
+    else if(combo >= 5)
+    {
+        comboMultiplier = 2.0f;  // 5-7 streak: 2x multiplier
+    }
+    else if(combo >= 3)
+    {
+        comboMultiplier = 1.5f;  // 3-4 streak: 1.5x multiplier
+    }
+    else
+    {
+        comboMultiplier = 1.0f;  // 1-2 kills: No multiplier
+    }
+   
+    // Apply combo multiplier to final score
+    int finalPoints = (int)(basePoints * comboMultiplier);
+    score += finalPoints;     }
+// Update trackers for next frame
+lastFrameGhostsSucked = currentGhostsSucked;
+lastFrameSkeletonsSucked = currentSkeletonsSucked;
+int bagFrame = 0;
+      if (enemiesSucked >= 3) bagFrame = 2;
+      else if (enemiesSucked > 0) bagFrame = enemiesSucked;
+
+      bagSprite.setTexture(bagTextures[bagFrame]);
+
+
+
+>>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
         // ============= DRAW PLAYER OR VACUUM =============
         if(!playerDead) {
             if(vacuumActive) {
@@ -1135,6 +1303,7 @@ lastFrameSkeletonsSucked = totalSkeletonsDefeated;
             ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
             window.draw(ghostSprite[i]);
         }
+<<<<<<< HEAD
         // ====== SKELETON MOVEMENT WITH GRAVITY AND PLATFORM TELEPORT ======
         for(int j = 0; j < skel; j++) {
             if(!skel_active[j]) continue; // skip inactive skeletons
@@ -1188,6 +1357,95 @@ lastFrameSkeletonsSucked = totalSkeletonsDefeated;
             window.draw(skelSprite[j]);
         }
         // ====== CHECK PLAYER-ENEMY COLLISIONS ======
+=======
+        
+        // ANIMATE GHOST WHILE MOVING
+        ghostFrameCounter[i]++;
+        if(ghostFrameCounter[i] >= ghostFrameDelay)
+        {
+            ghostFrameCounter[i] = 0;
+            ghostCurrentFrame[i] = (ghostCurrentFrame[i] + 1) % ghostAnimationFrames;
+            ghostSprite[i].setTexture(ghostWalkTextures[ghostCurrentFrame[i]]);
+        }
+    }
+
+    // update sprite position and draw
+    ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
+    window.draw(ghostSprite[i]);
+}
+
+
+
+
+        for(int i = 0; i < skel; i++)
+{
+    if(!skel_active[i]) continue; // skip inactive ghosts
+
+    // Find tile coordinates for ground checks
+    int bottomLeftX = skel_x[i] / cell_size;
+    int bottomRightX = (skel_x[i] + 64) / cell_size;
+    int bottomY = (skel_y[i] + 64) / cell_size;
+
+    // If ghost stands on a block, mark onGround true
+    if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
+    {
+        skel_onGround[i] = true;
+    }
+
+    // HORIZONTAL MOVEMENT - only if on ground
+    if(skel_onGround[i])
+    {
+        float nextX = skel_x[i] + skel_speed[i] * skel_dir[i];
+
+        // front tile X coordinate (depending on direction)
+        int frontTileX = (nextX + (skel_dir[i] == 1 ? 64 : 0)) / cell_size;
+        int midTileY = (skel_y[i] + 32) / cell_size;
+
+        // edge check: if no ground ahead then turn
+        int edgeCheckX = (nextX + (skel_dir[i] == 1 ? 64 : 0)) / cell_size;
+        int edgeCheckY = (skel_y[i] + 64 + 1) / cell_size;
+
+        // Turn around if there's a wall ahead OR no ground ahead (edge)
+        if(lvl[midTileY][frontTileX] == '#' || lvl[edgeCheckY][edgeCheckX] != '#')
+        {
+            skel_dir[i] *= -1;
+        if(skel_dir[i] == 1) // Now moving right
+    {
+        skelSprite[i].setScale(-2, 2);
+        
+    }
+    
+    
+    else // Now moving left
+    {
+        skelSprite[i].setScale(2, 2);
+                
+
+    }
+    }
+    else
+       
+        {
+            skel_x[i] = nextX;
+        }
+        
+        // ANIMATE GHOST WHILE MOVING
+        skelFrameCounter[i]++;
+        if(skelFrameCounter[i] >= skelFrameDelay)
+        {
+            skelFrameCounter[i] = 0;
+            skelCurrentFrame[i] = (skelCurrentFrame[i] + 1) % skelAnimationFrames;
+            skelSprite[i].setTexture(skelWalkTextures[skelCurrentFrame[i]]);
+        }
+    }
+
+    // update sprite position and draw
+    skelSprite[i].setPosition(skel_x[i], skel_y[i]);
+    window.draw(skelSprite[i]);
+}
+  
+  // ====== CHECK PLAYER-ENEMY COLLISIONS ======
+>>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
 if(!playerDead)
 {
     // Check ghost collisions
