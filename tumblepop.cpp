@@ -17,21 +17,32 @@ bool levelComplete = false;
 Clock levelCompleteClock;
 const float levelCompleteDelay = 3.0f;
 
-// ============================================================================
-// FORWARD DECLARATIONS (Function Prototypes)
-// ============================================================================
-
-// Level Management
+// Functions to check level of the game
+// Check if level 1 is completed 
 bool check_level_complete(bool ghost_active[], int total_ghosts, bool skel_active[], int total_skels);
+
+// If level 1 is compleeted then move to level 2
 void change_to_level2(char** lvl, int height, int width);
+
+// If level 1 is complete then display level  screen
 void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size);
 
-// Player Physics & Collision
+// Player gravity function is when player is not standing on a platform it should fall down
 void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth);
+
+// Check player collision with left blocks
 void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed);
+
+// Check player collision with right blocks
 void player_right_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed);
+
+// Check player collision with top blocks
 void player_ceiling_collision(char** lvl, float& offset_y, float& velocityY, float& player_x, float& player_y, const int cell_size, int& Pwidth);
+
+// Next check collison between player and enemy
 bool check_player_enemy_collision(float player_x, float player_y, int PlayerWidth, int PlayerHeight, float enemy_x, float enemy_y, int enemy_size);
+
+// When player is killed it should respawn as it does in the begining of the game
 void respawn_player(float& player_x, float& player_y, float& velocityY, bool& playerDead);
 
 // Vacuum and Shooting
@@ -41,9 +52,6 @@ void shoot_burst_mode(float player_x, float player_y, int vacuum_dir, int captur
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], bool shot_is_active[], int shot_count, char** lvl, int cell_size, int height);
 bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count, float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts, float skel_x[], float skel_y[], bool skel_active[], int total_skels, int& hit_projectile, int& hit_enemy_index, bool& hit_was_ghost);
 
-// ============================================================================
-// FUNCTION DEFINITIONS (Level Management)
-// ============================================================================
 
 // Check if all enemies are defeated
 bool check_level_complete(bool ghost_active[], int total_ghosts,
@@ -1716,4 +1724,5 @@ if(levelComplete && currentLevel == 1)
 
     return 0;
 }
+
 
