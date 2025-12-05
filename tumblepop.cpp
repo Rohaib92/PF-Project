@@ -54,26 +54,33 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot
 
 
 // Check if all enemies are defeated
+// here ghost_active[] and skel_active[] means alivee
 bool check_level_complete(bool ghost_active[], int total_ghosts,
                          bool skel_active[], int total_skels)
 {
+    // loop through all ghosts if any ghost is alive then level 1 is not ovr yet
     for(int i = 0; i < total_ghosts; i++)
     {
-        if(ghost_active[i]) return false;
+        if(ghost_active[i]) 
+        {
+          return false;
+        }
     }
-   
+   // same for skeletons
     for(int i = 0; i < total_skels; i++)
     {
         if(skel_active[i]) return false;
     }
    
-    return true; // All enemies defeated!
+    return true; 
 }
 
-// Change level layout to Level 2
+// Next move to level 2
+// char** lvl represents 2D aray of map
+// int height, int width are screen height and width
 void change_to_level2(char** lvl, int height, int width)
 {
-    // Clear everything first
+    // Clear everything on screen
     for(int i = 0; i < height; i++)
     {
         for(int j = 0; j < width; j++)
@@ -82,8 +89,8 @@ void change_to_level2(char** lvl, int height, int width)
         }
     }
    
-    // LEVEL 2 - Simple layout with few blocks
-   
+    
+   // make some blocks on level 2
     // Bottom floor
     for(int j = 0; j < width; ++j)
         lvl[13][j] = '#';
@@ -110,17 +117,20 @@ void change_to_level2(char** lvl, int height, int width)
     lvl[4][13] = '#'; lvl[4][14] = '#'; lvl[4][15] = '#';
 }
 
+// Next display level 2 window
+// window this displays SFML window
+// height and width are screen dmensions and cell_size is size of screen in pixels
 void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size)
 {
     window.draw(bgSprite);
 
-    for (int i = 0; i < height; i += 1)
+    for (int i = 0; i < height; i++)
     {
-        for (int j = 0; j < width; j += 1)
+        for (int j = 0; j < width; j++)
         {
             if (lvl[i][j] == '#')
             {
-                // position block sprite at tile coordinates
+                // Draw block sprite by conerting grids int pixels
                 blockSprite.setPosition(j * cell_size, i * cell_size);
                 window.draw(blockSprite);
             }
