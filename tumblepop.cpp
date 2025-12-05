@@ -17,6 +17,33 @@ bool levelComplete = false;
 Clock levelCompleteClock;
 const float levelCompleteDelay = 3.0f;
 
+// ============================================================================
+// FORWARD DECLARATIONS (Function Prototypes)
+// ============================================================================
+
+// Level Management
+bool check_level_complete(bool ghost_active[], int total_ghosts, bool skel_active[], int total_skels);
+void change_to_level2(char** lvl, int height, int width);
+void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size);
+
+// Player Physics & Collision
+void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth);
+void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed);
+void player_right_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed);
+void player_ceiling_collision(char** lvl, float& offset_y, float& velocityY, float& player_x, float& player_y, const int cell_size, int& Pwidth);
+bool check_player_enemy_collision(float player_x, float player_y, int PlayerWidth, int PlayerHeight, float enemy_x, float enemy_y, int enemy_size);
+void respawn_player(float& player_x, float& player_y, float& velocityY, bool& playerDead);
+
+// Vacuum and Shooting
+void update_vacuum(float player_x, float player_y, int vacuumDirection, float vacuum_range, float suck_strength, float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts, float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel, const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
+void shoot_single_enemy(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
+void shoot_burst_mode(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
+void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], bool shot_is_active[], int shot_count, char** lvl, int cell_size, int height);
+bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count, float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts, float skel_x[], float skel_y[], bool skel_active[], int total_skels, int& hit_projectile, int& hit_enemy_index, bool& hit_was_ghost);
+
+// ============================================================================
+// FUNCTION DEFINITIONS (Level Management)
+// ============================================================================
 
 // Check if all enemies are defeated
 bool check_level_complete(bool ghost_active[], int total_ghosts,
@@ -75,7 +102,151 @@ void change_to_level2(char** lvl, int height, int width)
     lvl[4][13] = '#'; lvl[4][14] = '#'; lvl[4][15] = '#';
 }
 
-// ===== END OF ADDITION =====
+void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size)
+{
+    window.draw(bgSprite);
+
+    for (int i = 0; i < height; i += 1)
+    {
+        for (int j = 0; j < width; j += 1)
+        {
+            if (lvl[i][j] == '#')
+            {
+                // position block sprite at tile coordinates
+                blockSprite.setPosition(j * cell_size, i * cell_size);
+                window.draw(blockSprite);
+            }
+        }
+    }
+}
+
+// ============================================================================
+// FUNCTION DEFINITIONS (Player Physics & Collision)
+// ============================================================================
+
+void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth)
+{
+    offset_y = player_y;
+    offset_y += velocityY; // predict new Y
+
+    // Check three points below the player (left, center, right) for collision with blocks
+    char bottom_left_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x ) / cell_size];
+    char bottom_right_down = lvl[(int)(offset_y  + Pheight) / cell_size][(int)(player_x + Pwidth) / cell_size];
+    char bottom_mid_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x + Pwidth / 2) / cell_size];
+
+    if (bottom_left_down == '#' || bottom_mid_down == '#' || bottom_right_down == '#')
+    {
+        onGround = true;
+    }
+    else
+    {
+        // no ground -> apply new vertical offset
+        player_y = offset_y;
+        onGround = false;
+    }
+
+    if (!onGround)
+    {
+        velocityY += gravity; // accelerate downward
+        if (velocityY >= terminal_Velocity)
+        {
+            velocityY = terminal_Velocity; // limit fall speed
+        }
+    }
+    else
+    {
+        velocityY = 0; // on ground -> stop vertical velocity
+    }
+}
+
+// LEFT COLLISION
+// Attempt to move left; if a block exists on left-edge points, do not move
+void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
+{
+    offset_x = player_x;     // start from current
+    offset_x -= speed;       // next predicted x after moving left
+
+    // Check three points on the left side of the player (top, middle, bottom)
+    char left_top = lvl[(int)(player_y) / cell_size][(int)(offset_x) / cell_size];
+    char left_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x) / cell_size];
+    char left_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x) / cell_size];
+
+    if (left_top == '#' || left_mid == '#' || left_bottom == '#')
+    {
+        offset_x = player_x ; // collision -> don't move
+    }
+    else
+    {
+        // safe -> commit movement
+        player_x = offset_x;
+    }
+}
+
+// RIGHT COLLISION - same as left but to the right
+void player_right_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
+{
+    offset_x = player_x;
+    offset_x += speed;
+
+    // Check three points on the right side of the player (top, middle, bottom)
+    char right_top = lvl[(int)(player_y) / cell_size][(int)(offset_x + Pwidth) / cell_size];
+    char right_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x + Pwidth) / cell_size];
+    char right_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x + Pwidth) / cell_size];
+
+    if (right_top == '#' || right_mid == '#' || right_bottom == '#')
+    {
+        offset_x = player_x ; // don't move into block
+    }
+    else
+    {
+        player_x = offset_x; // commit movement
+    }
+}
+
+// CEILING COLLISION - prevents moving up into blocks
+void player_ceiling_collision(char** lvl, float& offset_y, float& velocityY, float& player_x, float& player_y, const int cell_size, int& Pwidth)
+{
+    offset_y = player_y;
+    offset_y += velocityY; // predicted top position (velocityY negative when jumping)
+
+    // Check three points on the top of the player (left, middle, right)
+    char top_left = lvl[(int)(offset_y) / cell_size][(int)(player_x) / cell_size];
+    char top_mid = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth/2) / cell_size];
+    char top_right = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth) / cell_size];
+
+    if (top_left == '#' || top_mid == '#' || top_right == '#')
+    {
+        velocityY = 0; // hit ceiling -> stop upward speed (start falling afterwards)
+    }
+    else
+    {
+        player_y = offset_y; // safe -> commit new Y
+    }
+}
+
+// NEW FUNCTION: Check collision between player and enemies
+bool check_player_enemy_collision(
+    float player_x, float player_y, int PlayerWidth, int PlayerHeight,
+    float enemy_x, float enemy_y, int enemy_size)
+{
+    return (player_x < enemy_x + enemy_size &&
+            player_x + PlayerWidth > enemy_x &&
+            player_y < enemy_y + enemy_size &&
+            player_y + PlayerHeight > enemy_y);
+}
+
+// NEW FUNCTION: Respawn player from top
+void respawn_player(float& player_x, float& player_y, float& velocityY, bool& playerDead)
+{
+    player_x = 500;
+    player_y = 150;
+    velocityY = 0;
+    playerDead = false;
+}
+
+// ============================================================================
+// FUNCTION DEFINITIONS (Vacuum and Shooting)
+// ============================================================================
 
 //This function is used for sucking ghost and skeletons
 //player_x/player_y represents position of player top orleft
@@ -214,9 +385,6 @@ void update_vacuum(
     }
 }
 
-
-
-
 void shoot_single_enemy(float player_x, float player_y, int vacuum_dir,
                        int captured[], int& cap_count,
                        float shot_enemy_x[], float shot_enemy_y[],
@@ -283,10 +451,6 @@ void shoot_burst_mode(float player_x, float player_y, int vacuum_dir,
                           shot_enemy_type, shot_is_active, shot_count);
     }
 }
-
-
-
-
 
 // Update all projectile positions and physics
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
@@ -414,146 +578,9 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
     return false;
 }
 
-// NEW FUNCTION: Check collision between player and enemies
-bool check_player_enemy_collision(
-    float player_x, float player_y, int PlayerWidth, int PlayerHeight,
-    float enemy_x, float enemy_y, int enemy_size)
-{
-    return (player_x < enemy_x + enemy_size &&
-            player_x + PlayerWidth > enemy_x &&
-            player_y < enemy_y + enemy_size &&
-            player_y + PlayerHeight > enemy_y);
-}
-
-// NEW FUNCTION: Respawn player from top
-void respawn_player(float& player_x, float& player_y, float& velocityY, bool& playerDead)
-{
-    player_x = 500;
-    player_y = 150;
-    velocityY = 0;
-    playerDead = false;
-}
-
-
-// Draws the level: background (already drawn externally) and blocks where lvl[][] == '#'
-void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size)
-{
-    window.draw(bgSprite);
-
-    for (int i = 0; i < height; i += 1)
-    {
-        for (int j = 0; j < width; j += 1)
-        {
-            if (lvl[i][j] == '#')
-            {
-                // position block sprite at tile coordinates
-                blockSprite.setPosition(j * cell_size, i * cell_size);
-                window.draw(blockSprite);
-            }
-        }
-    }
-}
-
-// Applies gravity to player, checks if player is on ground, updates velocity/position
-void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth)
-{
-    offset_y = player_y;
-    offset_y += velocityY; // predict new Y
-
-    // Check three points below the player (left, center, right) for collision with blocks
-    char bottom_left_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x ) / cell_size];
-    char bottom_right_down = lvl[(int)(offset_y  + Pheight) / cell_size][(int)(player_x + Pwidth) / cell_size];
-    char bottom_mid_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x + Pwidth / 2) / cell_size];
-
-    if (bottom_left_down == '#' || bottom_mid_down == '#' || bottom_right_down == '#')
-    {
-        onGround = true;
-    }
-    else
-    {
-        // no ground -> apply new vertical offset
-        player_y = offset_y;
-        onGround = false;
-    }
-
-    if (!onGround)
-    {
-        velocityY += gravity; // accelerate downward
-        if (velocityY >= terminal_Velocity)
-        {
-            velocityY = terminal_Velocity; // limit fall speed
-        }
-    }
-    else
-    {
-        velocityY = 0; // on ground -> stop vertical velocity
-    }
-}
-
-// LEFT COLLISION
-// Attempt to move left; if a block exists on left-edge points, do not move
-void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
-{
-    offset_x = player_x;     // start from current
-    offset_x -= speed;       // next predicted x after moving left
-
-    // Check three points on the left side of the player (top, middle, bottom)
-    char left_top = lvl[(int)(player_y) / cell_size][(int)(offset_x) / cell_size];
-    char left_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x) / cell_size];
-    char left_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x) / cell_size];
-
-    if (left_top == '#' || left_mid == '#' || left_bottom == '#')
-    {
-        offset_x = player_x ; // collision -> don't move
-    }
-    else
-    {
-        // safe -> commit movement
-        player_x = offset_x;
-    }
-}
-
-// RIGHT COLLISION - same as left but to the right
-void player_right_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
-{
-    offset_x = player_x;
-    offset_x += speed;
-
-    // Check three points on the right side of the player (top, middle, bottom)
-    char right_top = lvl[(int)(player_y) / cell_size][(int)(offset_x + Pwidth) / cell_size];
-    char right_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x + Pwidth) / cell_size];
-    char right_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x + Pwidth) / cell_size];
-
-    if (right_top == '#' || right_mid == '#' || right_bottom == '#')
-    {
-        offset_x = player_x ; // don't move into block
-    }
-    else
-    {
-        player_x = offset_x; // commit movement
-    }
-}
-
-// CEILING COLLISION - prevents moving up into blocks
-void player_ceiling_collision(char** lvl, float& offset_y, float& velocityY, float& player_x, float& player_y, const int cell_size, int& Pwidth)
-{
-    offset_y = player_y;
-    offset_y += velocityY; // predicted top position (velocityY negative when jumping)
-
-    // Check three points on the top of the player (left, middle, right)
-    char top_left = lvl[(int)(offset_y) / cell_size][(int)(player_x) / cell_size];
-    char top_mid = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth/2) / cell_size];
-    char top_right = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth) / cell_size];
-
-    if (top_left == '#' || top_mid == '#' || top_right == '#')
-    {
-        velocityY = 0; // hit ceiling -> stop upward speed (start falling afterwards)
-    }
-    else
-    {
-        player_y = offset_y; // safe -> commit new Y
-    }
-}
+// ============================================================================
+// MAIN GAME LOOP
+// ============================================================================
 
 int main()
 {
@@ -605,7 +632,6 @@ int main()
 int score = 0;
 int combo = 0;  // Track consecutive kills without taking damage
 float comboMultiplier = 1.0f;
-bool levelComplete = false;
 bool tookDamage = false;  // Track if player took any damage in the level
 
 Font scoreFont;
@@ -633,15 +659,6 @@ comboText.setPosition(20, 50);
 
 
 levelTimer.restart();  // Start timing the level
-
-
-
-
-
-
-
-
-
 
  // ===== PLAYER LIVES SYSTEM =====
     int playerLives = 3;
@@ -973,7 +990,7 @@ if(ghost_dir[i] == 1)
     bool skel_onGround[4];
     Sprite skelSprite[4];
     bool skel_active[4];
-  
+ 
    
     Texture skelTexture;
     skelTexture.loadFromFile("skeleton.png");
@@ -1033,7 +1050,7 @@ for(int i = 0; i < skel; i++)
 
     Event ev;
     bool xKeyPressed=false;
-    
+   
     // Released enemies (projectiles) - for shooting captured enemies
     float shot_enemy_x[20];
     float shot_enemy_y[20];
@@ -1168,7 +1185,7 @@ for(int i = 0; i < skel; i++)
             vacuumActive = false; // No vacuum key pressed
         }
 } //end of player controls if alive
-        
+       
         // ============= VACUUM SUCKING WITH Space KEY =============
         xKeyPressed = Keyboard::isKeyPressed(Keyboard::Key::Space);
 
@@ -1183,7 +1200,7 @@ for(int i = 0; i < skel; i++)
         }
 
 
-        
+       
 // ============= SHOOTING CONTROLS - E AND Q KEYS =============
         bool E_key_pressed = Keyboard::isKeyPressed(Keyboard::E);
         bool Q_key_pressed = Keyboard::isKeyPressed(Keyboard::Q);
@@ -1266,7 +1283,7 @@ for(int i = 0; i < skel; i++)
         update_projectiles(shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
                           shot_is_active, shot_projectile_count, lvl, cell_size, height);
 
-        
+       
         // ============= DRAW PLAYER OR VACUUM =============
     if(!playerDead)
     {
@@ -1699,7 +1716,4 @@ if(levelComplete && currentLevel == 1)
 
     return 0;
 }
-
-
-
 
