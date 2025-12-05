@@ -12,6 +12,71 @@ using namespace std;
 int screen_x = 1136;
 int screen_y = 896;
 
+int currentLevel = 1;
+bool levelComplete = false;
+Clock levelCompleteClock;
+const float levelCompleteDelay = 3.0f;
+
+
+// Check if all enemies are defeated
+bool check_level_complete(bool ghost_active[], int total_ghosts,
+                         bool skel_active[], int total_skels)
+{
+    for(int i = 0; i < total_ghosts; i++)
+    {
+        if(ghost_active[i]) return false;
+    }
+   
+    for(int i = 0; i < total_skels; i++)
+    {
+        if(skel_active[i]) return false;
+    }
+   
+    return true; // All enemies defeated!
+}
+
+// Change level layout to Level 2
+void change_to_level2(char** lvl, int height, int width)
+{
+    // Clear everything first
+    for(int i = 0; i < height; i++)
+    {
+        for(int j = 0; j < width; j++)
+        {
+            lvl[i][j] = ' ';
+        }
+    }
+   
+    // LEVEL 2 - Simple layout with few blocks
+   
+    // Bottom floor
+    for(int j = 0; j < width; ++j)
+        lvl[13][j] = '#';
+   
+    // Left wall
+    for(int i = 0; i < height; ++i)
+        lvl[i][0] = '#';
+   
+    // Right wall
+    for(int i = 0; i < height; ++i)
+        lvl[i][17] = '#';
+   
+    // Top ceiling
+    for(int j = 0; j < width; ++j)
+        lvl[0][j] = '#';
+   
+    // Few platforms
+    lvl[10][5] = '#'; lvl[10][6] = '#'; lvl[10][7] = '#';
+    lvl[10][11] = '#'; lvl[10][12] = '#'; lvl[10][13] = '#';
+   
+    lvl[7][8] = '#'; lvl[7][9] = '#'; lvl[7][10] = '#';
+   
+    lvl[4][3] = '#'; lvl[4][4] = '#'; lvl[4][5] = '#';
+    lvl[4][13] = '#'; lvl[4][14] = '#'; lvl[4][15] = '#';
+}
+
+// ===== END OF ADDITION =====
+
 //This function is used for sucking ghost and skeletons
 //player_x/player_y represents position of player top orleft
 //PlayerWidth/PlayerHeight shows player's sprite size
@@ -20,152 +85,333 @@ int screen_y = 896;
 //cell_size indicates tile size to compute centers
 //suck_strength shows how fast the enemies are pulled
 //vacuumDirection indiactes 0=left,1=up,2=right,3=down
-void handle_vacuum_sucking(
-    float& player_x, float& player_y, int& PlayerWidth, int& PlayerHeight,
-    float ghost_x[], float ghost_y[], bool ghost_active[], int ghosts,
-    float skel_x[], float skel_y[], bool skel_active[], int skel,
-    const int cell_size, const float suck_strength, int vacuumDirection)
+void update_vacuum(
+    float player_x, float player_y, int vacuumDirection,
+    float vacuum_range, float suck_strength,
+    float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts,
+    float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel,
+    const int cell_size, bool vacuum_on,
+    int captured[], int &cap_count, int max_capacity, int &score)
 {
-    //this shows the maximum distance from which the enemy can be sucked
-    const float vacuum_range = 200.0f;    
-    //this tells the distance that from where the enemy should disappear after coming how much close to player    
-    const float capture_distance_sq = 10000.0f;
+    if (!vacuum_on)
+    {
+        return;
+    }
 
-    //this tells the player center
-    float player_center_x = player_x + PlayerWidth / 2.0f;
-    float player_center_y = player_y + PlayerHeight / 2.0f;
+    float player_center_x = player_x + 96 / 2.0f;
+    float player_center_y = player_y + 102 / 2.0f;
 
     // Vacuum direction as unit vector
     float dir_x = 0, dir_y = 0;
     switch (vacuumDirection)
     {
-        case 0://tells that the vacuum is facing left and looks for enemies on the left
-        {
-          dir_x = -1;
-          dir_y = 0;
-          break;
-         }
-           
-        case 1:// tells that the vacuum is faciing up and looks for enemies on up position
-        {
-          dir_x = 0;
-          dir_y = -1;
-          break;
-         }  
-         
-        case 2://tell that the vacuum is facing rightwards and same lokks for enemies on right
-        {
-         dir_x = 1;
-         dir_y = 0;
-         break;
-         }  
-        case 3://check for enemies in downward direction
-        {
-         dir_x = 0;
-         dir_y = 1;
-         break;
-         }  
+        case 0: dir_x = -1; dir_y = 0; break; // Left
+        case 1: dir_x = 0; dir_y = -1; break; // Up
+        case 2: dir_x = 1; dir_y = 0; break;  // Right
+        case 3: dir_x = 0; dir_y = 1; break;  // Down
     }
 
-    //Ghost sucking mechnism
+    // CRITICAL: Capture distance (when enemy is close enough to be captured)
+    const float capture_distance = 50.0f;
+
+    // Process ghosts
     for (int i = 0; i < ghosts; i++)
-    {    
-       //this check if ghost is currently active or alive in the game if not it continues and check the next ghost
-        if (!ghost_active[i])
-         {
-           continue;
-         }
-        //next we compute ghost sprite center because vacuum pulss ghost towards center
+    {
+        if (!ghost_active[i]) continue;
+
         float ghost_center_x = ghost_x[i] + cell_size / 2.0f;
         float ghost_center_y = ghost_y[i] + cell_size / 2.0f;
 
-        //this shoss the distance between ghost and player on x-axis
         float dx = ghost_center_x - player_center_x;
-        //this shows the distance between ghost and payer on y-axis
         float dy = ghost_center_y - player_center_y;
-
-        //using pythagorous theorum to find the distance where dx=horizontal distance and dy=vertical distance
         float distance_sq = dx * dx + dy * dy;
 
-        //this shows if ghost range is far then the vacuum range then its ignored and if ghost are on top of player they are also ignored
         if (distance_sq < vacuum_range * vacuum_range && distance_sq > 1.0f)
         {
-           // next taking the squareroot to find the distance again this come from pythagerous theorum
             float distance = sqrt(distance_sq);
-
-            //direction from player to ghost in unit vector form we need this becaoue later we need it to ensure ghost move in correct direction and in correct speed
             float to_ghost_x = dx / distance;
             float to_ghost_y = dy / distance;
-
-            //this is the dot product formula it tells how much ghost is infornt of the camera so only ghost in vacuum direction are pulled
             float dot = to_ghost_x * dir_x + to_ghost_y * dir_y;
-   
-             //checks if ghost is infront of the vacuum
+
             if (dot > 0.5f)
             {
-                //if the ghost is too close  then capture the ghost means deactivate it
-                if (distance_sq < capture_distance_sq)
-                {
-                    ghost_active[i] = false;
-                    ghost_x[i]= -1000;
-                    ghost_y[i]= -1000;
-                    continue;//move to next ghost
-                }
+                // Stun the ghost (stops its AI movement)
+                ghost_stunned[i] = true;
+                ghost_stun_timer[i] = 1.5f;
 
-               // move ghost is not too close but still in vacuum range then pull it using suck_strngth
-                ghost_x[i] -= to_ghost_x * suck_strength;
-                ghost_y[i] -= to_ghost_y * suck_strength;
+                // FIXED: Only capture if VERY close AND under capacity
+                if (distance < capture_distance && cap_count < max_capacity)
+                {
+                    // Capture ghost (type 0)
+                    captured[cap_count] = 0;
+                    cap_count = cap_count + 1;
+                    ghost_active[i] = false;
+                    ghost_stunned[i] = false;
+                    ghost_x[i] = -1000;
+                    ghost_y[i] = -1000;
+                   
+                    // Award capture points
+                    score = score + 50;
+                    cout << "[CAPTURE] Ghost captured! Total: " << cap_count << endl;
+                }
+                else
+                {
+                    // FIXED: Pull ghost toward player GRADUALLY
+                    ghost_x[i] -= to_ghost_x * suck_strength;
+                    ghost_y[i] -= to_ghost_y * suck_strength;
+                }
             }
         }
     }
 
-    //Skeleton sucking mechanism same logic as ghost one
+    // Process skeletons (same logic)
     for (int i = 0; i < skel; i++)
     {
-        //skips skeleton that are already captured
         if (!skel_active[i]) continue;
 
-        //next compute the center of skeleton sprite to make sure the sucking is directed toward sthe middle of the sprite
         float skel_center_x = skel_x[i] + cell_size / 2.0f;
         float skel_center_y = skel_y[i] + cell_size / 2.0f;
 
-        //find horizontal and vertocal distance from player to the skelton
         float dx = skel_center_x - player_center_x;
         float dy = skel_center_y - player_center_y;
-
-        //find the distance using pythagerous theorum
         float distance_sq = dx * dx + dy * dy;
 
-        //check if the skeleton is within the vacuum range and not above the player
         if (distance_sq < vacuum_range * vacuum_range && distance_sq > 1.0f)
         {
-            //next compute actual distance we didnt find actual distance before just to make more efficiency in game
             float distance = sqrt(distance_sq);
-
-            //next unit vertor direction to tell exactle which direction for skeleton to move
             float to_skel_x = dx / distance;
             float to_skel_y = dy / distance;
- 
-            //dot product between vacuum and direction to skeleton to tell how close the skeleton is
             float dot = to_skel_x * dir_x + to_skel_y * dir_y;
 
             if (dot > 0.5f)
             {
-            //if sskeleton is very close coming in the vacuum range then captur it and deactive it means that skeleton will dissapear
-                if (distance_sq < capture_distance_sq)
+                skel_stunned[i] = true;
+                skel_stun_timer[i] = 1.5f;
+
+                // FIXED: Only capture if VERY close AND under capacity
+                if (distance < capture_distance && cap_count < max_capacity)
                 {
+                    // Capture skeleton (type 1)
+                    captured[cap_count] = 1;
+                    cap_count = cap_count + 1;
                     skel_active[i] = false;
-                    skel_x[i]=-1000;
-                    skel_y[i]=-1000;
-                    continue;
+                    skel_stunned[i] = false;
+                    skel_x[i] = -1000;
+                    skel_y[i] = -1000;
+                   
+                    // Award capture points
+                    score = score + 75;
+                    cout << "[CAPTURE] Skeleton captured! Total: " << cap_count << endl;
                 }
- 
-               //if skeleton if within the range of vacumm then pull it towards the player which is controlled by suck strength
-                skel_x[i] -= to_skel_x * suck_strength;
-                skel_y[i] -= to_skel_y * suck_strength;
+                else
+                {
+                    // FIXED: Pull skeleton toward player GRADUALLY
+                    skel_x[i] -= to_skel_x * suck_strength;
+                    skel_y[i] -= to_skel_y * suck_strength;
+                }
             }
         }
     }
+}
+
+
+
+
+void shoot_single_enemy(float player_x, float player_y, int vacuum_dir,
+                       int captured[], int& cap_count,
+                       float shot_enemy_x[], float shot_enemy_y[],
+                       float shot_velocity_x[], float shot_velocity_y[],
+                       int shot_enemy_type[], bool shot_is_active[], int& shot_count)
+{
+    if (cap_count <= 0)
+    {
+        return;
+    }
+
+    // LIFO: Pop last captured enemy
+    cap_count = cap_count - 1;
+    int shot_type = captured[cap_count];
+
+    // Create new projectile
+    shot_enemy_x[shot_count] = player_x;
+    shot_enemy_y[shot_count] = player_y;
+    shot_enemy_type[shot_count] = shot_type; // Use actual enemy type
+    shot_is_active[shot_count] = true;
+
+    float projectile_speed = 10.0f;
+
+    // Set velocity based on vacuum direction
+    if (vacuum_dir == 0) // left
+    {
+        shot_velocity_x[shot_count] = -projectile_speed;
+        shot_velocity_y[shot_count] = 0.0f;
+    }
+    else if (vacuum_dir == 1) // up
+    {
+        shot_velocity_x[shot_count] = 0.0f;
+        shot_velocity_y[shot_count] = -projectile_speed;
+    }
+    else if (vacuum_dir == 2) // right
+    {
+        shot_velocity_x[shot_count] = projectile_speed;
+        shot_velocity_y[shot_count] = 0.0f;
+    }
+    else // down (3)
+    {
+        shot_velocity_x[shot_count] = 0.0f;
+        shot_velocity_y[shot_count] = projectile_speed;
+    }
+
+    shot_count = shot_count + 1;
+    if (shot_count >= 20)
+    {
+        shot_count = 0;
+    }
+}
+
+void shoot_burst_mode(float player_x, float player_y, int vacuum_dir,
+                     int captured[], int& cap_count,
+                     float shot_enemy_x[], float shot_enemy_y[],
+                     float shot_velocity_x[], float shot_velocity_y[],
+                     int shot_enemy_type[], bool shot_is_active[], int& shot_count)
+{
+    // Shoot all captured enemies in LIFO order
+    while (cap_count > 0)
+    {
+        shoot_single_enemy(player_x, player_y, vacuum_dir, captured, cap_count,
+                          shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
+                          shot_enemy_type, shot_is_active, shot_count);
+    }
+}
+
+
+
+
+
+// Update all projectile positions and physics
+void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
+                       float shot_velocity_x[], float shot_velocity_y[],
+                       bool shot_is_active[], int shot_count,
+                       char** lvl, int cell_size, int height)
+{
+    for (int i = 0; i < 20; i++)
+    {
+        if (!shot_is_active[i])
+        {
+            continue;
+        }
+
+        // Move projectile
+        shot_enemy_x[i] = shot_enemy_x[i] + shot_velocity_x[i];
+        shot_enemy_y[i] = shot_enemy_y[i] + shot_velocity_y[i];
+
+        // Add gravity for horizontal shots
+        if (shot_velocity_x[i] != 0.0f)
+        {
+            shot_velocity_y[i] = shot_velocity_y[i] + 0.3f;
+        }
+
+        // Check screen bounds
+        if (shot_enemy_x[i] < 0 || shot_enemy_x[i] > 1136)
+        {
+            shot_is_active[i] = false;
+        }
+
+        // Bounce at top
+        if (shot_enemy_y[i] < 0)
+        {
+            shot_velocity_y[i] = -shot_velocity_y[i] * 0.8f;
+            shot_enemy_y[i] = 0;
+        }
+
+        // Bounce at bottom
+        if (shot_enemy_y[i] > (height - 1) * cell_size)
+        {
+            shot_velocity_y[i] = -8.0f;
+            shot_enemy_y[i] = (height - 1) * cell_size - 48;
+        }
+
+        // Check platform collision
+        int col = (int)(shot_enemy_x[i] / cell_size);
+        int row = (int)(shot_enemy_y[i] / cell_size);
+
+        if (row >= 0 && row < height && col >= 0 && col < 18)
+        {
+            if (lvl[row][col] == '#')
+            {
+                // Bounce off blocks
+                if (shot_velocity_x[i] != 0.0f)
+                {
+                    shot_velocity_x[i] = -shot_velocity_x[i];
+                }
+            }
+        }
+    }
+}
+
+// Check if projectiles hit any active enemies
+bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
+                          bool shot_is_active[], int shot_count,
+                          float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts,
+                          float skel_x[], float skel_y[], bool skel_active[], int total_skels,
+                          int& hit_projectile, int& hit_enemy_index, bool& hit_was_ghost)
+{
+    hit_projectile = -1;
+    hit_enemy_index = -1;
+    hit_was_ghost = false;
+
+    // Check all active projectiles
+    for (int proj = 0; proj < 20; proj++)
+    {
+        if (!shot_is_active[proj])
+        {
+            continue;
+        }
+
+        // Check collision with ghosts
+        for (int g = 0; g < total_ghosts; g++)
+        {
+            if (!ghost_active[g])
+            {
+                continue;
+            }
+
+            float dx = shot_enemy_x[proj] - ghost_x[g];
+            float dy = shot_enemy_y[proj] - ghost_y[g];
+            float distance = sqrt(dx * dx + dy * dy);
+
+            if (distance < 48)
+            {
+                hit_projectile = proj;
+                hit_enemy_index = g;
+                hit_was_ghost = true;
+                return true;
+            }
+        }
+
+        // Check collision with skeletons
+        for (int s = 0; s < total_skels; s++)
+        {
+            if (!skel_active[s])
+            {
+                continue;
+            }
+
+            float dx = shot_enemy_x[proj] - skel_x[s];
+            float dy = shot_enemy_y[proj] - skel_y[s];
+            float distance = sqrt(dx * dx + dy * dy);
+
+            if (distance < 48)
+            {
+                hit_projectile = proj;
+                hit_enemy_index = s;
+                hit_was_ghost = false;
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 // NEW FUNCTION: Check collision between player and enemies
@@ -727,8 +973,29 @@ if(ghost_dir[i] == 1)
     bool skel_onGround[4];
     Sprite skelSprite[4];
     bool skel_active[4];
+  
+   
     Texture skelTexture;
     skelTexture.loadFromFile("skeleton.png");
+   
+    // ===== ENEMY STUN SYSTEM ===== (FIXED)
+    bool ghost_stunned[8];     // One for each ghost
+    float ghost_stun_timer[8];
+    bool skel_stunned[4];      // One for each skeleton
+    float skel_stun_timer[4];
+   
+    // Initialize all to false/0
+    for(int i = 0; i < ghosts; i++)
+    {
+        ghost_stunned[i] = false;
+        ghost_stun_timer[i] = 0.0f;
+    }
+    for(int i = 0; i < skel; i++)
+    {
+        skel_stunned[i] = false;
+        skel_stun_timer[i] = 0.0f;
+    }
+   
    
   //spawning skeletons
 srand(time(0));
@@ -766,9 +1033,29 @@ for(int i = 0; i < skel; i++)
 
     Event ev;
     bool xKeyPressed=false;
+    
+    // Released enemies (projectiles) - for shooting captured enemies
+    float shot_enemy_x[20];
+    float shot_enemy_y[20];
+    float shot_velocity_x[20];
+    float shot_velocity_y[20];
+    int shot_enemy_type[20];  // 0=ghost, 1=skeleton
+    bool shot_is_active[20];
+    int shot_projectile_count = 0;
+
+    // Initialize shot array
+    for (int i = 0; i < 20; i++)
+    {
+        shot_is_active[i] = false;
+    }
+
+    // Key press tracking (for single-shot detection)
+    bool previous_E_pressed = false;
+    bool previous_Q_pressed = false;
    
      // ===== SUCKING CAPACITY =====
-    int enemiesSucked = 0;           // Current count of sucked enemies
+     int captured[10];
+    int cap_count = 0;           // Current count of sucked enemies
     const int maxCapacity = 3;       // Maximum enemies that can be sucked at once
    
     //main loop
@@ -881,123 +1168,105 @@ for(int i = 0; i < skel; i++)
             vacuumActive = false; // No vacuum key pressed
         }
 } //end of player controls if alive
+        
         // ============= VACUUM SUCKING WITH Space KEY =============
         xKeyPressed = Keyboard::isKeyPressed(Keyboard::Key::Space);
 
-        if(xKeyPressed && vacuumActive && enemiesSucked < maxCapacity)
-     
+        if(xKeyPressed && vacuumActive)
         {
-            // call vacuum handler to pull enemies (only if capacity not reached)
-            handle_vacuum_sucking(
-                player_x, player_y, PlayerWidth, PlayerHeight,
-                ghost_x, ghost_y, ghost_active, ghosts,
-                skel_x, skel_y, skel_active, skel,
-                cell_size, 4.0f, vacuumDirection
+            update_vacuum(
+                player_x, player_y, vacuumDirection, 200.0f, 4.0f,
+                ghost_x, ghost_y, ghost_active, ghost_stunned, ghost_stun_timer, ghosts,
+                skel_x, skel_y, skel_active, skel_stunned, skel_stun_timer, skel,
+                cell_size, true, captured, cap_count, maxCapacity, score
             );
         }
 
-if(xKeyPressed && vacuumActive && enemiesSucked < maxCapacity)
-     
-        {
-            // call vacuum handler to pull enemies (only if capacity not reached)
-            handle_vacuum_sucking(
-                player_x, player_y, PlayerWidth, PlayerHeight,
-                ghost_x, ghost_y, ghost_active, ghosts,
-                skel_x, skel_y, skel_active, skel,
-                cell_size, 4.0f, vacuumDirection
-            );
-        }
 
-        // ====== COUNT SUCKED ENEMIES AND UPDATE SCORE ======
-        int previousEnemiesSucked = enemiesSucked;
-        int previousGhostsSucked = 0;
-        int previousSkeletonsSucked = 0;
+        
+// ============= SHOOTING CONTROLS - E AND Q KEYS =============
+        bool E_key_pressed = Keyboard::isKeyPressed(Keyboard::E);
+        bool Q_key_pressed = Keyboard::isKeyPressed(Keyboard::Q);
 
-        // Count previously defeated enemies by type
-        for(int i = 0; i < ghosts; i++)
+        // E key = Single Shot (shoot one enemy at a time)
+        if (E_key_pressed && !previous_E_pressed)
         {
-            if(!ghost_active[i]) previousGhostsSucked++;
-        }
-        for(int i = 0; i < skel; i++)
-        {
-            if(!skel_active[i]) previousSkeletonsSucked++;
-        }
-
-        enemiesSucked = 0;
-        int currentGhostsSucked = 0;
-        int currentSkeletonsSucked = 0;
-
-        // Count currently defeated enemies by type
-        for(int i = 0; i < ghosts; i++)
-        {
-            if(!ghost_active[i])
+            if (cap_count > 0)
             {
-                currentGhostsSucked++;
-                enemiesSucked++;
-            }
-        }
-        for(int i = 0; i < skel; i++)
-        {
-            if(!skel_active[i])
-            {
-                currentSkeletonsSucked++;
-                enemiesSucked++;
+                shoot_single_enemy(player_x, player_y, vacuumDirection, captured, cap_count,
+                                  shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
+                                  shot_enemy_type, shot_is_active, shot_projectile_count);
+                cout << "[SHOOT] Single shot! Remaining captured: " << cap_count << endl;
             }
         }
 
-        // Calculate points when new enemies are captured
-        int newGhosts = currentGhostsSucked - previousGhostsSucked;
-        int newSkeletons = currentSkeletonsSucked - previousSkeletonsSucked;
-        int newKills = newGhosts + newSkeletons;
-
-        if(newKills > 0)
+        // Q key = Burst Shot (shoot ALL captured enemies at once)
+        if (Q_key_pressed && !previous_Q_pressed)
         {
-            int basePoints = 0;
-           
-            // Base points per enemy type
-            basePoints += newGhosts * 50;        // Ghosts: 50 points each
-            basePoints += newSkeletons * 75;     // Skeletons: 75 points each
-           
-            // Multi-Kill Bonuses
-            if(newKills == 2)
+            if (cap_count > 0)
             {
-                basePoints += 200;  // Multi-Kill (2 enemies)
+                shoot_burst_mode(player_x, player_y, vacuumDirection, captured, cap_count,
+                                shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
+                                shot_enemy_type, shot_is_active, shot_projectile_count);
+                cout << "[BURST] All enemies shot!" << endl;
             }
-            else if(newKills >= 3)
-            {
-                basePoints += 500;  // Multi-Kill (3+ enemies)
-            }
-           
-            // Aerial Defeat Bonus (if player is not on ground when defeating enemies)
-            if(!onGround)
-            {
-                basePoints += 150 * newKills;  // 150 points per enemy defeated mid-air
-            }
-           
-            // Increment combo
-            combo += newKills;
-           
-            // Calculate combo multiplier
-            if(combo >= 5)
-            {
-                comboMultiplier = 2.0f;  // 5-7 streak
-            }
-            else if(combo >= 3)
-            {
-                comboMultiplier = 1.5f;  // 3-4 streak
-            }
-            else
-            {
-                comboMultiplier = 1.0f;  // No combo
-            }
-           
-            // Apply combo multiplier
-            int finalPoints = (int)(basePoints * comboMultiplier);
-            score += finalPoints;
         }
 
 
+// Check if any projectile hit an enemy
+        int hit_projectile = -1;
+        int hit_enemy_index = -1;
+        bool hit_was_ghost = false;
 
+        if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_projectile_count,
+                                  ghost_x, ghost_y, ghost_active, ghosts,
+                                  skel_x, skel_y, skel_active, skel,
+                                  hit_projectile, hit_enemy_index, hit_was_ghost))
+        {
+            if (hit_projectile >= 0 && hit_enemy_index >= 0)
+            {
+                // Deactivate the projectile
+                shot_is_active[hit_projectile] = false;
+
+                if (hit_was_ghost)
+                {
+                    // Deactivate the ghost
+                    ghost_active[hit_enemy_index] = false;
+                    ghost_x[hit_enemy_index] = -1000;
+                    ghost_y[hit_enemy_index] = -1000;
+                   
+                    // Award bonus points for defeating with projectile
+                    score += 100;  // Ghost defeat bonus
+                    combo++;
+                   
+                    cout << "[HIT] Ghost defeated by projectile! Score: " << score << endl;
+                }
+                else
+                {
+                    // Deactivate the skeleton
+                    skel_active[hit_enemy_index] = false;
+                    skel_x[hit_enemy_index] = -1000;
+                    skel_y[hit_enemy_index] = -1000;
+                   
+                    // Award bonus points for defeating with projectile
+                    score += 150;  // Skeleton defeat bonus (worth more)
+                    combo++;
+                   
+                    cout << "[HIT] Skeleton defeated by projectile! Score: " << score << endl;
+                }
+            }
+        }
+
+
+        // Update key states for next frame
+        previous_E_pressed = E_key_pressed;
+        previous_Q_pressed = Q_key_pressed;
+
+        // Update all projectile physics
+        update_projectiles(shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
+                          shot_is_active, shot_projectile_count, lvl, cell_size, height);
+
+        
         // ============= DRAW PLAYER OR VACUUM =============
     if(!playerDead)
     {
@@ -1071,12 +1340,32 @@ if(xKeyPressed && vacuumActive && enemiesSucked < maxCapacity)
 
 
 
-
+  // ============= DRAW PROJECTILES =============
+        // Draw all active projectiles (shot enemies)
+        for (int i = 0; i < 20; i++)
+        {
+            if (shot_is_active[i])
+            {
+                // Draw projectile using ghost sprite with red tint
+                ghostSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
+                ghostSprite[0].setColor(Color(255, 100, 100)); // Red tint for projectiles
+                window.draw(ghostSprite[0]);
+                ghostSprite[0].setColor(Color::White); // Reset color back to white
+            }
+        }
 
         // ====== GHOST MOVEMENT
        for(int i = 0; i < ghosts; i++)
 {
     if(!ghost_active[i]) continue; // skip inactive ghosts
+
+ if(ghost_stunned[i])
+    {
+        // Just draw the ghost in place, don't move it
+        ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
+        window.draw(ghostSprite[i]);
+        continue;  // Skip all movement logic
+    }
 
     // Find tile coordinates for ground checks
     int bottomLeftX = ghost_x[i] / cell_size;
@@ -1146,6 +1435,14 @@ if(xKeyPressed && vacuumActive && enemiesSucked < maxCapacity)
         for(int j = 0; j < skel; j++)
         {
             if(!skel_active[j]) continue;  // skip inactive skeletons
+
+if(skel_stunned[j])
+            {
+                // Just draw the skeleton in place, don't move it
+                skelSprite[j].setPosition(skel_x[j], skel_y[j]);
+                window.draw(skelSprite[j]);
+                continue;  // Skip all movement logic
+            }
 
             // GRAVITY - predict next vertical position
             float nextY = skel_y[j] + skel_velocityY[j];
@@ -1226,12 +1523,13 @@ if(!playerDead)
     // Check ghost collisions
     for(int i = 0; i < ghosts; i++)
     {
-        if(ghost_active[i])
+        if(ghost_active[i] && !ghost_stunned[i])  // FIXED: Don't collide with stunned ghosts!
         {
             if(check_player_enemy_collision(player_x, player_y, PlayerWidth, PlayerHeight,
                                ghost_x[i], ghost_y[i], 64))
 {
     playerDead = true;
+
     deathClock.restart();
     score -= 50;  // PENALTY: Take Damage
     if(score < 0) score = 0;
@@ -1247,7 +1545,7 @@ if(!playerDead)
     {
         for(int i = 0; i < skel; i++)
         {
-            if(skel_active[i])
+            if(skel_active[i] && !skel_stunned[i])  // FIXED: Don't collide with stunned skeletons!
             {
                if(check_player_enemy_collision(player_x, player_y, PlayerWidth, PlayerHeight,
                                skel_x[i], skel_y[i], 64))
@@ -1294,7 +1592,7 @@ if(!playerDead)
                     PlayerSprite.setColor(Color(255, 255, 255, 255));
                     bagSprite.setColor(Color(255, 255, 255, 255));
                     vacuumActive = false;
-                    enemiesSucked = 0;
+                    cap_count = 0;
                 }
                 else
                 {
@@ -1316,6 +1614,75 @@ if(combo > 0)
 {
     comboText.setString("Combo: " + to_string(combo) + "x  Multiplier: " + to_string(comboMultiplier) + "x");
     window.draw(comboText);
+}
+ 
+ // ====== CHECK LEVEL COMPLETION ======
+if(!levelComplete && !playerDead && currentLevel == 1)
+{
+    if(check_level_complete(ghost_active, ghosts, skel_active, skel))
+    {
+        levelComplete = true;
+        levelCompleteClock.restart();
+        score += 500; // Bonus points
+        cout << "[LEVEL] Level 1 Complete!" << endl;
+    }
+}
+
+// ====== SHOW COMPLETION MESSAGE & MOVE TO LEVEL 2 ======
+if(levelComplete && currentLevel == 1)
+{
+    float elapsed = levelCompleteClock.getElapsedTime().asSeconds();
+   
+    // Draw "LEVEL 1 COMPLETE" message
+    Text completeText;
+    completeText.setFont(scoreFont);
+    completeText.setCharacterSize(60);
+    completeText.setFillColor(Color::Green);
+    completeText.setString("LEVEL 1 COMPLETE!");
+    completeText.setPosition(200, 350);
+    window.draw(completeText);
+   
+    Text nextText;
+    nextText.setFont(scoreFont);
+    nextText.setCharacterSize(40);
+    nextText.setFillColor(Color::Yellow);
+    nextText.setString("Moving to Level 2...");
+    nextText.setPosition(280, 450);
+    window.draw(nextText);
+   
+    // After 3 seconds, load Level 2
+    if(elapsed >= levelCompleteDelay)
+    {
+        currentLevel = 2;
+       
+        // Change to Level 2 layout
+        change_to_level2(lvl, height, width);
+       
+        // Reset player position
+        player_x = 500;
+        player_y = 150;
+        velocityY = 0;
+        cap_count = 0;
+        vacuumActive = false;
+       
+        // Deactivate ALL enemies (Level 2 has no enemies)
+        for(int i = 0; i < ghosts; i++)
+        {
+            ghost_active[i] = false;
+            ghost_x[i] = -1000;
+            ghost_y[i] = -1000;
+        }
+       
+        for(int i = 0; i < skel; i++)
+        {
+            skel_active[i] = false;
+            skel_x[i] = -1000;
+            skel_y[i] = -1000;
+        }
+       
+        levelComplete = false;
+        cout << "[LEVEL] Now in Level 2 - No Enemies!" << endl;
+    }
 }
  
         // Present everything drawn this frame
