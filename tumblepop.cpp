@@ -368,14 +368,14 @@ int main()
     Sprite bagSprite;
     bool facingRight = false;
     // Animation variables
-<<<<<<< HEAD
+
     const int animationFrames = 4;
     Texture walkTextures[4];
     int currentFrame = 0;
     int frameCounter = 0;
     const int frameDelay = 10; // (lower = faster)
     bool isWalking = false;
-=======
+
 const int animationFrames = 4;  
 const int bagFrames = 4;
 Texture walkTextures[4]; 
@@ -387,7 +387,7 @@ int bagFrameCounter = 0;
 const int frameDelay = 10;      // (lower = faster)
 bool isWalking = false;         
 
->>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
+
     // Music objects and settings
     Music menuMusic;
     Music lvlMusic;
@@ -451,7 +451,7 @@ bool isWalking = false;
         PlayerSprite.setScale(3,3);
         PlayerSprite.setPosition(player_x, player_y);
         // Load walking animation frames based on selected player
-<<<<<<< HEAD
+
         if(selectedIndex == 0) {
             walkTextures[0].loadFromFile("player1walk1.png");
             walkTextures[1].loadFromFile("player1walk2.png");
@@ -464,7 +464,7 @@ bool isWalking = false;
             walkTextures[2].loadFromFile("player2walk3.png");
             walkTextures[3].loadFromFile("player2walk4.png");
         }
-=======
+
 if(selectedIndex == 0)
 {
     walkTextures[0].loadFromFile("player1walk1.png");
@@ -488,7 +488,7 @@ else if(selectedIndex == 1)
     bagTextures[2].loadFromFile("bagptwo3.png");
      bagTextures[3].loadFromFile("bagptwo4.png");
 }
->>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
+
         bagTexture = bagOptions[selectedIndex];
         bagSprite.setTexture(bagTexture);
         bagSprite.setScale(2, 2);
@@ -637,7 +637,7 @@ else if(selectedIndex == 1)
     Sprite skelSprite[4];
     bool skel_active[4];
     Texture skelTexture;
-<<<<<<< HEAD
+
     skelTexture.loadFromFile("skeleton.png");
     //spawning skeletons
     srand(time(0));
@@ -653,7 +653,7 @@ else if(selectedIndex == 1)
                 skel_y[i] = ty * cell_size;
                 break;
             }
-=======
+
     const int skelAnimationFrames = 4;
      Texture skelWalkTextures[4];
      int skelCurrentFrame[8];      // cuuurrent frame for each skel
@@ -688,17 +688,17 @@ for(int i = 0; i < skel; i++)
             skel_x[i] = tx * cell_size;
             skel_y[i] = ty * cell_size;
             break;
->>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
+
         }
         skel_speed[i] = 1;
         skel_dir[i] = (rand() % 2 == 0) ? -1 : 1;
         skel_velocityY[i]=0;
         skel_onGround[i]=false;
         skel_active[i]=true;
-<<<<<<< HEAD
+
         skelSprite[i].setTexture(skelTexture);
         skelSprite[i].setScale(2, 2);
-=======
+
         skelSprite[i].setTexture(skelWalkTextures[0]);
         skelSprite[i].setScale(2, 2);   // increase ghost size
 // Flip sprite if starting direction is right
@@ -711,9 +711,10 @@ if(skel_dir[i] == 1)
     skelFrameCounter[i] = 0;
     
 
->>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
+
         skelSprite[i].setPosition(skel_x[i], skel_y[i]);
     }
+ }   
     const int MAX_PROJECTILES = 20;
     bool proj_active[MAX_PROJECTILES];
     // ===== CAPTURED ENEMY STACK (LIFO) =====
@@ -1024,7 +1025,7 @@ for(int i = 0; i < skel; i++)
 int newGhosts = totalGhostsDefeated - lastFrameGhostsSucked;
 int newSkeletons = totalSkeletonsDefeated - lastFrameSkeletonsSucked;
 int newKills = newGhosts + newSkeletons;
-<<<<<<< HEAD
+
         if(newKills > 0) {
             int basePoints = 0;
             // ===== BASE POINTS PER ENEMY TYPE =====
@@ -1129,7 +1130,7 @@ lastFrameSkeletonsSucked = totalSkeletonsDefeated;
                 }
             }
         }
-=======
+
 
 
 
@@ -1203,7 +1204,6 @@ int bagFrame = 0;
 
 
 
->>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
         // ============= DRAW PLAYER OR VACUUM =============
         if(!playerDead) {
             if(vacuumActive) {
@@ -1303,7 +1303,7 @@ int bagFrame = 0;
             ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
             window.draw(ghostSprite[i]);
         }
-<<<<<<< HEAD
+
         // ====== SKELETON MOVEMENT WITH GRAVITY AND PLATFORM TELEPORT ======
         for(int j = 0; j < skel; j++) {
             if(!skel_active[j]) continue; // skip inactive skeletons
@@ -1357,7 +1357,7 @@ int bagFrame = 0;
             window.draw(skelSprite[j]);
         }
         // ====== CHECK PLAYER-ENEMY COLLISIONS ======
-=======
+
         
         // ANIMATE GHOST WHILE MOVING
         ghostFrameCounter[i]++;
@@ -1445,7 +1445,7 @@ int bagFrame = 0;
 }
   
   // ====== CHECK PLAYER-ENEMY COLLISIONS ======
->>>>>>> c5504a66be96ace49bddf6f0c5805879b3d4f5e4
+
 if(!playerDead)
 {
     // Check ghost collisions
