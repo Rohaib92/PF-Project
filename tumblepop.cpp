@@ -143,18 +143,28 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSpr
     }
 }
 
-// ============================================================================
-// FUNCTION DEFINITIONS (Player Physics & Collision)
-// ============================================================================
-
+// This functioin is to check if player is not standing on the blocks then it must fall
+// char** lvl is a 2D array for map 
+// player_x and player_y are the current horizontal and vertical position of player
+// Pheight and Pwidth are players height and wdth in pixels of players collision with block
+// offset_y is the prediction of players vertical position
+// speed = players constant speed
+// terminal_Velocity is the maximum downward speed that the player can achieve
+// onGround checks if player is on the ground
 void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth)
 {
+    // Copying current player position to offset_y
     offset_y = player_y;
-    offset_y += velocityY; // predict new Y
+    // Predicts new vertical velocity after applyong the current vertical velocity
+    offset_y += velocityY; 
 
     // Check three points below the player (left, center, right) for collision with blocks
+    // for bottom collision check the predicted top value + height of player gives players bottom posiiton
+    // next dividing it by cell_size to convert to pixels and finally convert to integer to discard decimal parts
     char bottom_left_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x ) / cell_size];
+    // Right sid checks bootom and right side of the player
     char bottom_right_down = lvl[(int)(offset_y  + Pheight) / cell_size][(int)(player_x + Pwidth) / cell_size];
+    // for middle part check bootom and center of players width by dividing Players wdith by 2
     char bottom_mid_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x + Pwidth / 2) / cell_size];
 
     if (bottom_left_down == '#' || bottom_mid_down == '#' || bottom_right_down == '#')
@@ -163,31 +173,38 @@ void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGroun
     }
     else
     {
-        // no ground -> apply new vertical offset
+        // if player is not on ground then update its vertical position to move down
         player_y = offset_y;
         onGround = false;
     }
 
     if (!onGround)
     {
-        velocityY += gravity; // accelerate downward
+        // increse velocity so player falls faster
+        velocityY += gravity; 
+        // Prevent falling jut too fast by putting it eual to terminal velocity
         if (velocityY >= terminal_Velocity)
         {
-            velocityY = terminal_Velocity; // limit fall speed
+            velocityY = terminal_Velocity; 
         }
     }
+    // else if player is on ground then stop the vertical movement
     else
     {
-        velocityY = 0; // on ground -> stop vertical velocity
+        velocityY = 0; 
     }
 }
 
-// LEFT COLLISION
-// Attempt to move left; if a block exists on left-edge points, do not move
-void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
+// Check player collison with left wall 
+// char** lvl is a 2D array for map 
+// player_x and player_y are the current horizontal and vertical position of player
+// Pheight and Pwidth are players height and wdth in pixels of players collision with block
+// offset_x is the prediction of players horizontal position
+void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_x, const int cell_size, int& Pheight, int& Pwidth, float speed)
 {
-    offset_x = player_x;     // start from current
-    offset_x -= speed;       // next predicted x after moving left
+    // moving left if there is no wall
+    offset_x = player_x;     
+    offset_x -= speed;       
 
     // Check three points on the left side of the player (top, middle, bottom)
     char left_top = lvl[(int)(player_y) / cell_size][(int)(offset_x) / cell_size];
@@ -196,11 +213,12 @@ void player_left_collision(char** lvl, float& offset_x, float& player_x, float& 
 
     if (left_top == '#' || left_mid == '#' || left_bottom == '#')
     {
-        offset_x = player_x ; // collision -> don't move
+       // collision occurs so dont move and stay still
+        offset_x = player_x ; 
     }
     else
     {
-        // safe -> commit movement
+        // no collisions ocuur player is safe to move left
         player_x = offset_x;
     }
 }
@@ -218,19 +236,20 @@ void player_right_collision(char** lvl, float& offset_x, float& player_x, float&
 
     if (right_top == '#' || right_mid == '#' || right_bottom == '#')
     {
-        offset_x = player_x ; // don't move into block
+        offset_x = player_x ; 
     }
     else
     {
-        player_x = offset_x; // commit movement
+        player_x = offset_x; 
     }
 }
 
-// CEILING COLLISION - prevents moving up into blocks
+// CEILING COLLISION  this prevents moving up into blocks
 void player_ceiling_collision(char** lvl, float& offset_y, float& velocityY, float& player_x, float& player_y, const int cell_size, int& Pwidth)
 {
+    // predicting next position
     offset_y = player_y;
-    offset_y += velocityY; // predicted top position (velocityY negative when jumping)
+    offset_y += velocityY; 
 
     // Check three points on the top of the player (left, middle, right)
     char top_left = lvl[(int)(offset_y) / cell_size][(int)(player_x) / cell_size];
@@ -239,32 +258,40 @@ void player_ceiling_collision(char** lvl, float& offset_y, float& velocityY, flo
 
     if (top_left == '#' || top_mid == '#' || top_right == '#')
     {
-        velocityY = 0; // hit ceiling -> stop upward speed (start falling afterwards)
+        velocityY = 0; 
     }
     else
     {
-        player_y = offset_y; // safe -> commit new Y
+        player_y = offset_y; 
     }
 }
 
-// NEW FUNCTION: Check collision between player and enemies
+//Check collision between player and they enemies
+//PlayerWidth and PlayerHeight are players height and width
+//whre enemy idth and height = enemy_size
+//player_x and player_y are players top left points 
+//enemy_x and enemy_y are enemies top and left points
 bool check_player_enemy_collision(
     float player_x, float player_y, int PlayerWidth, int PlayerHeight,
     float enemy_x, float enemy_y, int enemy_size)
 {
+   // checking players collision with enemy by horizontal and vertical overlapping
     return (player_x < enemy_x + enemy_size &&
             player_x + PlayerWidth > enemy_x &&
             player_y < enemy_y + enemy_size &&
             player_y + PlayerHeight > enemy_y);
 }
 
-// NEW FUNCTION: Respawn player from top
+// Respawn player from top
+// player_x = players horizontal position and player_y is players vertical position
+// velocityY = vertical speed meanng howfast is player movng down
+// playerDead check if player is dead
 void respawn_player(float& player_x, float& player_y, float& velocityY, bool& playerDead)
 {
-    player_x = 500;
+    player_x = 500;       // resets players poistion
     player_y = 150;
-    velocityY = 0;
-    playerDead = false;
+    velocityY = 0;       // stop falling
+    playerDead = false;  // player is alive again
 }
 
 // ============================================================================
