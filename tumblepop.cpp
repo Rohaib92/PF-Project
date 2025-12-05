@@ -11,14 +11,6 @@ using namespace std;
 int screen_x = 1136;
 int screen_y = 896;
 
-//This function is used for sucking ghost and skeletons
-//player_x/player_y represents position of player top orleft
-//PlayerWidth/PlayerHeight shows player's sprite size
-//ghost_x[], ghost_y[], ghost_active[], ghosts shows ghost positions + active flags + count
-//skel_x[], skel_y[], skel_active[], skel is skeletons same as ghosts
-//cell_size indicates tile size to compute centers
-//suck_strength shows how fast the enemies are pulled
-//vacuumDirection indiactes 0=left,1=up,2=right,3=down
 void handle_vacuum_sucking(
     float& player_x, float& player_y, int& PlayerWidth, int& PlayerHeight,
     float ghost_x[], float ghost_y[], bool ghost_active[], int ghosts,
@@ -368,24 +360,17 @@ int main()
     Sprite bagSprite;
     bool facingRight = false;
     // Animation variables
-
-    const int animationFrames = 4;
-    Texture walkTextures[4];
-    int currentFrame = 0;
-    int frameCounter = 0;
-    const int frameDelay = 10; // (lower = faster)
-    bool isWalking = false;
-
+     // Animation variables
 const int animationFrames = 4;  
 const int bagFrames = 4;
 Texture walkTextures[4]; 
 Texture bagTextures[4];       
 int currentFrame = 0;  
-int currentBagFrame =0; 
+int currentBagFrame = 0; 
 int frameCounter = 0;  
 int bagFrameCounter = 0;         
-const int frameDelay = 10;      // (lower = faster)
-bool isWalking = false;         
+const int frameDelay = 10;
+bool isWalking = false;
 
 
     // Music objects and settings
@@ -452,42 +437,7 @@ bool isWalking = false;
         PlayerSprite.setPosition(player_x, player_y);
         // Load walking animation frames based on selected player
 
-        if(selectedIndex == 0) {
-            walkTextures[0].loadFromFile("player1walk1.png");
-            walkTextures[1].loadFromFile("player1walk2.png");
-            walkTextures[2].loadFromFile("player1walk3.png");
-            walkTextures[3].loadFromFile("player1walk4.png");
-        }
-        else if(selectedIndex == 1) {
-            walkTextures[0].loadFromFile("player2walk1.png");
-            walkTextures[1].loadFromFile("player2walk2.png");
-            walkTextures[2].loadFromFile("player2walk3.png");
-            walkTextures[3].loadFromFile("player2walk4.png");
-        }
-
-if(selectedIndex == 0)
-{
-    walkTextures[0].loadFromFile("player1walk1.png");
-    walkTextures[1].loadFromFile("player1walk2.png");
-    walkTextures[2].loadFromFile("player1walk3.png");
-    walkTextures[3].loadFromFile("player1walk4.png");
-    bagTextures[0].loadFromFile("bagpone1.png");
-    bagTextures[1].loadFromFile("bagpone2.png");
-    bagTextures[2].loadFromFile("bagpone3.png");
-     bagTextures[3].loadFromFile("bagpone4.png");
-    
-}
-else if(selectedIndex == 1)
-{
-    walkTextures[0].loadFromFile("player2walk1.png");
-    walkTextures[1].loadFromFile("player2walk2.png");
-    walkTextures[2].loadFromFile("player2walk3.png");
-    walkTextures[3].loadFromFile("player2walk4.png");
-    bagTextures[0].loadFromFile("bagptwo1.png");
-    bagTextures[1].loadFromFile("bagptwo2.png");
-    bagTextures[2].loadFromFile("bagptwo3.png");
-     bagTextures[3].loadFromFile("bagptwo4.png");
-}
+        
 
         bagTexture = bagOptions[selectedIndex];
         bagSprite.setTexture(bagTexture);
@@ -506,6 +456,26 @@ else if(selectedIndex == 1)
             window.draw(bagOptionSprite[i]);
             window.draw(playerOptionSprite[i]);
             window.draw(descSprites[i]); // This draws the description images
+        }
+        if(selectedIndex == 0) {
+            walkTextures[0].loadFromFile("player1walk1.png");
+            walkTextures[1].loadFromFile("player1walk2.png");
+            walkTextures[2].loadFromFile("player1walk3.png");
+            walkTextures[3].loadFromFile("player1walk4.png");
+            bagTextures[0].loadFromFile("bagpone1.png");
+            bagTextures[1].loadFromFile("bagpone2.png");
+            bagTextures[2].loadFromFile("bagpone3.png");
+            bagTextures[3].loadFromFile("bagpone4.png");
+        }
+        else if(selectedIndex == 1) {
+            walkTextures[0].loadFromFile("player2walk1.png");
+            walkTextures[1].loadFromFile("player2walk2.png");
+            walkTextures[2].loadFromFile("player2walk3.png");
+            walkTextures[3].loadFromFile("player2walk4.png");
+            bagTextures[0].loadFromFile("bagptwo1.png");
+            bagTextures[1].loadFromFile("bagptwo2.png");
+            bagTextures[2].loadFromFile("bagptwo3.png");
+            bagTextures[3].loadFromFile("bagptwo4.png");
         }
         window.display();
     }
@@ -636,31 +606,13 @@ else if(selectedIndex == 1)
     bool skel_onGround[4];
     Sprite skelSprite[4];
     bool skel_active[4];
-    Texture skelTexture;
-
-    skelTexture.loadFromFile("skeleton.png");
-    //spawning skeletons
-    srand(time(0));
-    for(int i = 0; i < skel; i++) {
-        // pick random platform tile (empty + ground below)
-        while(true) {
-            int tx = rand() % width;
-            int ty = rand() % (height - 1);
-            // Exclude spawning on the player's starting platform
-            bool onPlayerPlatform = (ty == 4 && tx >= 6 && tx <= 11);
-            if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#' && !onPlayerPlatform) {
-                skel_x[i] = tx * cell_size;
-                skel_y[i] = ty * cell_size;
-                break;
-            }
-
-    const int skelAnimationFrames = 4;
-     Texture skelWalkTextures[4];
-     int skelCurrentFrame[8];      // cuuurrent frame for each skel
-int skelFrameCounter[8];      // Frame counter for each skel
-const int skelFrameDelay = 10; // aniimation speed 
-
     
+    // ===== SKELETON ANIMATION VARIABLES (MUST BE HERE!) =====
+    const int skelAnimationFrames = 4;
+    Texture skelWalkTextures[4];
+    int skelCurrentFrame[4];
+    int skelFrameCounter[4];
+    const int skelFrameDelay = 10; 
     
     
     skelWalkTextures[0].loadFromFile("skel1.png");
@@ -675,46 +627,35 @@ srand(time(0));
 for(int i = 0; i < skel; i++)
 {
     // pick random platform tile (empty + ground below)
-    while(true)
-    {
-        int tx = rand() % width;
-        int ty = rand() % (height - 1);
-
-        // Exclude spawning on the player's starting platform
-        bool onPlayerPlatform = (ty == 4 && tx >= 6 && tx <= 11);
-       
-        if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#' && !onPlayerPlatform)
-        {
-            skel_x[i] = tx * cell_size;
-            skel_y[i] = ty * cell_size;
-            break;
-
+     while(true) {
+            int tx = rand() % width;
+            int ty = rand() % (height - 1);
+            bool onPlayerPlatform = (ty == 4 && tx >= 6 && tx <= 11);
+            
+            if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#' && !onPlayerPlatform) {
+                skel_x[i] = tx * cell_size;
+                skel_y[i] = ty * cell_size;
+                break;
+            }
         }
+        
         skel_speed[i] = 1;
         skel_dir[i] = (rand() % 2 == 0) ? -1 : 1;
-        skel_velocityY[i]=0;
-        skel_onGround[i]=false;
-        skel_active[i]=true;
-
-        skelSprite[i].setTexture(skelTexture);
-        skelSprite[i].setScale(2, 2);
-
+        skel_velocityY[i] = 0;
+        skel_onGround[i] = false;
+        skel_active[i] = true;
         skelSprite[i].setTexture(skelWalkTextures[0]);
-        skelSprite[i].setScale(2, 2);   // increase ghost size
-// Flip sprite if starting direction is right
-if(skel_dir[i] == 1)
-{
-    ghostSprite[i].setScale(-2, 2);
-}
+        skelSprite[i].setScale(2, 2);
+        
+        // Flip sprite if starting direction is right
+        if(skel_dir[i] == 1) {
+            skelSprite[i].setScale(-2, 2);
+        }
+        
         skelSprite[i].setPosition(skel_x[i], skel_y[i]);
         skelCurrentFrame[i] = 0;
-    skelFrameCounter[i] = 0;
-    
-
-
-        skelSprite[i].setPosition(skel_x[i], skel_y[i]);
+        skelFrameCounter[i] = 0;
     }
- }   
     const int MAX_PROJECTILES = 20;
     bool proj_active[MAX_PROJECTILES];
     // ===== CAPTURED ENEMY STACK (LIFO) =====
@@ -1360,90 +1301,7 @@ int bagFrame = 0;
 
         
         // ANIMATE GHOST WHILE MOVING
-        ghostFrameCounter[i]++;
-        if(ghostFrameCounter[i] >= ghostFrameDelay)
-        {
-            ghostFrameCounter[i] = 0;
-            ghostCurrentFrame[i] = (ghostCurrentFrame[i] + 1) % ghostAnimationFrames;
-            ghostSprite[i].setTexture(ghostWalkTextures[ghostCurrentFrame[i]]);
-        }
-    }
-
-    // update sprite position and draw
-    ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
-    window.draw(ghostSprite[i]);
-}
-
-
-
-
-        for(int i = 0; i < skel; i++)
-{
-    if(!skel_active[i]) continue; // skip inactive ghosts
-
-    // Find tile coordinates for ground checks
-    int bottomLeftX = skel_x[i] / cell_size;
-    int bottomRightX = (skel_x[i] + 64) / cell_size;
-    int bottomY = (skel_y[i] + 64) / cell_size;
-
-    // If ghost stands on a block, mark onGround true
-    if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
-    {
-        skel_onGround[i] = true;
-    }
-
-    // HORIZONTAL MOVEMENT - only if on ground
-    if(skel_onGround[i])
-    {
-        float nextX = skel_x[i] + skel_speed[i] * skel_dir[i];
-
-        // front tile X coordinate (depending on direction)
-        int frontTileX = (nextX + (skel_dir[i] == 1 ? 64 : 0)) / cell_size;
-        int midTileY = (skel_y[i] + 32) / cell_size;
-
-        // edge check: if no ground ahead then turn
-        int edgeCheckX = (nextX + (skel_dir[i] == 1 ? 64 : 0)) / cell_size;
-        int edgeCheckY = (skel_y[i] + 64 + 1) / cell_size;
-
-        // Turn around if there's a wall ahead OR no ground ahead (edge)
-        if(lvl[midTileY][frontTileX] == '#' || lvl[edgeCheckY][edgeCheckX] != '#')
-        {
-            skel_dir[i] *= -1;
-        if(skel_dir[i] == 1) // Now moving right
-    {
-        skelSprite[i].setScale(-2, 2);
         
-    }
-    
-    
-    else // Now moving left
-    {
-        skelSprite[i].setScale(2, 2);
-                
-
-    }
-    }
-    else
-       
-        {
-            skel_x[i] = nextX;
-        }
-        
-        // ANIMATE GHOST WHILE MOVING
-        skelFrameCounter[i]++;
-        if(skelFrameCounter[i] >= skelFrameDelay)
-        {
-            skelFrameCounter[i] = 0;
-            skelCurrentFrame[i] = (skelCurrentFrame[i] + 1) % skelAnimationFrames;
-            skelSprite[i].setTexture(skelWalkTextures[skelCurrentFrame[i]]);
-        }
-    }
-
-    // update sprite position and draw
-    skelSprite[i].setPosition(skel_x[i], skel_y[i]);
-    window.draw(skelSprite[i]);
-}
-  
   // ====== CHECK PLAYER-ENEMY COLLISIONS ======
 
 if(!playerDead)
