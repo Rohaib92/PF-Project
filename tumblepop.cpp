@@ -17,34 +17,6 @@ bool levelComplete = false;
 Clock levelCompleteClock;
 const float levelCompleteDelay = 3.0f;
 
-// Functions to check level of the game
-// Check if level 1 is completed 
-bool check_level_complete(bool ghost_active[], int total_ghosts, bool skel_active[], int total_skels);
-
-// If level 1 is compleeted then move to level 2
-void change_to_level2(char** lvl, int height, int width);
-
-// If level 1 is complete then display level  screen
-void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size);
-
-// Player gravity function is when player is not standing on a platform it should fall down
-void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth);
-
-// Check player collision with left blocks
-void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed);
-
-// Check player collision with right blocks
-void player_right_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed);
-
-// Check player collision with top blocks
-void player_ceiling_collision(char** lvl, float& offset_y, float& velocityY, float& player_x, float& player_y, const int cell_size, int& Pwidth);
-
-// Next check collison between player and enemy
-bool check_player_enemy_collision(float player_x, float player_y, int PlayerWidth, int PlayerHeight, float enemy_x, float enemy_y, int enemy_size);
-
-// When player is killed it should respawn as it does in the begining of the game
-void respawn_player(float& player_x, float& player_y, float& velocityY, bool& playerDead);
-
 // Vacuum and Shooting
 void update_vacuum(float player_x, float player_y, int vacuumDirection, float vacuum_range, float suck_strength, float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts, float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel, const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
 void shoot_single_enemy(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
@@ -53,7 +25,7 @@ void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_v
 bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count, float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts, float skel_x[], float skel_y[], bool skel_active[], int total_skels, int& hit_projectile, int& hit_enemy_index, bool& hit_was_ghost);
 
 
-// Check if all enemies are defeated
+// Check if all enemies are defeated then level  completed
 // here ghost_active[] and skel_active[] means alivee
 bool check_level_complete(bool ghost_active[], int total_ghosts,
                          bool skel_active[], int total_skels)
@@ -195,7 +167,7 @@ void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGroun
 // player_x and player_y are the current horizontal and vertical position of player
 // Pheight and Pwidth are players height and wdth in pixels of players collision with block
 // offset_x is the prediction of players horizontal position
-void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_x, const int cell_size, int& Pheight, int& Pwidth, float speed)
+void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
 {
     // moving left if there is no wall
     offset_x = player_x;     
