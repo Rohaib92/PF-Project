@@ -54,26 +54,35 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot
 
 
 // Check if all enemies are defeated
+// where ghost_active[]=true means ghost is alive and same for skeleton
 bool check_level_complete(bool ghost_active[], int total_ghosts,
                          bool skel_active[], int total_skels)
 {
+// loop through all the ghost and check if any ghost is aliv then level is not yet completed
     for(int i = 0; i < total_ghosts; i++)
     {
-        if(ghost_active[i]) return false;
+        if(ghost_active[i]) 
+        {
+          return false;
+        }
     }
-   
+// loop through all the skeltons and check if any skeleton is alive then level 1 is not yet completed 
     for(int i = 0; i < total_skels; i++)
     {
-        if(skel_active[i]) return false;
+        if(skel_active[i]) 
+        {
+          return false;
+        }
     }
    
-    return true; // All enemies defeated!
+    return true; 
 }
 
-// Change level layout to Level 2
+// Next after all enemies killed move to level to 2
+// In this function char**lvl is 2D array representing map of game and height and width are dimensions
 void change_to_level2(char** lvl, int height, int width)
 {
-    // Clear everything first
+    // First clear all screen
     for(int i = 0; i < height; i++)
     {
         for(int j = 0; j < width; j++)
@@ -81,9 +90,8 @@ void change_to_level2(char** lvl, int height, int width)
             lvl[i][j] = ' ';
         }
     }
-   
-    // LEVEL 2 - Simple layout with few blocks
-   
+ 
+     // add blocks  
     // Bottom floor
     for(int j = 0; j < width; ++j)
         lvl[13][j] = '#';
@@ -110,17 +118,24 @@ void change_to_level2(char** lvl, int height, int width)
     lvl[4][13] = '#'; lvl[4][14] = '#'; lvl[4][15] = '#';
 }
 
+// Next display level on the screen
+// here window is the main SFML window screen and char**lvl is 2D arrays representing the level map
+// bgTex and bgSprite are textur and Sprite for background
+// and blockTexture and blockSprite are textures and sprites for block
+// Also height and width are dimensions of map and cell_size is the size of each tile or box in pixel
 void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size)
 {
     window.draw(bgSprite);
 
+     // this function loops through the full screen and if the screen has a block it draws a block sprite there
     for (int i = 0; i < height; i += 1)
     {
         for (int j = 0; j < width; j += 1)
         {
             if (lvl[i][j] == '#')
             {
-                // position block sprite at tile coordinates
+               // setting the correct position by converting grid position to pixel position 
+               // where i means row and j means column
                 blockSprite.setPosition(j * cell_size, i * cell_size);
                 window.draw(blockSprite);
             }
