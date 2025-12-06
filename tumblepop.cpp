@@ -17,6 +17,24 @@ bool levelComplete = false;
 Clock levelCompleteClock;
 const float levelCompleteDelay = 3.0f;
 
+// ADD THIS NEW FUNCTION HERE:
+// Get character-specific speed multiplier
+// characterIndex: 0 = green (1.5x speed), 1 = yellow (1.2x speed)
+// baseSpeed: the normal movement speed
+// Returns: modified speed based on character
+float get_character_speed(int characterIndex, float baseSpeed)
+{
+    if(characterIndex == 0)
+    {
+        return baseSpeed * 1.5f;  // Green character - faster
+    }
+    else if(characterIndex == 1)
+    {
+        return baseSpeed * 1.2f;  // Yellow character - medium speed
+    }
+    return baseSpeed;  // Default speed
+}
+
 // Vacuum and Shooting
 void update_vacuum(float player_x, float player_y, int vacuumDirection, float vacuum_range, float suck_strength, float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts, float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel, const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
 void shoot_single_enemy(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
@@ -630,7 +648,9 @@ int main()
     float player_x = 500;
     float player_y = 150;
 
+    
     float speed = 5;
+   
 
     const float jumpStrength = -15; // negative -> upward
     const float gravity = 1;        // gravity per frame
@@ -774,6 +794,8 @@ bagOptions[1].loadFromFile("bag2.png");
                 {
                     playerChosen = true;
                     menuMusic.stop();
+                     float baseSpeed = 5;
+                    speed = get_character_speed(selectedIndex, baseSpeed);
                 }
             }
         }
@@ -823,8 +845,9 @@ bagSprite.setScale(2, 2);
         }
         window.display();
     }
-
-    bool isJumping = false;  // Track if jumping (unused now but available)
+ float baseSpeed = 5;
+                    speed = get_character_speed(selectedIndex, baseSpeed);
+    
 
     // collision flags and char placeholders (many used locally later)
     bool up_collide = false;
