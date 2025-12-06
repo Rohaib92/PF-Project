@@ -12,12 +12,6 @@ using namespace std;
 int screen_x = 1136;
 int screen_y = 896;
 
-int currentLevel = 1;
-bool levelComplete = false;
-Clock levelCompleteClock;
-const float levelCompleteDelay = 3.0f;
-
-// ADD THIS NEW FUNCTION HERE:
 // Get character-specific speed multiplier
 // characterIndex: 0 = green (1.5x speed), 1 = yellow (1.2x speed)
 // baseSpeed: the normal movement speed
@@ -42,6 +36,12 @@ void shoot_burst_mode(float player_x, float player_y, int vacuum_dir, int captur
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], bool shot_is_active[], int shot_count, char** lvl, int cell_size, int height);
 bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count, float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts, float skel_x[], float skel_y[], bool skel_active[], int total_skels, int& hit_projectile, int& hit_enemy_index, bool& hit_was_ghost);
 
+// Level 2 helper functions
+bool is_platform_reachable(char** lvl, int x, int y, int width, int height);
+bool check_on_slant(float player_x, float player_y, int player_width, int player_height,
+                    float slant_x1[], float slant_y1[], float slant_x2[], float slant_y2[],
+                    bool slant_active[], float slant_slide_force[], int slant_count, float& slide_force);
+
 
 // Check if all enemies are defeated then level  completed
 // here ghost_active[] and skel_active[] means alivee
@@ -64,13 +64,26 @@ bool check_level_complete(bool ghost_active[], int total_ghosts,
    
     return true;
 }
+bool is_platform_reachable(char** lvl, int x, int y, int width, int height)
+{
+    if (y <= 0 || lvl[y-1][x] == '#') return false;
+   
+    bool has_neighbor = false;
+    if (x > 0 && lvl[y][x-1] == '#') has_neighbor = true;
+    if (x < width-1 && lvl[y][x+1] == '#') has_neighbor = true;
+    if (y < height-1 && lvl[y+1][x] == '#') has_neighbor = true;
+   
+    return has_neighbor || y == height-2;
+    }
+
 
 // Next move to level 2
 // char** lvl represents 2D aray of map
 // int height, int width are screen height and width
-void change_to_level2(char** lvl, int height, int width)
+void change_to_level2(char** lvl, int height, int width, float slant_x1[], float slant_y1[],
+                     float slant_x2[], float slant_y2[], bool slant_active[],
+                     float slant_slide_force[], int& slant_count)
 {
-    // Clear everything on screen
     for(int i = 0; i < height; i++)
     {
         for(int j = 0; j < width; j++)
@@ -79,38 +92,158 @@ void change_to_level2(char** lvl, int height, int width)
         }
     }
    
+    slant_count = 0;
+    for(int i = 0; i < 5; i++)
+    {
+        slant_active[i] = false;
+    }
    
-   // make some blocks on level 2
-    // Bottom floor
+    // Boundaries
     for(int j = 0; j < width; ++j)
         lvl[13][j] = '#';
    
-    // Left wall
     for(int i = 0; i < height; ++i)
         lvl[i][0] = '#';
    
-    // Right wall
     for(int i = 0; i < height; ++i)
         lvl[i][17] = '#';
    
-    // Top ceiling
     for(int j = 0; j < width; ++j)
         lvl[0][j] = '#';
    
-    // Few platforms
-    lvl[10][5] = '#'; lvl[10][6] = '#'; lvl[10][7] = '#';
-    lvl[10][11] = '#'; lvl[10][12] = '#'; lvl[10][13] = '#';
+    // Starting platform
+    for(int j = 7; j <= 10; ++j)
+        lvl[11][j] = '#';
    
-    lvl[7][8] = '#'; lvl[7][9] = '#'; lvl[7][10] = '#';
+    // Generate 5-7 random horizontal platforms
+    int num_platforms = 5 + rand() % 3;
    
-    lvl[4][3] = '#'; lvl[4][4] = '#'; lvl[4][5] = '#';
-    lvl[4][13] = '#'; lvl[4][14] = '#'; lvl[4][15] = '#';
+    for(int p = 0; p < num_platforms; p++)
+    {
+        int attempts = 0;
+        while(attempts < 25)
+        {
+            int px = 2 + rand() % 13;
+            int py = 3 + rand() % 8;
+            int pwidth = 2 + rand() % 4;
+           
+            bool valid = true;
+           
+            for(int j = px; j < px + pwidth && j < width-1; j++)
+            {
+                if(lvl[py][j] == '#' || (py > 0 && lvl[py-1][j] == '#'))
+                {
+                    valid = false;
+                    break;
+                }
+            }
+           
+            if(valid && is_platform_reachable(lvl, px, py, width, height))
+            {
+                for(int j = px; j < px + pwidth && j < width-1; j++)
+                {
+                    lvl[py][j] = '#';
+                }
+                break;
+            }
+            attempts++;
+        }
+    }
+   
+    // Generate 2-3 slanted platforms
+    int num_slants = 2 + rand() % 2;
+   
+    for(int s = 0; s < num_slants && slant_count < 5; s++)
+    {
+        int attempts = 0;
+        while(attempts < 30)
+        {
+            int start_x = 3 + rand() % 10;
+            int start_y = 4 + rand() % 6;
+            int length = 3 + rand() % 4;
+            int direction = rand() % 2;
+           
+            bool valid = true;
+           
+            for(int i = 0; i < length; i++)
+            {
+                int x = direction == 0 ? start_x + i : start_x - i;
+                int y = start_y + i;
+               
+                if(x <= 0 || x >= width-1 || y >= height-1 || lvl[y][x] == '#')
+                {
+                    valid = false;
+                    break;
+                }
+            }
+           
+            if(valid)
+            {
+                slant_x1[slant_count] = start_x * 64;
+                slant_y1[slant_count] = start_y * 64;
+               
+                if(direction == 0)
+                {
+                    slant_x2[slant_count] = (start_x + length) * 64;
+                    slant_y2[slant_count] = (start_y + length) * 64;
+                    slant_slide_force[slant_count] = 1.5f;  // Slide down-right
+                }
+                else
+                {
+                    slant_x2[slant_count] = (start_x - length) * 64;
+                    slant_y2[slant_count] = (start_y + length) * 64;
+                    slant_slide_force[slant_count] = -1.5f;  // Slide down-left
+                }
+               
+                slant_active[slant_count] = true;
+                slant_count++;
+                break;
+            }
+            attempts++;
+        }
+    }
+   
+    cout << "[LEVEL 2] Generated with " << slant_count << " slanted platforms" << endl;
 }
-
+            bool check_on_slant(float player_x, float player_y, int player_width, int player_height,
+                    float slant_x1[], float slant_y1[], float slant_x2[], float slant_y2[],
+                    bool slant_active[], float slant_slide_force[], int slant_count, float& slide_force)
+                   
+{
+    slide_force = 0.0f;
+   
+    for(int i = 0; i < slant_count; i++)
+    {
+        if(!slant_active[i]) continue;
+       
+        float px = player_x + player_width / 2.0f;
+        float py = player_y + player_height;
+       
+        float dx = slant_x2[i] - slant_x1[i];
+        float dy = slant_y2[i] - slant_y1[i];
+       
+        if(dx == 0) continue;
+       
+        float slope = dy / dx;
+        float intercept = slant_y1[i] - slope * slant_x1[i];
+        float line_y = slope * px + intercept;
+       
+        float min_x = slant_x1[i] < slant_x2[i] ? slant_x1[i] : slant_x2[i];
+        float max_x = slant_x1[i] > slant_x2[i] ? slant_x1[i] : slant_x2[i];
+       
+        if(px >= min_x && px <= max_x && abs(py - line_y) < 25.0f)
+        {
+            slide_force = slant_slide_force[i];
+            return true;
+        }
+    }
+   
+    return false;
+}
 // Next display level 2 window
 // window this displays SFML window
 // height and width are screen dmensions and cell_size is size of screen in pixels
-void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size)
+void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size, float slant_x1[], float slant_y1[], float slant_x2[], float slant_y2[], bool slant_active[], int slant_count)
 {
     window.draw(bgSprite);
 
@@ -126,9 +259,25 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSpr
             }
         }
     }
+    // Draw slanted platforms
+    for(int i = 0; i < slant_count; i++)
+    {
+        if(!slant_active[i]) continue;
+       
+        float dx = slant_x2[i] - slant_x1[i];
+        float dy = slant_y2[i] - slant_y1[i];
+        float length = sqrt(dx*dx + dy*dy);
+        float angle = atan2(dy, dx) * 180.0f / 3.14159f;
+       
+        RectangleShape slantShape(Vector2f(length, 12));
+        slantShape.setPosition(slant_x1[i], slant_y1[i]);
+        slantShape.setRotation(angle);
+        slantShape.setFillColor(Color(200, 100, 50));
+        window.draw(slantShape);
+    }
 }
 
-/// This functioin is to check if player is not standing on the blocks then it must fall
+// This functioin is to check if player is not standing on the blocks then it must fall
 // char** lvl is a 2D array for map
 // player_x and player_y are the current horizontal and vertical position of player
 // Pheight and Pwidth are players height and wdth in pixels of players collision with block
@@ -136,8 +285,24 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSpr
 // speed = players constant speed
 // terminal_Velocity is the maximum downward speed that the player can achieve
 // onGround checks if player is on the ground
-void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth)
+void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float slant_x1[], float slant_y1[], float slant_x2[], float slant_y2[], bool slant_active[], float slant_slide_force[], int slant_count, float& slide_velocity_x)
 {
+    // Check if on slanted platform FIRST (for Level 2)
+    float slide_force = 0.0f;
+    bool on_slant = check_on_slant(player_x, player_y, Pwidth, Pheight, slant_x1, slant_y1, slant_x2, slant_y2, slant_active, slant_slide_force, slant_count, slide_force);
+   
+    if(on_slant)
+    {
+        onGround = true;
+        velocityY = 0;
+        slide_velocity_x = slide_force;
+        return;
+    }
+    else
+    {
+        slide_velocity_x = 0.0f;
+    }
+   
     // Apply gravity first (increase downward velocity)
     if (!onGround)
     {
@@ -637,7 +802,30 @@ int main()
     const int cell_size = 64;  // tile dimension in pixels
     const int height = 14;     // tiles vertically
     const int width = 18;      // tiles horizontally
-    char** lvl;                // 2D dynamic array representing map cells
+    char** lvl;        // Level management variables
+   
+    // Slanted platform arrays
+const int MAX_SLANTS = 5;
+float slant_x1[5];
+float slant_y1[5];
+float slant_x2[5];
+float slant_y2[5];
+bool slant_active[5];
+float slant_slide_force[5];
+int slant_count = 0;
+
+for(int i = 0; i < MAX_SLANTS; i++)
+{
+    slant_active[i] = false;
+}
+
+float slide_velocity_x = 0.0f;
+
+
+int currentLevel = 1;
+bool levelComplete = false;
+Clock levelCompleteClock;
+const float levelCompleteDelay = 3.0f;         // 2D dynamic array representing map cells
 
     //level and background textures and sprites
     Texture bgTex;
@@ -657,9 +845,7 @@ int main()
     float player_x = 500;
     float player_y = 150;
 
-    
     float speed = 5;
-   
 
     const float jumpStrength = -20; // negative -> upward
     const float gravity = 1;        // gravity per frame
@@ -803,8 +989,6 @@ bagOptions[1].loadFromFile("bag2.png");
                 {
                     playerChosen = true;
                     menuMusic.stop();
-                     
-                    
                 }
             }
         }
@@ -854,9 +1038,9 @@ bagSprite.setScale(2, 2);
         }
         window.display();
     }
- float baseSpeed = 5;
-                    speed = get_character_speed(selectedIndex, baseSpeed);
-    
+  float baseSpeed = 5;
+    speed = get_character_speed(selectedIndex, baseSpeed);
+    bool isJumping = false;  // Track if jumping (unused now but available)
 
     // collision flags and char placeholders (many used locally later)
     bool up_collide = false;
@@ -1119,6 +1303,63 @@ for(int i = 0; i < skel; i++)
     bool previous_E_pressed = false;
     bool previous_Q_pressed = false;
    
+    // ================= LEVEL 2 ENEMY SETUP =================
+    // INVISIBLE MAN (3 total)
+    const int invisible_men = 3;
+    float invis_x[3];
+    float invis_y[3];
+    float invis_speed[3];
+    int invis_dir[3];
+    bool invis_active[3];
+    bool invis_stunned[3];
+    float invis_stun_timer[3];
+    Sprite invisSprite[3];
+
+    Texture invisTexture;
+    invisTexture.loadFromFile("invisible.png");  // You need this image file!
+
+    for(int i = 0; i < invisible_men; i++)
+    {
+        invis_active[i] = false;  // Start inactive, spawn sequentially
+        invis_stunned[i] = false;
+        invis_stun_timer[i] = 0.0f;
+        invis_speed[i] = 1.5f;
+        invis_dir[i] = 1;
+        invisSprite[i].setTexture(invisTexture);
+        invisSprite[i].setScale(2, 2);
+    }
+
+    // CHELNOV (4 total)
+    const int chelnovs = 4;
+    float chelnov_x[4];
+    float chelnov_y[4];
+    float chelnov_speed[4];
+    int chelnov_dir[4];
+    bool chelnov_active[4];
+    bool chelnov_stunned[4];
+    float chelnov_stun_timer[4];
+    Sprite chelnovSprite[4];
+
+    Texture chelnovTexture;
+    chelnovTexture.loadFromFile("chelnov.png");  // You need this image file!
+
+    for(int i = 0; i < chelnovs; i++)
+    {
+        chelnov_active[i] = false;  // Start inactive
+        chelnov_stunned[i] = false;
+        chelnov_stun_timer[i] = 0.0f;
+        chelnov_speed[i] = 1.2f;
+        chelnov_dir[i] = 1;
+        chelnovSprite[i].setTexture(chelnovTexture);
+        chelnovSprite[i].setScale(2, 2);
+    }
+
+    // Sequential spawn tracking for Level 2
+    Clock enemySpawnClock;
+    int enemiesSpawned = 0;
+    const float spawnInterval = 2.5f;  // Spawn an enemy every 2.5 seconds
+    bool level2EnemiesSpawning = false;
+   
      // ===== SUCKING CAPACITY =====
      int captured[10];
     int cap_count = 0;           // Current count of sucked enemies
@@ -1149,8 +1390,8 @@ for(int i = 0; i < skel; i++)
         window.clear();
 
         // draw level and apply gravity to player
-        display_level(window, lvl, bgTex, bgSprite, blockTexture, blockSprite, height, width, cell_size);
-        player_gravity(lvl,offset_y,velocityY,onGround,gravity,terminal_Velocity, player_x, player_y, cell_size, PlayerHeight, PlayerWidth);
+       display_level(window, lvl, bgTex, bgSprite, blockTexture, blockSprite, height, width, cell_size, slant_x1, slant_y1, slant_x2, slant_y2, slant_active, slant_count);
+        player_gravity(lvl,offset_y,velocityY,onGround,gravity,terminal_Velocity, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, slant_x1, slant_y1, slant_x2, slant_y2, slant_active, slant_slide_force, slant_count, slide_velocity_x);
 
         ///*** // Moving the character left and right using arrow keys'
         if(!playerDead) // Only allow controls if alive
@@ -1160,6 +1401,7 @@ for(int i = 0; i < skel; i++)
         {
             // attempt to move right with collision check
             player_right_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
+            player_x += slide_velocity_x;  // Apply sliding from slanted platforms
             bagSprite.setScale(-2,2);
             PlayerSprite.setScale(-3,3);
             facingRight = true;// flip horizontally to face right
@@ -1170,6 +1412,7 @@ for(int i = 0; i < skel; i++)
         {
             // attempt to move left
             player_left_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
+            player_x += slide_velocity_x;  // Apply sliding from slanted platforms
             bagSprite.setScale(2,2);
             PlayerSprite.setScale(3,3);
             facingRight=false; // normal facing left
@@ -1413,6 +1656,61 @@ for(int i = 0; i < skel; i++)
             }
         }
 
+// ====== INVISIBLE MAN MOVEMENT (Level 2) ======
+for(int i = 0; i < invisible_men; i++)
+{
+    if(!invis_active[i]) continue;
+   
+    if(invis_stunned[i])
+    {
+        invisSprite[i].setPosition(invis_x[i], invis_y[i]);
+        window.draw(invisSprite[i]);
+        continue;
+    }
+   
+    // Simple left-right movement
+    invis_x[i] += invis_speed[i] * invis_dir[i];
+   
+    // Check boundaries and turn around
+    int tile_x = invis_x[i] / cell_size;
+    int tile_y = invis_y[i] / cell_size;
+   
+    if(tile_x <= 1 || tile_x >= width-2)
+    {
+        invis_dir[i] *= -1;
+    }
+   
+    invisSprite[i].setPosition(invis_x[i], invis_y[i]);
+    window.draw(invisSprite[i]);
+}
+
+// ====== CHELNOV MOVEMENT (Level 2) ======
+for(int i = 0; i < chelnovs; i++)
+{
+    if(!chelnov_active[i]) continue;
+   
+    if(chelnov_stunned[i])
+    {
+        chelnovSprite[i].setPosition(chelnov_x[i], chelnov_y[i]);
+        window.draw(chelnovSprite[i]);
+        continue;
+    }
+   
+    // Simple left-right movement
+    chelnov_x[i] += chelnov_speed[i] * chelnov_dir[i];
+   
+    // Check boundaries and turn around
+    int tile_x = chelnov_x[i] / cell_size;
+    int tile_y = chelnov_y[i] / cell_size;
+   
+    if(tile_x <= 1 || tile_x >= width-2)
+    {
+        chelnov_dir[i] *= -1;
+    }
+   
+    chelnovSprite[i].setPosition(chelnov_x[i], chelnov_y[i]);
+    window.draw(chelnovSprite[i]);
+}
         // ====== GHOST MOVEMENT
        for(int i = 0; i < ghosts; i++)
 {
@@ -1676,16 +1974,154 @@ if(combo > 0)
 }
  
  // ====== CHECK LEVEL COMPLETION ======
-if(!levelComplete && !playerDead && currentLevel == 1)
+ 
+ // ====== LEVEL 2 SEQUENTIAL ENEMY SPAWNING ======
+if(currentLevel == 2 && level2EnemiesSpawning)
 {
-    if(check_level_complete(ghost_active, ghosts, skel_active, skel))
+    float spawnElapsed = enemySpawnClock.getElapsedTime().asSeconds();
+   
+    if(spawnElapsed >= spawnInterval)
     {
-        levelComplete = true;
-        levelCompleteClock.restart();
-        score += 500; // Bonus points
-        cout << "[LEVEL] Level 1 Complete!" << endl;
+        enemySpawnClock.restart();
+       
+        // Total enemies to spawn: 3 invisible + 4 chelnov + 4 ghosts + 9 skeletons = 20
+       
+        // Spawn invisible men first (0-2)
+        if(enemiesSpawned < 3)
+        {
+            int idx = enemiesSpawned;
+            // Find random spawn position
+            while(true)
+            {
+                int tx = 2 + rand() % 14;
+                int ty = rand() % (height - 1);
+               
+                if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
+                {
+                    invis_x[idx] = tx * cell_size;
+                    invis_y[idx] = ty * cell_size;
+                    invis_active[idx] = true;
+                    invis_dir[idx] = (rand() % 2 == 0) ? -1 : 1;
+                    invisSprite[idx].setPosition(invis_x[idx], invis_y[idx]);
+                    cout << "[SPAWN] Invisible Man " << (idx+1) << " spawned!" << endl;
+                    break;
+                }
+            }
+        }
+        // Then spawn chelnovs (3-6)
+        else if(enemiesSpawned >= 3 && enemiesSpawned < 7)
+        {
+            int idx = enemiesSpawned - 3;
+            while(true)
+            {
+                int tx = 2 + rand() % 14;
+                int ty = rand() % (height - 1);
+               
+                if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
+                {
+                    chelnov_x[idx] = tx * cell_size;
+                    chelnov_y[idx] = ty * cell_size;
+                    chelnov_active[idx] = true;
+                    chelnov_dir[idx] = (rand() % 2 == 0) ? -1 : 1;
+                    chelnovSprite[idx].setPosition(chelnov_x[idx], chelnov_y[idx]);
+                    cout << "[SPAWN] Chelnov " << (idx+1) << " spawned!" << endl;
+                    break;
+                }
+            }
+        }
+        // Then spawn ghosts (7-10)
+        else if(enemiesSpawned >= 7 && enemiesSpawned < 11)
+        {
+            int idx = enemiesSpawned - 7;
+            while(true)
+            {
+                int tx = 2 + rand() % 14;
+                int ty = rand() % (height - 1);
+               
+                if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
+                {
+                    ghost_x[idx] = tx * cell_size;
+                    ghost_y[idx] = ty * cell_size;
+                    ghost_active[idx] = true;
+                    ghost_dir[idx] = (rand() % 2 == 0) ? -1 : 1;
+                    ghostSprite[idx].setPosition(ghost_x[idx], ghost_y[idx]);
+                    cout << "[SPAWN] Ghost " << (idx+1) << " spawned!" << endl;
+                    break;
+                }
+            }
+        }
+        // Finally spawn skeletons (11-19)
+        else if(enemiesSpawned >= 11 && enemiesSpawned < 20)
+        {
+            int idx = enemiesSpawned - 11;
+            while(true)
+            {
+                int tx = 2 + rand() % 14;
+                int ty = rand() % (height - 1);
+               
+                if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
+                {
+                    skel_x[idx] = tx * cell_size;
+                    skel_y[idx] = ty * cell_size;
+                    skel_active[idx] = true;
+                    skel_dir[idx] = (rand() % 2 == 0) ? -1 : 1;
+                    skelSprite[idx].setPosition(skel_x[idx], skel_y[idx]);
+                    cout << "[SPAWN] Skeleton " << (idx+1) << " spawned!" << endl;
+                    break;
+                }
+            }
+        }
+       
+        enemiesSpawned++;
+       
+        if(enemiesSpawned >= 20)
+        {
+            level2EnemiesSpawning = false;
+            cout << "[LEVEL 2] All enemies spawned!" << endl;
+        }
     }
 }
+// ====== CHECK LEVEL COMPLETION ======
+if(!levelComplete && !playerDead)
+{
+    if(currentLevel == 1)
+    {
+        if(check_level_complete(ghost_active, ghosts, skel_active, skel))
+        {
+            levelComplete = true;
+            levelCompleteClock.restart();
+            score += 500;
+            cout << "[LEVEL] Level 1 Complete!" << endl;
+        }
+        }
+   
+    else if(currentLevel == 2)
+    {
+        // Check all Level 2 enemies
+        bool all_defeated = true;
+       
+        for(int i = 0; i < invisible_men; i++)
+            if(invis_active[i]) all_defeated = false;
+           
+        for(int i = 0; i < chelnovs; i++)
+            if(chelnov_active[i]) all_defeated = false;
+           
+        for(int i = 0; i < 4; i++)
+            if(ghost_active[i]) all_defeated = false;
+           
+        for(int i = 0; i < 9; i++)
+            if(skel_active[i]) all_defeated = false;
+       
+        if(all_defeated && !level2EnemiesSpawning)
+        {
+            levelComplete = true;
+            levelCompleteClock.restart();
+            score += 1000;
+            cout << "[LEVEL] Level 2 Complete!" << endl;
+        }
+    }
+}
+   
 
 // ====== SHOW COMPLETION MESSAGE & MOVE TO LEVEL 2 ======
 if(levelComplete && currentLevel == 1)
@@ -1715,7 +2151,7 @@ if(levelComplete && currentLevel == 1)
         currentLevel = 2;
        
         // Change to Level 2 layout
-        change_to_level2(lvl, height, width);
+     change_to_level2(lvl, height, width, slant_x1, slant_y1, slant_x2, slant_y2, slant_active, slant_slide_force, slant_count);
        
         // Reset player position
         player_x = 500;
@@ -1725,6 +2161,7 @@ if(levelComplete && currentLevel == 1)
         vacuumActive = false;
        
         // Deactivate ALL enemies (Level 2 has no enemies)
+        // Deactivate Level 1 enemies
         for(int i = 0; i < ghosts; i++)
         {
             ghost_active[i] = false;
@@ -1739,25 +2176,27 @@ if(levelComplete && currentLevel == 1)
             skel_y[i] = -1000;
         }
        
+        // Start Level 2 sequential spawning
+        level2EnemiesSpawning = true;
+        enemiesSpawned = 0;
+        enemySpawnClock.restart();
+       
         levelComplete = false;
-        cout << "[LEVEL] Now in Level 2 - No Enemies!" << endl;
+        cout << "[LEVEL] Now in Level 2 - No Enemiegs!" << endl;
     }
 }
- 
-        // Present everything drawn this frame
-        window.display();
-    }
-
-    //stopping music and deleting level array (cleanup)
+window.display();
+}
+ //stopping music and deleting level array (cleanup)
     lvlMusic.stop();
     for (int i = 0; i < height; i++)
-    {
         delete[] lvl[i];
-    }
     delete[] lvl;
-
+   
     return 0;
 }
 
+       
+   
 
 
