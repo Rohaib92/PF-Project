@@ -33,7 +33,7 @@ float get_character_speed(int characterIndex, float baseSpeed)
 void update_vacuum(float player_x, float player_y, int vacuumDirection, float vacuum_range, float suck_strength, float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts, float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel, const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
 void shoot_single_enemy(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
 void shoot_burst_mode(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
-void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], bool shot_is_active[], int shot_count, char** lvl, int cell_size, int height);
+void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], bool shot_is_active[], float shot_lifetime[], float deltaTime, float max_lifetime, int shot_count, char** lvl, int cell_size, int height);
 bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count, float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts, float skel_x[], float skel_y[], bool skel_active[], int total_skels, int& hit_projectile, int& hit_enemy_index, bool& hit_was_ghost);
 
 // Level 2 helper functions
@@ -643,7 +643,9 @@ void shoot_single_enemy(float player_x, float player_y, int vacuum_dir,
                        int captured[], int& cap_count,
                        float shot_enemy_x[], float shot_enemy_y[],
                        float shot_velocity_x[], float shot_velocity_y[],
-                       int shot_enemy_type[], bool shot_is_active[], int& shot_count)
+                       int shot_enemy_type[], bool shot_is_active[],
+                       float shot_lifetime[],  // NEW: Add lifetime parameter
+                       int& shot_count)
 {
     if (cap_count <= 0)
     {
@@ -653,69 +655,104 @@ void shoot_single_enemy(float player_x, float player_y, int vacuum_dir,
     // LIFO: Pop last captured enemy
     cap_count = cap_count - 1;
     int shot_type = captured[cap_count];
+   
+    // ===== ADD DEBUG OUTPUT =====
+    cout << "[DEBUG] Shooting enemy type: " << shot_type << " from index: " << cap_count << endl;
 
-    // Create new projectile
-    shot_enemy_x[shot_count] = player_x;
-    shot_enemy_y[shot_count] = player_y;
-    shot_enemy_type[shot_count] = shot_type; // Use actual enemy type
-    shot_is_active[shot_count] = true;
+    // Find next available projectile slot
+    int slot = -1;
+    for(int i = 0; i < 20; i++)
+    {
+        if(!shot_is_active[i])
+        {
+            slot = i;
+            break;
+        }
+    }
+   
+    if(slot == -1) // No available slots
+    {
+        cout << "[WARN] No available projectile slots!" << endl;
+        return;
+    }
+
+    // Create new projectile at the found slot
+    shot_enemy_x[slot] = player_x;
+    shot_enemy_y[slot] = player_y;
+    shot_enemy_type[slot] = shot_type; // CRITICAL: Use the actual captured type!
+    shot_is_active[slot] = true;
+    shot_lifetime[slot] = 0.0f;  // NEW: Reset lifetime to 0
 
     float projectile_speed = 10.0f;
 
     // Set velocity based on vacuum direction
     if (vacuum_dir == 0) // left
     {
-        shot_velocity_x[shot_count] = -projectile_speed;
-        shot_velocity_y[shot_count] = 0.0f;
+        shot_velocity_x[slot] = -projectile_speed;
+        shot_velocity_y[slot] = 0.0f;
     }
     else if (vacuum_dir == 1) // up
     {
-        shot_velocity_x[shot_count] = 0.0f;
-        shot_velocity_y[shot_count] = -projectile_speed;
+        shot_velocity_x[slot] = 0.0f;
+        shot_velocity_y[slot] = -projectile_speed;
     }
     else if (vacuum_dir == 2) // right
     {
-        shot_velocity_x[shot_count] = projectile_speed;
-        shot_velocity_y[shot_count] = 0.0f;
+        shot_velocity_x[slot] = projectile_speed;
+        shot_velocity_y[slot] = 0.0f;
     }
     else // down (3)
     {
-        shot_velocity_x[shot_count] = 0.0f;
-        shot_velocity_y[shot_count] = projectile_speed;
+        shot_velocity_x[slot] = 0.0f;
+        shot_velocity_y[slot] = projectile_speed;
     }
-
-    shot_count = shot_count + 1;
-    if (shot_count >= 20)
-    {
-        shot_count = 0;
-    }
+   
+    cout << "[SHOOT] Created projectile in slot " << slot << " with type " << shot_type << endl;
 }
 
 void shoot_burst_mode(float player_x, float player_y, int vacuum_dir,
                      int captured[], int& cap_count,
                      float shot_enemy_x[], float shot_enemy_y[],
                      float shot_velocity_x[], float shot_velocity_y[],
-                     int shot_enemy_type[], bool shot_is_active[], int& shot_count)
+                     int shot_enemy_type[], bool shot_is_active[],
+                     float shot_lifetime[],  // NEW: Add lifetime parameter
+                     int& shot_count)
 {
+    cout << "[BURST] Starting burst mode! Captured count: " << cap_count << endl;
+   
     // Shoot all captured enemies in LIFO order
     while (cap_count > 0)
     {
         shoot_single_enemy(player_x, player_y, vacuum_dir, captured, cap_count,
                           shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
-                          shot_enemy_type, shot_is_active, shot_count);
+                          shot_enemy_type, shot_is_active, shot_lifetime, shot_count);  // NEW: Pass lifetime
     }
+   
+    cout << "[BURST] Burst complete!" << endl;
 }
-
 // Update all projectile positions and physics
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
                        float shot_velocity_x[], float shot_velocity_y[],
-                       bool shot_is_active[], int shot_count,
+                       bool shot_is_active[], float shot_lifetime[],  // NEW: Add lifetime parameter
+                       float deltaTime, float max_lifetime,  // NEW: Add deltaTime and max_lifetime
+                       int shot_count,
                        char** lvl, int cell_size, int height)
 {
     for (int i = 0; i < 20; i++)
     {
         if (!shot_is_active[i])
         {
+            continue;
+        }
+
+        // NEW: Update lifetime
+        shot_lifetime[i] += deltaTime;
+       
+        // NEW: Check if projectile has exceeded lifetime
+        if (shot_lifetime[i] >= max_lifetime)
+        {
+            shot_is_active[i] = false;
+            cout << "[PROJECTILE] Projectile " << i << " expired after " << max_lifetime << " seconds" << endl;
             continue;
         }
 
@@ -733,20 +770,15 @@ void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
         if (shot_enemy_x[i] < 0 || shot_enemy_x[i] > 1136)
         {
             shot_is_active[i] = false;
+            cout << "[PROJECTILE] Deactivated (out of bounds X)" << endl;
+            continue;
         }
-
-        // Bounce at top
-        if (shot_enemy_y[i] < 0)
+       
+        if (shot_enemy_y[i] < 0 || shot_enemy_y[i] > 896)
         {
-            shot_velocity_y[i] = -shot_velocity_y[i] * 0.8f;
-            shot_enemy_y[i] = 0;
-        }
-
-        // Bounce at bottom
-        if (shot_enemy_y[i] > (height - 1) * cell_size)
-        {
-            shot_velocity_y[i] = -8.0f;
-            shot_enemy_y[i] = (height - 1) * cell_size - 48;
+            shot_is_active[i] = false;
+            cout << "[PROJECTILE] Deactivated (out of bounds Y)" << endl;
+            continue;
         }
 
         // Check platform collision
@@ -762,10 +794,30 @@ void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
                 {
                     shot_velocity_x[i] = -shot_velocity_x[i];
                 }
+                if (shot_velocity_y[i] > 0)
+                {
+                    shot_velocity_y[i] = -shot_velocity_y[i] * 0.8f;
+                }
             }
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Check if projectiles hit any active enemies
 bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
@@ -1342,12 +1394,15 @@ for(int i = 0; i < skel; i++)
     float shot_velocity_y[20];
     int shot_enemy_type[20];  // 0=ghost, 1=skeleton
     bool shot_is_active[20];
-    int shot_projectile_count = 0;
+    float shot_lifetime[20];      //How long projectile has been alive
+const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
+   int shot_projectile_count=0;
 
     // Initialize shot array
     for (int i = 0; i < 20; i++)
     {
         shot_is_active[i] = false;
+         shot_lifetime[i] = 0.0f;  // Initialize lifetime
     }
 
     // Key press tracking (for single-shot detection)
@@ -1551,9 +1606,8 @@ for(int i = 0; i < skel; i++)
             if (cap_count > 0)
             {
                 shoot_single_enemy(player_x, player_y, vacuumDirection, captured, cap_count,
-                                  shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
-                                  shot_enemy_type, shot_is_active, shot_projectile_count);
-                cout << "[SHOOT] Single shot! Remaining captured: " << cap_count << endl;
+                  shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
+                  shot_enemy_type, shot_is_active, shot_lifetime, shot_projectile_count);  
             }
         }
 
@@ -1563,9 +1617,8 @@ for(int i = 0; i < skel; i++)
             if (cap_count > 0)
             {
                 shoot_burst_mode(player_x, player_y, vacuumDirection, captured, cap_count,
-                                shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
-                                shot_enemy_type, shot_is_active, shot_projectile_count);
-                cout << "[BURST] All enemies shot!" << endl;
+                shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
+                shot_enemy_type, shot_is_active, shot_lifetime, shot_projectile_count); 
             }
         }
 
@@ -1620,9 +1673,9 @@ for(int i = 0; i < skel; i++)
         previous_Q_pressed = Q_key_pressed;
 
         // Update all projectile physics
-        update_projectiles(shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
-                          shot_is_active, shot_projectile_count, lvl, cell_size, height);
-
+       update_projectiles(shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
+                  shot_is_active, shot_lifetime, deltaTime, max_lifetime,  // ADD these 3 parameters
+                  shot_projectile_count, lvl, cell_size, height);
        
         // ============= DRAW PLAYER OR VACUUM =============
     if(!playerDead)
@@ -1698,18 +1751,29 @@ for(int i = 0; i < skel; i++)
 
 
   // ============= DRAW PROJECTILES =============
-        // Draw all active projectiles (shot enemies)
-        for (int i = 0; i < 20; i++)
+// Draw all active projectiles (shot enemies) - use correct sprite based on type
+for (int i = 0; i < 20; i++)
+{
+    if (shot_is_active[i])
+    {
+        // Draw projectile using CORRECT sprite based on enemy type
+        if(shot_enemy_type[i] == 0) // Ghost
         {
-            if (shot_is_active[i])
-            {
-                // Draw projectile using ghost sprite with red tint
-                ghostSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
-                ghostSprite[0].setColor(Color(255, 100, 100)); // Red tint for projectiles
-                window.draw(ghostSprite[0]);
-                ghostSprite[0].setColor(Color::White); // Reset color back to white
-            }
+            ghostSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
+            ghostSprite[0].setColor(Color(255, 100, 100)); // Red tint
+            window.draw(ghostSprite[0]);
+            ghostSprite[0].setColor(Color::White); // Reset
         }
+        else if(shot_enemy_type[i] == 1) // Skeleton
+        {
+            skelSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
+            skelSprite[0].setColor(Color(255, 100, 100)); // Red tint
+            window.draw(skelSprite[0]);
+            skelSprite[0].setColor(Color::White); // Reset
+        }
+    }
+}
+
 
 // ====== INVISIBLE MAN MOVEMENT (Level 2) ======
 for(int i = 0; i < invisible_men; i++)
