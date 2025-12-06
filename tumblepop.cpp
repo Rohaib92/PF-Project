@@ -794,8 +794,8 @@ bagOptions[1].loadFromFile("bag2.png");
                 {
                     playerChosen = true;
                     menuMusic.stop();
-                     float baseSpeed = 5;
-                    speed = get_character_speed(selectedIndex, baseSpeed);
+                     
+                    
                 }
             }
         }
