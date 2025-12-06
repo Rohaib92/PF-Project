@@ -38,7 +38,7 @@ void update_vacuum(float player_x, float player_y, int vacuumDirection, float va
     float chelnov_x[], float chelnov_y[], bool chelnov_active[], bool chelnov_stunned[], float chelnov_stun_timer[], int chelnov_count,
     const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
     
-    
+    void generate_random_slanted_platform(char** lvl, int height, int width);
 void shoot_single_enemy(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
 void shoot_burst_mode(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], bool shot_is_active[], float shot_lifetime[], float deltaTime, float max_lifetime, int shot_count, char** lvl, int cell_size, int height);
@@ -52,9 +52,6 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot
     
 // Level 2 helper functions
 bool is_platform_reachable(char** lvl, int x, int y, int width, int height);
-bool check_on_slant(float player_x, float player_y, int player_width, int player_height,
-                    float slant_x1[], float slant_y1[], float slant_x2[], float slant_y2[],
-                    bool slant_active[], float slant_slide_force[], int slant_count, float& slide_force);
 
 
 // Check if all enemies are defeated then level  completed
@@ -102,10 +99,9 @@ bool is_platform_reachable(char** lvl, int x, int y, int width, int height)
 // Next move to level 2
 // char** lvl represents 2D aray of map
 // int height, int width are screen height and width
-void change_to_level2(char** lvl, int height, int width, float slant_x1[], float slant_y1[],
-                     float slant_x2[], float slant_y2[], bool slant_active[],
-                     float slant_slide_force[], int& slant_count)
+void change_to_level2(char** lvl, int height, int width)
 {
+    // Clear entire level
     for(int i = 0; i < height; i++)
     {
         for(int j = 0; j < width; j++)
@@ -114,158 +110,183 @@ void change_to_level2(char** lvl, int height, int width, float slant_x1[], float
         }
     }
    
-    slant_count = 0;
-    for(int i = 0; i < 5; i++)
-    {
-        slant_active[i] = false;
-    }
-   
-    // Boundaries
+    // Bottom floor (same as Level 1)
     for(int j = 0; j < width; ++j)
-        lvl[13][j] = '#';
+        lvl[height-6][j] = '#';
    
-    for(int i = 0; i < height; ++i)
+    // Left wall
+    for(int i = 0; i < height-6; ++i)
         lvl[i][0] = '#';
    
-    for(int i = 0; i < height; ++i)
-        lvl[i][17] = '#';
+    // Right wall
+    for(int i = 0; i < height-6; ++i)
+        lvl[i][width-1] = '#';
    
+    // Top ceiling
     for(int j = 0; j < width; ++j)
         lvl[0][j] = '#';
    
-    // Starting platform
+    // Starting platform (centered)
+    int platform_row = height-9;
     for(int j = 7; j <= 10; ++j)
-        lvl[11][j] = '#';
+        lvl[platform_row][j] = '#';
    
-    // Generate 5-7 random horizontal platforms
-    int num_platforms = 5 + rand() % 3;
+    // ADD MORE BLOCKS - Top platforms
+    // Top left platform
+    for(int j = 2; j <= 5; ++j)
+        lvl[2][j] = '#';
+    
+    // Top right platform
+    for(int j = 12; j <= 15; ++j)
+        lvl[2][j] = '#';
+    
+    // Middle left platform
+    for(int j = 2; j <= 4; ++j)
+        lvl[4][j] = '#';
+    
+    // Middle right platform
+    for(int j = 13; j <= 15; ++j)
+        lvl[4][j] = '#';
+    
+    // Lower left platform
+    for(int j = 2; j <= 6; ++j)
+        lvl[6][j] = '#';
+    
+    // Lower right platform
+    for(int j = 11; j <= 15; ++j)
+        lvl[6][j] = '#';
    
-    for(int p = 0; p < num_platforms; p++)
-    {
-        int attempts = 0;
-        while(attempts < 25)
-        {
-            int px = 2 + rand() % 13;
-            int py = 3 + rand() % 8;
-            int pwidth = 2 + rand() % 4;
-           
-            bool valid = true;
-           
-            for(int j = px; j < px + pwidth && j < width-1; j++)
-            {
-                if(lvl[py][j] == '#' || (py > 0 && lvl[py-1][j] == '#'))
-                {
-                    valid = false;
-                    break;
-                }
-            }
-           
-            if(valid && is_platform_reachable(lvl, px, py, width, height))
-            {
-                for(int j = px; j < px + pwidth && j < width-1; j++)
-                {
-                    lvl[py][j] = '#';
-                }
-                break;
-            }
-            attempts++;
-        }
-    }
+    // IMMEDIATELY SPAWN FIRST SLANTED PLATFORM
+    generate_random_slanted_platform(lvl, height, width);
    
-    // Generate 2-3 slanted platforms
-    int num_slants = 2 + rand() % 2;
-   
-    for(int s = 0; s < num_slants && slant_count < 5; s++)
-    {
-        int attempts = 0;
-        while(attempts < 30)
-        {
-            int start_x = 3 + rand() % 10;
-            int start_y = 4 + rand() % 6;
-            int length = 3 + rand() % 4;
-            int direction = rand() % 2;
-           
-            bool valid = true;
-           
-            for(int i = 0; i < length; i++)
-            {
-                int x = direction == 0 ? start_x + i : start_x - i;
-                int y = start_y + i;
-               
-                if(x <= 0 || x >= width-1 || y >= height-1 || lvl[y][x] == '#')
-                {
-                    valid = false;
-                    break;
-                }
-            }
-           
-            if(valid)
-            {
-                slant_x1[slant_count] = start_x * 64;
-                slant_y1[slant_count] = start_y * 64;
-               
-                if(direction == 0)
-                {
-                    slant_x2[slant_count] = (start_x + length) * 64;
-                    slant_y2[slant_count] = (start_y + length) * 64;
-                    slant_slide_force[slant_count] = 1.5f;  // Slide down-right
-                }
-                else
-                {
-                    slant_x2[slant_count] = (start_x - length) * 64;
-                    slant_y2[slant_count] = (start_y + length) * 64;
-                    slant_slide_force[slant_count] = -1.5f;  // Slide down-left
-                }
-               
-                slant_active[slant_count] = true;
-                slant_count++;
-                break;
-            }
-            attempts++;
-        }
-    }
-   
-    cout << "[LEVEL 2] Generated with " << slant_count << " slanted platforms" << endl;
+    cout << "[LEVEL 2] Base level created with additional platforms - first slanted platform spawned!" << endl;
 }
-            bool check_on_slant(float player_x, float player_y, int player_width, int player_height,
-                    float slant_x1[], float slant_y1[], float slant_x2[], float slant_y2[],
-                    bool slant_active[], float slant_slide_force[], int slant_count, float& slide_force)
-                   
+
+// REPLACE the generate_random_slanted_platform function with this:
+
+void generate_random_slanted_platform(char** lvl, int height, int width)
 {
-    slide_force = 0.0f;
-   
-    for(int i = 0; i < slant_count; i++)
+    // Clear any existing slanted platforms (but keep static platforms and starting platform)
+    for(int i = 2; i < height-6; i++)
     {
-        if(!slant_active[i]) continue;
-       
-        float px = player_x + player_width / 2.0f;
-        float py = player_y + player_height;
-       
-        float dx = slant_x2[i] - slant_x1[i];
-        float dy = slant_y2[i] - slant_y1[i];
-       
-        if(dx == 0) continue;
-       
-        float slope = dy / dx;
-        float intercept = slant_y1[i] - slope * slant_x1[i];
-        float line_y = slope * px + intercept;
-       
-        float min_x = slant_x1[i] < slant_x2[i] ? slant_x1[i] : slant_x2[i];
-        float max_x = slant_x1[i] > slant_x2[i] ? slant_x1[i] : slant_x2[i];
-       
-        if(px >= min_x && px <= max_x && abs(py - line_y) < 25.0f)
+        for(int j = 2; j < width-2; j++)
         {
-            slide_force = slant_slide_force[i];
-            return true;
+            // Only clear blocks that are NOT walls or floor
+            if(lvl[i][j] == '#' && i != 0 && i != height-6 && j != 0 && j != width-1)
+            {
+                // Don't clear static platforms (rows 2, 4, 6) or starting platform (row 5, columns 7-10)
+                bool isStaticPlatform = (i == 2 && ((j >= 2 && j <= 5) || (j >= 12 && j <= 15))) ||
+                                       (i == 4 && ((j >= 2 && j <= 4) || (j >= 13 && j <= 15))) ||
+                                       (i == 6 && ((j >= 2 && j <= 6) || (j >= 11 && j <= 15))) ||
+                                       (i == 5 && j >= 7 && j <= 10);
+               
+                if(!isStaticPlatform)
+                {
+                    lvl[i][j] = ' ';
+                }
+            }
         }
     }
    
-    return false;
+    // Generate new SLANTED platform (diagonal blocks - 1 block wide)
+    int direction = rand() % 2; // 0 = ascending left-to-right, 1 = ascending right-to-left
+    int length = 6;  // 6 blocks long
+   
+    int attempts = 0;
+    bool placed = false;
+   
+    while(attempts < 50 && !placed)
+    {
+        int start_x, start_y;
+       
+        if(direction == 0) // Ascending left to right
+        {
+            start_x = 3 + rand() % 5;  // Start x: 3-7
+            start_y = 7;               // Start from row 7
+        }
+        else // Ascending right to left
+        {
+            start_x = 10 + rand() % 5; // Start x: 10-14
+            start_y = 7;               // Start from row 7
+        }
+       
+        // Check if platform can be placed
+        bool valid = true;
+        for(int i = 0; i < length; i++)
+        {
+            int x = (direction == 0) ? start_x + i : start_x - i;
+            int y = start_y - i;  // Going UP
+           
+            // Check bounds
+            if(x <= 1 || x >= width-1 || y <= 1 || y >= height-6)
+            {
+                valid = false;
+                break;
+            }
+           
+            // Check if space is empty
+            if(lvl[y][x] != ' ')
+            {
+                valid = false;
+                break;
+            }
+        }
+       
+        // Place the DIAGONAL BLOCKS (1 block wide - sliding staircase)
+        if(valid)
+        {
+            if(direction == 0) // Left-to-right ascending
+            {
+                // Creates diagonal like:
+                //      #
+                //     #
+                //    #
+                //   #
+                //  #
+                // #
+                for(int i = 0; i < length; i++)
+                {
+                    int x = start_x + i;  // Step right by 1
+                    int y = start_y - i;  // Step up by 1
+                    lvl[y][x] = '#';      // Single block
+                }
+            }
+            else // Right-to-left ascending
+            {
+                // Creates diagonal like:
+                // #
+                //  #
+                //   #
+                //    #
+                //     #
+                //      #
+                for(int i = 0; i < length; i++)
+                {
+                    int x = start_x - i;  // Step left by 1
+                    int y = start_y - i;  // Step up by 1
+                    lvl[y][x] = '#';      // Single block
+                }
+            }
+           
+            placed = true;
+            cout << "[PLATFORM] DIAGONAL sliding platform created! Direction: "
+                 << (direction == 0 ? "/ (up-right)" : "\\ (up-left)")
+                 << " - SINGLE BLOCK WIDTH for sliding!" << endl;
+        }
+       
+        attempts++;
+    }
+   
+    if(!placed)
+    {
+        cout << "[PLATFORM] Failed to place slanted platform after 50 attempts!" << endl;
+    }
 }
+
 // Next display level 2 window
 // window this displays SFML window
 // height and width are screen dmensions and cell_size is size of screen in pixels
-void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size, float slant_x1[], float slant_y1[], float slant_x2[], float slant_y2[], bool slant_active[], int slant_count)
+void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size)
 {
     window.draw(bgSprite);
 
@@ -275,29 +296,35 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSpr
         {
             if (lvl[i][j] == '#')
             {
-                // Draw block sprite by conerting grids int pixels
                 blockSprite.setPosition(j * cell_size, i * cell_size);
                 window.draw(blockSprite);
             }
+            else if (lvl[i][j] == '/')
+            {
+                ConvexShape slope;
+                slope.setPointCount(3);
+                slope.setPoint(0, Vector2f(0, cell_size));
+                slope.setPoint(1, Vector2f(cell_size, 0));
+                slope.setPoint(2, Vector2f(cell_size, cell_size));
+                slope.setPosition(j * cell_size, i * cell_size);
+                slope.setFillColor(Color(180, 120, 60));
+                window.draw(slope);
+            }
+            else if (lvl[i][j] == '\\')
+            {
+                ConvexShape slope;
+                slope.setPointCount(3);
+                slope.setPoint(0, Vector2f(0, 0));
+                slope.setPoint(1, Vector2f(0, cell_size));
+                slope.setPoint(2, Vector2f(cell_size, cell_size));
+                slope.setPosition(j * cell_size, i * cell_size);
+                slope.setFillColor(Color(180, 120, 60));
+                window.draw(slope);
+            }
         }
     }
-    // Draw slanted platforms
-    for(int i = 0; i < slant_count; i++)
-    {
-        if(!slant_active[i]) continue;
-       
-        float dx = slant_x2[i] - slant_x1[i];
-        float dy = slant_y2[i] - slant_y1[i];
-        float length = sqrt(dx*dx + dy*dy);
-        float angle = atan2(dy, dx) * 180.0f / 3.14159f;
-       
-        RectangleShape slantShape(Vector2f(length, 12));
-        slantShape.setPosition(slant_x1[i], slant_y1[i]);
-        slantShape.setRotation(angle);
-        slantShape.setFillColor(Color(200, 100, 50));
-        window.draw(slantShape);
-    }
 }
+
 
 // This functioin is to check if player is not standing on the blocks then it must fall
 // char** lvl is a 2D array for map
@@ -307,22 +334,32 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSpr
 // speed = players constant speed
 // terminal_Velocity is the maximum downward speed that the player can achieve
 // onGround checks if player is on the ground
-void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float slant_x1[], float slant_y1[], float slant_x2[], float slant_y2[], bool slant_active[], float slant_slide_force[], int slant_count, float& slide_velocity_x)
+void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth)
 {
-    // Check if on slanted platform FIRST (for Level 2)
-    float slide_force = 0.0f;
-    bool on_slant = check_on_slant(player_x, player_y, Pwidth, Pheight, slant_x1, slant_y1, slant_x2, slant_y2, slant_active, slant_slide_force, slant_count, slide_force);
+    // Check if standing on slope
+    int col_mid = (player_x + Pwidth / 2) / cell_size;
+    int row_feet = (player_y + Pheight) / cell_size;
    
-    if(on_slant)
+    if(row_feet >= 0 && row_feet < 14 && col_mid >= 0 && col_mid < 18)
     {
-        onGround = true;
-        velocityY = 0;
-        slide_velocity_x = slide_force;
-        return;
-    }
-    else
-    {
-        slide_velocity_x = 0.0f;
+        char tile = lvl[row_feet][col_mid];
+       
+        if(tile == '/')
+        {
+            player_x += 2.5f;
+            velocityY = 1.5f;
+            onGround = false;
+            player_y += velocityY;
+            return;
+        }
+        else if(tile == '\\')
+        {
+            player_x -= 2.5f;
+            velocityY = 1.5f;
+            onGround = false;
+            player_y += velocityY;
+            return;
+        }
     }
    
     // Apply gravity first (increase downward velocity)
@@ -1028,22 +1065,7 @@ int main()
     const int width = 18;      // tiles horizontally
     char** lvl;        // Level management variables
    
-    // Slanted platform arrays
-const int MAX_SLANTS = 5;
-float slant_x1[5];
-float slant_y1[5];
-float slant_x2[5];
-float slant_y2[5];
-bool slant_active[5];
-float slant_slide_force[5];
-int slant_count = 0;
-
-for(int i = 0; i < MAX_SLANTS; i++)
-{
-    slant_active[i] = false;
-}
-
-float slide_velocity_x = 0.0f;
+ 
 
 
 int currentLevel = 1;
@@ -1390,10 +1412,6 @@ ghostWalkTextures[1].loadFromFile("ghost2.png");
 ghostWalkTextures[2].loadFromFile("ghost3.png");
 ghostWalkTextures[3].loadFromFile("ghost4.png");
 
-
-     
-   
-   
    
     //spawning ghosts
 srand(time(0)); // seed RNG
@@ -1592,6 +1610,10 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
     int enemiesSpawned = 0;
     const float spawnInterval = 2.5f;  // Spawn an enemy every 2.5 seconds
     bool level2EnemiesSpawning = false;
+    // Platform spawning for Level 2
+    
+Clock platformChangeClock;
+
    
      // ===== SUCKING CAPACITY =====
      int captured[10];
@@ -1627,9 +1649,8 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
         window.clear();
 
         // draw level and apply gravity to player
-       display_level(window, lvl, bgTex, bgSprite, blockTexture, blockSprite, height, width, cell_size, slant_x1, slant_y1, slant_x2, slant_y2, slant_active, slant_count);
-        player_gravity(lvl,offset_y,velocityY,onGround,gravity,terminal_Velocity, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, slant_x1, slant_y1, slant_x2, slant_y2, slant_active, slant_slide_force, slant_count, slide_velocity_x);
-
+       display_level(window, lvl, bgTex, bgSprite, blockTexture, blockSprite, height, width, cell_size);
+       player_gravity(lvl,offset_y,velocityY,onGround,gravity,terminal_Velocity, player_x, player_y, cell_size, PlayerHeight, PlayerWidth);
         ///*** // Moving the character left and right using arrow keys'
         if(!playerDead) // Only allow controls if alive
         {
@@ -1638,7 +1659,7 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
         {
             // attempt to move right with collision check
             player_right_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
-            player_x += slide_velocity_x;  // Apply sliding from slanted platforms
+           
             bagSprite.setScale(-2,2);
             PlayerSprite.setScale(-3,3);
             facingRight = true;// flip horizontally to face right
@@ -1649,7 +1670,7 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
         {
             // attempt to move left
             player_left_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
-            player_x += slide_velocity_x;  // Apply sliding from slanted platforms
+           
             bagSprite.setScale(2,2);
             PlayerSprite.setScale(3,3);
             facingRight=false; // normal facing left
@@ -2520,50 +2541,57 @@ if(levelComplete && currentLevel == 1)
     nextText.setString("Moving to Level 2...");
     nextText.setPosition(280, 450);
     window.draw(nextText);
-   
-    // After 3 seconds, load Level 2
-    if(elapsed >= levelCompleteDelay)
+ 
+  // NOW FIX THE TIMING ISSUE
+// In main() function, find the level transition code (around line 2520-2570)
+// REPLACE the level 2 transition section with this:
+
+// After 3 seconds, load Level 2
+if(elapsed >= levelCompleteDelay)
+{
+    currentLevel = 2;
+
+    change_to_level2(lvl, height, width); // This spawns the FIRST platform immediately
+
+    // Reset player position
+    player_x = 500;
+    player_y = 150;
+    velocityY = 0;
+    cap_count = 0;
+    vacuumActive = false;
+
+    // Deactivate Level 1 enemies
+    for(int i = 0; i < ghosts; i++)
     {
-        currentLevel = 2;
-       
-        // Change to Level 2 layout
-     change_to_level2(lvl, height, width, slant_x1, slant_y1, slant_x2, slant_y2, slant_active, slant_slide_force, slant_count);
-       
-        // Reset player position
-        player_x = 500;
-        player_y = 150;
-        velocityY = 0;
-        cap_count = 0;
-        vacuumActive = false;
-       
-        // Deactivate ALL enemies (Level 2 has no enemies)
-        // Deactivate Level 1 enemies
-        for(int i = 0; i < ghosts; i++)
-        {
-            ghost_active[i] = false;
-            ghost_x[i] = -1000;
-            ghost_y[i] = -1000;
-        }
-       
-        for(int i = 0; i < skel; i++)
-        {
-            skel_active[i] = false;
-            skel_x[i] = -1000;
-            skel_y[i] = -1000;
-        }
-       
-        // Start Level 2 sequential spawning
-        level2EnemiesSpawning = true;
-        enemiesSpawned = 0;
-        enemySpawnClock.restart();
-       
-        levelComplete = false;
-        cout << "[LEVEL] Now in Level 2 - No Enemiegs!" << endl;
+        ghost_active[i] = false;
+        ghost_x[i] = -1000;
+        ghost_y[i] = -1000;
     }
+
+    for(int i = 0; i < skel; i++)
+    {
+        skel_active[i] = false;
+        skel_x[i] = -1000;
+        skel_y[i] = -1000;
+    }
+
+    // Start Level 2 sequential spawning
+    level2EnemiesSpawning = true;
+    enemiesSpawned = 0;
+    enemySpawnClock.restart();
+
+    // IMPORTANT: Start platform timer NOW (first platform already exists)
+    // Next platform will spawn after 20 seconds
+    platformChangeClock.restart();
+
+    levelComplete = false;
+    cout << "[LEVEL] Now in Level 2! First platform already placed." << endl;
+}
 }
 window.display();
+
 }
- //stopping music and deleting level array (cleanup)
+//stopping music and deleting level array (cleanup)
     lvlMusic.stop();
     for (int i = 0; i < height; i++)
         delete[] lvl[i];
