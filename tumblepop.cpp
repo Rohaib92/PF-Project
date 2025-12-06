@@ -320,6 +320,35 @@ void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGroun
     // Predicts new vertical velocity after applyong the current vertical velocity
     offset_y += velocityY;
    
+    // ===== ONLY CHECK TOP BOUNDARY (ROW 0) - Player can jump through all other blocks =====
+    if (velocityY < 0)  // Moving upward (jumping)
+    {
+        int top_y = (int)(offset_y) / cell_size;
+       
+        // Only check if trying to go into or above row 0 (top ceiling)
+        if(top_y <= 0)
+        {
+            int left_x = (int)(player_x) / cell_size;
+            int mid_x = (int)(player_x + Pwidth / 2) / cell_size;
+            int right_x = (int)(player_x + Pwidth) / cell_size;
+           
+            // Check if hitting the TOP ROW blocks
+            if(lvl[0][left_x] == '#' || lvl[0][mid_x] == '#' || lvl[0][right_x] == '#')
+            {
+                // Hit top ceiling - stop upward movement
+                velocityY = 0;
+                player_y = cell_size;  // Position just below row 0
+                onGround = false;
+                return;
+            }
+        }
+       
+        // If not hitting top row, move freely upward through other blocks
+        player_y = offset_y;
+        onGround = false;
+        return;
+    }
+   
     // CRITICAL FIX: Only check GROUND collision when FALLING DOWN (velocityY > 0)
     // This allows player to jump UP through platforms without getting stuck
     if (velocityY > 0)
@@ -354,6 +383,22 @@ void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGroun
         onGround = false;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Check player collison with left wall
 // char** lvl is a 2D array for map
 // player_x and player_y are the current horizontal and vertical position of player
@@ -1278,7 +1323,7 @@ for(int i = 0; i < skel; i++)
        
         // ADD THESE TIMER INITIALIZATIONS:
         skel_jump_timer[i] = 0.0f;                                    // Start timer at 0
-        skel_next_jump_time[i] = 4.0f + (rand() % 2);                // Random 4-5 seconds
+        skel_next_jump_time[i] = 10.0f + (rand() % 2);                // Random 4-5 seconds
        
         skelSprite[i].setTexture(skelTexture);
         skelSprite[i].setScale(2, 2);
@@ -1827,8 +1872,42 @@ for(int i = 0; i < chelnovs; i++)
             // GRAVITY - predict next vertical position
             float nextY = skel_y[j] + skel_velocityY[j];
 
+            // ===== ONLY CHECK TOP BOUNDARY (ROW 0) - Skeleton can jump through all other blocks =====
+            if(skel_velocityY[j] < 0)  // Moving upward (jumping)
+            {
+                int top_y = (int)(nextY) / cell_size;
+               
+                // Only check if trying to go into or above row 0 (top ceiling)
+                if(top_y <= 0)
+                {
+                    int left_x = (int)(skel_x[j]) / cell_size;
+                    int mid_x = (int)(skel_x[j] + 32) / cell_size;
+                    int right_x = (int)(skel_x[j] + 64) / cell_size;
+                   
+                    // Check if hitting the TOP ROW blocks
+                    if(lvl[0][left_x] == '#' || lvl[0][mid_x] == '#' || lvl[0][right_x] == '#')
+                    {
+                        // Hit top ceiling - stop upward movement
+                        skel_velocityY[j] = 0;
+                        skel_y[j] = cell_size;  // Position just below row 0
+                        skel_onGround[j] = false;
+                    }
+                    else
+                    {
+                        // Not hitting blocks, move freely
+                        skel_y[j] = nextY;
+                        skel_onGround[j] = false;
+                    }
+                }
+                else
+                {
+                    // If not near top row, move freely upward through other blocks
+                    skel_y[j] = nextY;
+                    skel_onGround[j] = false;
+                }
+            }
             // Check ground collision when FALLING DOWN only (same as player)
-            if(skel_velocityY[j] > 0)
+            else if(skel_velocityY[j] > 0)
             {
                 // Check ground collision (bottom of skeleton)
                 int bottomLeftX = skel_x[j] / cell_size;
@@ -1859,16 +1938,16 @@ for(int i = 0; i < chelnovs; i++)
             // HORIZONTAL MOVEMENT - only move left/right if on ground
             if(skel_onGround[j])
             {
-                // CHECK IF IT'S TIME TO JUMP (every 4-5 seconds)
+                // CHECK IF IT'S TIME TO JUMP (every 10-11 seconds)
                 if(skel_jump_timer[j] >= skel_next_jump_time[j])
                 {
                     // JUMP! - Give skeleton upward velocity
-                    skel_velocityY[j] = -18.0f;  // Jump strength (same as player)
+                    skel_velocityY[j] = -20.0f;  // Increased jump strength (higher jump)
                     skel_onGround[j] = false;
                    
-                    // Reset timer and set next random jump time (4-5 seconds)
+                    // Reset timer and set next random jump time (10-11 seconds)
                     skel_jump_timer[j] = 0.0f;
-                    skel_next_jump_time[j] = 4.0f + (rand() % 2);  // Random 4 or 5 seconds
+                    skel_next_jump_time[j] = 10.0f + (rand() % 2);  // Random 10 or 11 seconds
                    
                     // Randomly change direction 50% of the time
                     if(rand() % 2 == 0)
@@ -1905,7 +1984,6 @@ for(int i = 0; i < chelnovs; i++)
             skelSprite[j].setPosition(skel_x[j], skel_y[j]);
             window.draw(skelSprite[j]);
         }
-
  
   // ====== CHECK PLAYER-ENEMY COLLISIONS ======
 if(!playerDead)
