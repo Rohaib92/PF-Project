@@ -128,7 +128,7 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSpr
     }
 }
 
-// This functioin is to check if player is not standing on the blocks then it must fall
+/// This functioin is to check if player is not standing on the blocks then it must fall
 // char** lvl is a 2D array for map
 // player_x and player_y are the current horizontal and vertical position of player
 // Pheight and Pwidth are players height and wdth in pixels of players collision with block
@@ -138,31 +138,7 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSpr
 // onGround checks if player is on the ground
 void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth)
 {
-    // Copying current player position to offset_y
-    offset_y = player_y;
-    // Predicts new vertical velocity after applyong the current vertical velocity
-    offset_y += velocityY;
-
-    // Check three points below the player (left, center, right) for collision with blocks
-    // for bottom collision check the predicted top value + height of player gives players bottom posiiton
-    // next dividing it by cell_size to convert to pixels and finally convert to integer to discard decimal parts
-    char bottom_left_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x ) / cell_size];
-    // Right sid checks bootom and right side of the player
-    char bottom_right_down = lvl[(int)(offset_y  + Pheight) / cell_size][(int)(player_x + Pwidth) / cell_size];
-    // for middle part check bootom and center of players width by dividing Players wdith by 2
-    char bottom_mid_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x + Pwidth / 2) / cell_size];
-
-    if (bottom_left_down == '#' || bottom_mid_down == '#' || bottom_right_down == '#')
-    {
-        onGround = true;
-    }
-    else
-    {
-        // if player is not on ground then update its vertical position to move down
-        player_y = offset_y;
-        onGround = false;
-    }
-
+    // Apply gravity first (increase downward velocity)
     if (!onGround)
     {
         // increse velocity so player falls faster
@@ -173,13 +149,46 @@ void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGroun
             velocityY = terminal_Velocity;
         }
     }
-    // else if player is on ground then stop the vertical movement
+   
+    // Copying current player position to offset_y
+    offset_y = player_y;
+    // Predicts new vertical velocity after applyong the current vertical velocity
+    offset_y += velocityY;
+   
+    // CRITICAL FIX: Only check GROUND collision when FALLING DOWN (velocityY > 0)
+    // This allows player to jump UP through platforms without getting stuck
+    if (velocityY > 0)
+    {
+        // Check three points below the player (left, center, right) for collision with blocks
+        // for bottom collision check the predicted top value + height of player gives players bottom posiiton
+        // next dividing it by cell_size to convert to pixels and finally convert to integer to discard decimal parts
+        char bottom_left_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x ) / cell_size];
+        // Right sid checks bootom and right side of the player
+        char bottom_right_down = lvl[(int)(offset_y  + Pheight) / cell_size][(int)(player_x + Pwidth) / cell_size];
+        // for middle part check bootom and center of players width by dividing Players wdith by 2
+        char bottom_mid_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x + Pwidth / 2) / cell_size];
+
+        if (bottom_left_down == '#' || bottom_mid_down == '#' || bottom_right_down == '#')
+        {
+            // Hit ground - stop on platform
+            onGround = true;
+            velocityY = 0;
+            // Don't update player_y - stay on top of block
+        }
+        else
+        {
+            // if player is not on ground then update its vertical position to move down
+            player_y = offset_y;
+            onGround = false;
+        }
+    }
     else
     {
-        velocityY = 0;
+        // When jumping UP (velocityY <= 0), move freely through blocks
+        player_y = offset_y;
+        onGround = false;
     }
 }
-
 // Check player collison with left wall
 // char** lvl is a 2D array for map
 // player_x and player_y are the current horizontal and vertical position of player
@@ -652,7 +661,7 @@ int main()
     float speed = 5;
    
 
-    const float jumpStrength = -15; // negative -> upward
+    const float jumpStrength = -20; // negative -> upward
     const float gravity = 1;        // gravity per frame
     bool onGround = false;
 
@@ -1183,13 +1192,6 @@ for(int i = 0; i < skel; i++)
         PlayerSprite.setTexture(PlayerTexture);
         }
        
-
-        // Ceiling collision when moving up (velocityY < 0)
-        if(velocityY<0)
-        {
-            player_ceiling_collision(lvl, offset_y, velocityY, player_x, player_y, cell_size, PlayerWidth);
-        }
-
         // Jump with up if on ground
         if(Keyboard::isKeyPressed(Keyboard::Key::Up))
         {
