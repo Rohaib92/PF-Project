@@ -30,12 +30,26 @@ float get_character_speed(int characterIndex, float baseSpeed)
 }
 
 // Vacuum and Shooting
-void update_vacuum(float player_x, float player_y, int vacuumDirection, float vacuum_range, float suck_strength, float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts, float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel, const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
+
+void update_vacuum(float player_x, float player_y, int vacuumDirection, float vacuum_range, float suck_strength, 
+    float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts, 
+    float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel,
+    float invis_x[], float invis_y[], bool invis_active[], bool invis_stunned[], float invis_stun_timer[], int invis_count,
+    float chelnov_x[], float chelnov_y[], bool chelnov_active[], bool chelnov_stunned[], float chelnov_stun_timer[], int chelnov_count,
+    const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
+    
+    
 void shoot_single_enemy(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
 void shoot_burst_mode(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], bool shot_is_active[], float shot_lifetime[], float deltaTime, float max_lifetime, int shot_count, char** lvl, int cell_size, int height);
-bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count, float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts, float skel_x[], float skel_y[], bool skel_active[], int total_skels, int& hit_projectile, int& hit_enemy_index, bool& hit_was_ghost);
 
+bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count, 
+    float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts, 
+    float skel_x[], float skel_y[], bool skel_active[], int total_skels,
+    float invis_x[], float invis_y[], bool invis_active[], int total_invis,
+    float chelnov_x[], float chelnov_y[], bool chelnov_active[], int total_chelnov,
+    int& hit_projectile, int& hit_enemy_index, int& hit_enemy_type);
+    
 // Level 2 helper functions
 bool is_platform_reachable(char** lvl, int x, int y, int width, int height);
 bool check_on_slant(float player_x, float player_y, int player_width, int player_height,
@@ -46,20 +60,28 @@ bool check_on_slant(float player_x, float player_y, int player_width, int player
 // Check if all enemies are defeated then level  completed
 // here ghost_active[] and skel_active[] means alivee
 bool check_level_complete(bool ghost_active[], int total_ghosts,
-                         bool skel_active[], int total_skels)
+                         bool skel_active[], int total_skels,
+                         bool invis_active[], int total_invis,
+                         bool chelnov_active[], int total_chelnov)
 {
-    // loop through all ghosts if any ghost is alive then level 1 is not ovr yet
     for(int i = 0; i < total_ghosts; i++)
     {
-        if(ghost_active[i])
-        {
-          return false;
-        }
+        if(ghost_active[i]) return false;
     }
-   // same for skeletons
+   
     for(int i = 0; i < total_skels; i++)
     {
         if(skel_active[i]) return false;
+    }
+    
+    for(int i = 0; i < total_invis; i++)
+    {
+        if(invis_active[i]) return false;
+    }
+    
+    for(int i = 0; i < total_chelnov; i++)
+    {
+        if(chelnov_active[i]) return false;
     }
    
     return true;
@@ -510,11 +532,14 @@ void respawn_player(float& player_x, float& player_y, float& velocityY, bool& pl
 //cell_size indicates tile size to compute centers
 //suck_strength shows how fast the enemies are pulled
 //vacuumDirection indiactes 0=left,1=up,2=right,3=down
+
 void update_vacuum(
     float player_x, float player_y, int vacuumDirection,
     float vacuum_range, float suck_strength,
     float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts,
     float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel,
+    float invis_x[], float invis_y[], bool invis_active[], bool invis_stunned[], float invis_stun_timer[], int invis_count,
+    float chelnov_x[], float chelnov_y[], bool chelnov_active[], bool chelnov_stunned[], float chelnov_stun_timer[], int chelnov_count,
     const int cell_size, bool vacuum_on,
     int captured[], int &cap_count, int max_capacity, int &score)
 {
@@ -526,20 +551,18 @@ void update_vacuum(
     float player_center_x = player_x + 96 / 2.0f;
     float player_center_y = player_y + 102 / 2.0f;
 
-    // Vacuum direction as unit vector
     float dir_x = 0, dir_y = 0;
     switch (vacuumDirection)
     {
-        case 0: dir_x = -1; dir_y = 0; break; // Left
-        case 1: dir_x = 0; dir_y = -1; break; // Up
-        case 2: dir_x = 1; dir_y = 0; break;  // Right
-        case 3: dir_x = 0; dir_y = 1; break;  // Down
+        case 0: dir_x = -1; dir_y = 0; break;
+        case 1: dir_x = 0; dir_y = -1; break;
+        case 2: dir_x = 1; dir_y = 0; break;
+        case 3: dir_x = 0; dir_y = 1; break;
     }
 
-    // CRITICAL: Capture distance (when enemy is close enough to be captured)
     const float capture_distance = 50.0f;
 
-    // Process ghosts
+    // Process ghosts (type 0)
     for (int i = 0; i < ghosts; i++)
     {
         if (!ghost_active[i]) continue;
@@ -560,28 +583,22 @@ void update_vacuum(
 
             if (dot > 0.5f)
             {
-                // Stun the ghost (stops its AI movement)
                 ghost_stunned[i] = true;
                 ghost_stun_timer[i] = 1.5f;
 
-                // FIXED: Only capture if VERY close AND under capacity
                 if (distance < capture_distance && cap_count < max_capacity)
                 {
-                    // Capture ghost (type 0)
                     captured[cap_count] = 0;
                     cap_count = cap_count + 1;
                     ghost_active[i] = false;
                     ghost_stunned[i] = false;
                     ghost_x[i] = -1000;
                     ghost_y[i] = -1000;
-                   
-                    // Award capture points
                     score = score + 50;
                     cout << "[CAPTURE] Ghost captured! Total: " << cap_count << endl;
                 }
                 else
                 {
-                    // FIXED: Pull ghost toward player GRADUALLY
                     ghost_x[i] -= to_ghost_x * suck_strength;
                     ghost_y[i] -= to_ghost_y * suck_strength;
                 }
@@ -589,7 +606,7 @@ void update_vacuum(
         }
     }
 
-    // Process skeletons (same logic)
+    // Process skeletons (type 1)
     for (int i = 0; i < skel; i++)
     {
         if (!skel_active[i]) continue;
@@ -613,26 +630,109 @@ void update_vacuum(
                 skel_stunned[i] = true;
                 skel_stun_timer[i] = 1.5f;
 
-                // FIXED: Only capture if VERY close AND under capacity
                 if (distance < capture_distance && cap_count < max_capacity)
                 {
-                    // Capture skeleton (type 1)
                     captured[cap_count] = 1;
                     cap_count = cap_count + 1;
                     skel_active[i] = false;
                     skel_stunned[i] = false;
                     skel_x[i] = -1000;
                     skel_y[i] = -1000;
-                   
-                    // Award capture points
                     score = score + 75;
                     cout << "[CAPTURE] Skeleton captured! Total: " << cap_count << endl;
                 }
                 else
                 {
-                    // FIXED: Pull skeleton toward player GRADUALLY
                     skel_x[i] -= to_skel_x * suck_strength;
                     skel_y[i] -= to_skel_y * suck_strength;
+                }
+            }
+        }
+    }
+
+    // Process Invisible Men (type 2) - NEW
+    for (int i = 0; i < invis_count; i++)
+    {
+        if (!invis_active[i]) continue;
+
+        float invis_center_x = invis_x[i] + cell_size / 2.0f;
+        float invis_center_y = invis_y[i] + cell_size / 2.0f;
+
+        float dx = invis_center_x - player_center_x;
+        float dy = invis_center_y - player_center_y;
+        float distance_sq = dx * dx + dy * dy;
+
+        if (distance_sq < vacuum_range * vacuum_range && distance_sq > 1.0f)
+        {
+            float distance = sqrt(distance_sq);
+            float to_invis_x = dx / distance;
+            float to_invis_y = dy / distance;
+            float dot = to_invis_x * dir_x + to_invis_y * dir_y;
+
+            if (dot > 0.5f)
+            {
+                invis_stunned[i] = true;
+                invis_stun_timer[i] = 1.5f;
+
+                if (distance < capture_distance && cap_count < max_capacity)
+                {
+                    captured[cap_count] = 2;  // Invisible Man type
+                    cap_count = cap_count + 1;
+                    invis_active[i] = false;
+                    invis_stunned[i] = false;
+                    invis_x[i] = -1000;
+                    invis_y[i] = -1000;
+                    score = score + 100;
+                    cout << "[CAPTURE] Invisible Man captured! Total: " << cap_count << endl;
+                }
+                else
+                {
+                    invis_x[i] -= to_invis_x * suck_strength;
+                    invis_y[i] -= to_invis_y * suck_strength;
+                }
+            }
+        }
+    }
+
+    // Process Chelnovs (type 3) - NEW
+    for (int i = 0; i < chelnov_count; i++)
+    {
+        if (!chelnov_active[i]) continue;
+
+        float chelnov_center_x = chelnov_x[i] + cell_size / 2.0f;
+        float chelnov_center_y = chelnov_y[i] + cell_size / 2.0f;
+
+        float dx = chelnov_center_x - player_center_x;
+        float dy = chelnov_center_y - player_center_y;
+        float distance_sq = dx * dx + dy * dy;
+
+        if (distance_sq < vacuum_range * vacuum_range && distance_sq > 1.0f)
+        {
+            float distance = sqrt(distance_sq);
+            float to_chelnov_x = dx / distance;
+            float to_chelnov_y = dy / distance;
+            float dot = to_chelnov_x * dir_x + to_chelnov_y * dir_y;
+
+            if (dot > 0.5f)
+            {
+                chelnov_stunned[i] = true;
+                chelnov_stun_timer[i] = 1.5f;
+
+                if (distance < capture_distance && cap_count < max_capacity)
+                {
+                    captured[cap_count] = 3;  // Chelnov type
+                    cap_count = cap_count + 1;
+                    chelnov_active[i] = false;
+                    chelnov_stunned[i] = false;
+                    chelnov_x[i] = -1000;
+                    chelnov_y[i] = -1000;
+                    score = score + 125;
+                    cout << "[CAPTURE] Chelnov captured! Total: " << cap_count << endl;
+                }
+                else
+                {
+                    chelnov_x[i] -= to_chelnov_x * suck_strength;
+                    chelnov_y[i] -= to_chelnov_y * suck_strength;
                 }
             }
         }
@@ -824,27 +924,22 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
                           bool shot_is_active[], int shot_count,
                           float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts,
                           float skel_x[], float skel_y[], bool skel_active[], int total_skels,
-                          int& hit_projectile, int& hit_enemy_index, bool& hit_was_ghost)
+                          float invis_x[], float invis_y[], bool invis_active[], int total_invis,
+                          float chelnov_x[], float chelnov_y[], bool chelnov_active[], int total_chelnov,
+                          int& hit_projectile, int& hit_enemy_index, int& hit_enemy_type)
 {
     hit_projectile = -1;
     hit_enemy_index = -1;
-    hit_was_ghost = false;
+    hit_enemy_type = -1;
 
-    // Check all active projectiles
     for (int proj = 0; proj < 20; proj++)
     {
-        if (!shot_is_active[proj])
-        {
-            continue;
-        }
+        if (!shot_is_active[proj]) continue;
 
-        // Check collision with ghosts
+        // Check ghosts (type 0)
         for (int g = 0; g < total_ghosts; g++)
         {
-            if (!ghost_active[g])
-            {
-                continue;
-            }
+            if (!ghost_active[g]) continue;
 
             float dx = shot_enemy_x[proj] - ghost_x[g];
             float dy = shot_enemy_y[proj] - ghost_y[g];
@@ -854,18 +949,15 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
             {
                 hit_projectile = proj;
                 hit_enemy_index = g;
-                hit_was_ghost = true;
+                hit_enemy_type = 0;
                 return true;
             }
         }
 
-        // Check collision with skeletons
+        // Check skeletons (type 1)
         for (int s = 0; s < total_skels; s++)
         {
-            if (!skel_active[s])
-            {
-                continue;
-            }
+            if (!skel_active[s]) continue;
 
             float dx = shot_enemy_x[proj] - skel_x[s];
             float dy = shot_enemy_y[proj] - skel_y[s];
@@ -875,7 +967,43 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
             {
                 hit_projectile = proj;
                 hit_enemy_index = s;
-                hit_was_ghost = false;
+                hit_enemy_type = 1;
+                return true;
+            }
+        }
+
+        // Check Invisible Men (type 2)
+        for (int inv = 0; inv < total_invis; inv++)
+        {
+            if (!invis_active[inv]) continue;
+
+            float dx = shot_enemy_x[proj] - invis_x[inv];
+            float dy = shot_enemy_y[proj] - invis_y[inv];
+            float distance = sqrt(dx * dx + dy * dy);
+
+            if (distance < 48)
+            {
+                hit_projectile = proj;
+                hit_enemy_index = inv;
+                hit_enemy_type = 2;
+                return true;
+            }
+        }
+
+        // Check Chelnovs (type 3)
+        for (int ch = 0; ch < total_chelnov; ch++)
+        {
+            if (!chelnov_active[ch]) continue;
+
+            float dx = shot_enemy_x[proj] - chelnov_x[ch];
+            float dy = shot_enemy_y[proj] - chelnov_y[ch];
+            float distance = sqrt(dx * dx + dy * dy);
+
+            if (distance < 48)
+            {
+                hit_projectile = proj;
+                hit_enemy_index = ch;
+                hit_enemy_type = 3;
                 return true;
             }
         }
@@ -883,7 +1011,6 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
 
     return false;
 }
-
 // ============================================================================
 // MAIN GAME LOOP
 // ============================================================================
@@ -1586,12 +1713,14 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
 
         if(xKeyPressed && vacuumActive)
         {
-            update_vacuum(
-                player_x, player_y, vacuumDirection, 200.0f, 4.0f,
-                ghost_x, ghost_y, ghost_active, ghost_stunned, ghost_stun_timer, ghosts,
-                skel_x, skel_y, skel_active, skel_stunned, skel_stun_timer, skel,
-                cell_size, true, captured, cap_count, maxCapacity, score
-            );
+           update_vacuum(
+        player_x, player_y, vacuumDirection, 200.0f, 4.0f,
+        ghost_x, ghost_y, ghost_active, ghost_stunned, ghost_stun_timer, ghosts,
+        skel_x, skel_y, skel_active, skel_stunned, skel_stun_timer, skel,
+        invis_x, invis_y, invis_active, invis_stunned, invis_stun_timer, invisible_men,
+        chelnov_x, chelnov_y, chelnov_active, chelnov_stunned, chelnov_stun_timer, chelnovs,
+        cell_size, true, captured, cap_count, maxCapacity, score
+    );
         }
 
 
@@ -1624,48 +1753,59 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
 
 
 // Check if any projectile hit an enemy
-        int hit_projectile = -1;
-        int hit_enemy_index = -1;
-        bool hit_was_ghost = false;
+       int hit_projectile = -1;
+int hit_enemy_index = -1;
+int hit_enemy_type = -1;
 
-        if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_projectile_count,
-                                  ghost_x, ghost_y, ghost_active, ghosts,
-                                  skel_x, skel_y, skel_active, skel,
-                                  hit_projectile, hit_enemy_index, hit_was_ghost))
+if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_projectile_count,
+                          ghost_x, ghost_y, ghost_active, ghosts,
+                          skel_x, skel_y, skel_active, skel,
+                          invis_x, invis_y, invis_active, invisible_men,
+                          chelnov_x, chelnov_y, chelnov_active, chelnovs,
+                          hit_projectile, hit_enemy_index, hit_enemy_type))
+{
+    if (hit_projectile >= 0 && hit_enemy_index >= 0)
+    {
+        shot_is_active[hit_projectile] = false;
+
+        if (hit_enemy_type == 0)  // Ghost
         {
-            if (hit_projectile >= 0 && hit_enemy_index >= 0)
-            {
-                // Deactivate the projectile
-                shot_is_active[hit_projectile] = false;
-
-                if (hit_was_ghost)
-                {
-                    // Deactivate the ghost
-                    ghost_active[hit_enemy_index] = false;
-                    ghost_x[hit_enemy_index] = -1000;
-                    ghost_y[hit_enemy_index] = -1000;
-                   
-                    // Award bonus points for defeating with projectile
-                    score += 100;  // Ghost defeat bonus
-                    combo++;
-                   
-                    cout << "[HIT] Ghost defeated by projectile! Score: " << score << endl;
-                }
-                else
-                {
-                    // Deactivate the skeleton
-                    skel_active[hit_enemy_index] = false;
-                    skel_x[hit_enemy_index] = -1000;
-                    skel_y[hit_enemy_index] = -1000;
-                   
-                    // Award bonus points for defeating with projectile
-                    score += 150;  // Skeleton defeat bonus (worth more)
-                    combo++;
-                   
-                    cout << "[HIT] Skeleton defeated by projectile! Score: " << score << endl;
-                }
-            }
+            ghost_active[hit_enemy_index] = false;
+            ghost_x[hit_enemy_index] = -1000;
+            ghost_y[hit_enemy_index] = -1000;
+            score += 100;
+            combo++;
+            cout << "[HIT] Ghost defeated! Score: " << score << endl;
         }
+        else if (hit_enemy_type == 1)  // Skeleton
+        {
+            skel_active[hit_enemy_index] = false;
+            skel_x[hit_enemy_index] = -1000;
+            skel_y[hit_enemy_index] = -1000;
+            score += 150;
+            combo++;
+            cout << "[HIT] Skeleton defeated! Score: " << score << endl;
+        }
+        else if (hit_enemy_type == 2)  // Invisible Man
+        {
+            invis_active[hit_enemy_index] = false;
+            invis_x[hit_enemy_index] = -1000;
+            invis_y[hit_enemy_index] = -1000;
+            score += 200;
+            combo++;
+            cout << "[HIT] Invisible Man defeated! Score: " << score << endl;
+        }
+        else if (hit_enemy_type == 3)  // Chelnov
+        {
+            chelnov_active[hit_enemy_index] = false;
+            chelnov_x[hit_enemy_index] = -1000;
+            chelnov_y[hit_enemy_index] = -1000;
+            score += 250;
+            combo++;
+            cout << "[HIT] Chelnov defeated! Score: " << score << endl;
+        }
+    }
+}
 
 
         // Update key states for next frame
@@ -1756,20 +1896,33 @@ for (int i = 0; i < 20; i++)
 {
     if (shot_is_active[i])
     {
-        // Draw projectile using CORRECT sprite based on enemy type
         if(shot_enemy_type[i] == 0) // Ghost
         {
             ghostSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
-            ghostSprite[0].setColor(Color(255, 100, 100)); // Red tint
+            ghostSprite[0].setColor(Color(255, 100, 100));
             window.draw(ghostSprite[0]);
-            ghostSprite[0].setColor(Color::White); // Reset
+            ghostSprite[0].setColor(Color::White);
         }
         else if(shot_enemy_type[i] == 1) // Skeleton
         {
             skelSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
-            skelSprite[0].setColor(Color(255, 100, 100)); // Red tint
+            skelSprite[0].setColor(Color(255, 100, 100));
             window.draw(skelSprite[0]);
-            skelSprite[0].setColor(Color::White); // Reset
+            skelSprite[0].setColor(Color::White);
+        }
+        else if(shot_enemy_type[i] == 2) // Invisible Man
+        {
+            invisSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
+            invisSprite[0].setColor(Color(255, 100, 100));
+            window.draw(invisSprite[0]);
+            invisSprite[0].setColor(Color::White);
+        }
+        else if(shot_enemy_type[i] == 3) // Chelnov
+        {
+            chelnovSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
+            chelnovSprite[0].setColor(Color(255, 100, 100));
+            window.draw(chelnovSprite[0]);
+            chelnovSprite[0].setColor(Color::White);
         }
     }
 }
@@ -2093,6 +2246,49 @@ if(!playerDead)
             }
         }
     }
+    // Check Invisible Man collisions
+if(!playerDead)
+{
+    for(int i = 0; i < invisible_men; i++)
+    {
+        if(invis_active[i] && !invis_stunned[i])
+        {
+            if(check_player_enemy_collision(player_x, player_y, PlayerWidth, PlayerHeight,
+                               invis_x[i], invis_y[i], 64))
+            {
+                playerDead = true;
+                deathClock.restart();
+                score -= 50;
+                if(score < 0) score = 0;
+                combo = 0;
+                comboMultiplier = 1.0f;
+                break;
+            }
+        }
+    }
+}
+
+// Check Chelnov collisions
+if(!playerDead)
+{
+    for(int i = 0; i < chelnovs; i++)
+    {
+        if(chelnov_active[i] && !chelnov_stunned[i])
+        {
+            if(check_player_enemy_collision(player_x, player_y, PlayerWidth, PlayerHeight,
+                               chelnov_x[i], chelnov_y[i], 64))
+            {
+                playerDead = true;
+                deathClock.restart();
+                score -= 50;
+                if(score < 0) score = 0;
+                combo = 0;
+                comboMultiplier = 1.0f;
+                break;
+            }
+        }
+    }
+}
 }
 
 
@@ -2259,16 +2455,21 @@ if(currentLevel == 2 && level2EnemiesSpawning)
 // ====== CHECK LEVEL COMPLETION ======
 if(!levelComplete && !playerDead)
 {
-    if(currentLevel == 1)
+   if(currentLevel == 1)
+{
+    // For Level 1, pass empty arrays for invisible men and chelnov
+    bool empty_invis[3] = {false, false, false};
+    bool empty_chelnov[4] = {false, false, false, false};
+    
+    if(check_level_complete(ghost_active, ghosts, skel_active, skel, 
+                           empty_invis, 0, empty_chelnov, 0))
     {
-        if(check_level_complete(ghost_active, ghosts, skel_active, skel))
-        {
-            levelComplete = true;
-            levelCompleteClock.restart();
-            score += 500;
-            cout << "[LEVEL] Level 1 Complete!" << endl;
-        }
-        }
+        levelComplete = true;
+        levelCompleteClock.restart();
+        score += 500;
+        cout << "[LEVEL] Level 1 Complete!" << endl;
+    }
+}
    
     else if(currentLevel == 2)
     {
