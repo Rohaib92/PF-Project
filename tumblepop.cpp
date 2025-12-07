@@ -1766,7 +1766,7 @@ bool platformNeedsRegen = true;
      // ===== SUCKING CAPACITY =====
      int captured[10];
     int cap_count = 0;           // Current count of sucked enemies
-    const int maxCapacity = 3;       // Maximum enemies that can be sucked at once
+    int maxCapacity = 3;       // Maximum enemies that can be sucked at once
    
 
 // ADD DELTA TIME CLOCK FOR SKELETON JUMP TIMING:
@@ -2805,10 +2805,13 @@ if(levelComplete && levelCompleteClock.getElapsedTime().asSeconds() >= levelComp
 {
     cout << "[TRANSITION] Starting Level 2!" << endl;
     currentLevel = 2;
+      playerLives=3;
+      maxCapacity=5;
     levelComplete = false;
    
     // Reset level
     change_to_level2(lvl, height, width);
+  
    
     // Activate Level 2 enemies
     level2EnemiesSpawning = true;
@@ -3080,16 +3083,32 @@ if(levelComplete && currentLevel == 1)
 // After 3 seconds, load Level 2
 if(elapsed >= levelCompleteDelay)
 {
+    cout << "[TRANSITION] Starting Level 2!" << endl;
     currentLevel = 2;
-
-    change_to_level2(lvl, height, width); // This spawns the FIRST platform immediately
-
-    // Reset player position
+   
+    // 1. Reset Lives to 3 (This ensures the count starts fresh)
+    playerLives = 3;
+   
+    levelComplete = false;
+   
+    // Reset level map
+    change_to_level2(lvl, height, width);
+   
+    // 2. Reset Player Position: Place player on the safe platform (Row 4)
+    // We calculate the Y position to put the *bottom* of the player sprite (PlayerHeight)
+    // exactly at the *top* of the safe platform (Row 4, or 4 * cell_size).
     player_x = 500;
-    player_y = 150;
+    player_y = 4 * 64 - 102; // (Row 4 * cell_size) - PlayerHeight
+   
     velocityY = 0;
     cap_count = 0;
     vacuumActive = false;
+
+    // ... (Deactivate Level 1 enemies, restart timers, etc.) ...
+   
+    cout << "[LEVEL] Now in Level 2! First platform already placed." << endl;
+
+
 
     // Deactivate Level 1 enemies
     for(int i = 0; i < ghosts; i++)
