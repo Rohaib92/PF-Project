@@ -1095,11 +1095,11 @@ const float levelCompleteDelay = 3.0f;         // 2D dynamic array representing 
     Sprite blockSprite;
 
     // load background & block textures (files must exist)
-    bgTex.loadFromFile("bg.png");
+    bgTex.loadFromFile("bg/bg.png");
     bgSprite.setTexture(bgTex);
     bgSprite.setPosition(0,0);
 
-    blockTexture.loadFromFile("block1.png");
+    blockTexture.loadFromFile("bg/block1.png");
     blockSprite.setTexture(blockTexture);
 
     //player data (position, speed, size etc.)
@@ -1134,11 +1134,7 @@ Text comboText;
 Clock levelTimer;  // Timer for level completion speed
 
 // Load font
-if(!scoreFont.loadFromFile("Roboto-Regular.ttf"))
-{
-    // Font loading failed - handle error if needed
-    cout << "Error loading font!" << endl;
-}
+scoreFont.loadFromFile("txt/Roboto-Regular.ttf");
 
 scoreText.setFont(scoreFont);
 scoreText.setCharacterSize(30);
@@ -1175,11 +1171,11 @@ bool isWalking = false;
     // Music objects and settings
     Music menuMusic;
     Music lvlMusic;
-    menuMusic.openFromFile("bgmus.ogg");
+    menuMusic.openFromFile("music/bgmus.ogg");
     menuMusic.setLoop(true);
     menuMusic.setVolume(40);
 
-    lvlMusic.openFromFile("mus.ogg");
+    lvlMusic.openFromFile("music/mus.ogg");
     lvlMusic.setLoop(true);
     lvlMusic.setVolume(40);
    
@@ -1190,14 +1186,14 @@ bool isWalking = false;
     Sprite playerOptionSprite[playerOptionsCount];
 
     // Load textures for each character (must exist)
-    playerOptions[0].loadFromFile("player1.png");
-    playerOptions[1].loadFromFile("player2.png");
+    playerOptions[0].loadFromFile("players/player1.png");
+    playerOptions[1].loadFromFile("players/player2.png");
 
 const int bagOptionsCount = 2;
 Texture bagOptions[bagOptionsCount];
 Sprite bagOptionSprite[bagOptionsCount];
-bagOptions[0].loadFromFile("bag1.png");
-bagOptions[1].loadFromFile("bag2.png");
+bagOptions[0].loadFromFile("props/bag1.png");
+bagOptions[1].loadFromFile("props/bag2.png");
     /// Set positions and scale for menu display
     for(int i = 0; i < playerOptionsCount; i++)
     {
@@ -1213,8 +1209,8 @@ bagOptions[1].loadFromFile("bag2.png");
     Texture descTextures[2];
     Sprite descSprites[2];
    
-    descTextures[0].loadFromFile("greendesc.png");
-    descTextures[1].loadFromFile("yellowdesc.png");
+    descTextures[0].loadFromFile("txt/greendesc.png");
+    descTextures[1].loadFromFile("txt/yellowdesc.png");
    
     descSprites[0].setTexture(descTextures[0]);
     descSprites[0].setPosition(200, 300);  // Moved right (280→320) and up (500→400)
@@ -1262,17 +1258,17 @@ bagOptions[1].loadFromFile("bag2.png");
         // Load walking animation frames based on selected player
 if(selectedIndex == 0)
 {
-    walkTextures[0].loadFromFile("player1walk1.png");
-    walkTextures[1].loadFromFile("player1walk2.png");
-    walkTextures[2].loadFromFile("player1walk3.png");
-    walkTextures[3].loadFromFile("player1walk4.png");
+    walkTextures[0].loadFromFile("players/player1walk1.png");
+    walkTextures[1].loadFromFile("players/player1walk2.png");
+    walkTextures[2].loadFromFile("players/player1walk3.png");
+    walkTextures[3].loadFromFile("players/player1walk4.png");
 }
 else if(selectedIndex == 1)
 {
-    walkTextures[0].loadFromFile("player2walk1.png");
-    walkTextures[1].loadFromFile("player2walk2.png");
-    walkTextures[2].loadFromFile("player2walk3.png");
-    walkTextures[3].loadFromFile("player2walk4.png");
+    walkTextures[0].loadFromFile("players/player2walk1.png");
+    walkTextures[1].loadFromFile("players/player2walk2.png");
+    walkTextures[2].loadFromFile("players/player2walk3.png");
+    walkTextures[3].loadFromFile("players/player2walk4.png");
 }
         bagTexture = bagOptions[selectedIndex];
         bagSprite.setTexture(bagTexture);
@@ -1337,10 +1333,10 @@ bool isJumping = false;  // Track if jumping (unused now but available)
     Sprite vacuumLeftSprite, vacuumUpSprite, vacuumRightSprite, vacuumDownSprite;
 
     // Load vacuum textures (add this after loading PlayerTexture)
-    vacuumLeftTex.loadFromFile("left.png");  // default player with vacuum left
-    vacuumUpTex.loadFromFile("up.png");
-    vacuumRightTex.loadFromFile("right.png");
-    vacuumDownTex.loadFromFile("down.png");
+    vacuumLeftTex.loadFromFile("players/left.png");  // default player with vacuum left
+    vacuumUpTex.loadFromFile("players/up.png");
+    vacuumRightTex.loadFromFile("players/right.png");
+    vacuumDownTex.loadFromFile("players/down.png");
 
     // Setup vacuum sprites and scale them
     vacuumLeftSprite.setTexture(vacuumLeftTex);
@@ -1358,7 +1354,7 @@ bool isJumping = false;  // Track if jumping (unused now but available)
     // LASER BEAM SETUP
     Texture laserTex;
     Sprite laserSprite;
-    bool laserLoaded = laserTex.loadFromFile("lazer.png"); // try to load laser image
+    bool laserLoaded = laserTex.loadFromFile("props/lazer.png"); // try to load laser image
     if(laserLoaded)
     {
         laserSprite.setTexture(laserTex);
@@ -1422,18 +1418,18 @@ int ghostFrameCounter[8];      // Frame counter for each ghost
 const int ghostFrameDelay = 10; // aniimation speed
 
 // Load ghost walking animation frames
-ghostWalkTextures[0].loadFromFile("ghost1.png");
-ghostWalkTextures[1].loadFromFile("ghost2.png");
-ghostWalkTextures[2].loadFromFile("ghost3.png");
-ghostWalkTextures[3].loadFromFile("ghost4.png");\
+ghostWalkTextures[0].loadFromFile("enemies/ghost1.png");
+ghostWalkTextures[1].loadFromFile("enemies/ghost2.png");
+ghostWalkTextures[2].loadFromFile("enemies/ghost3.png");
+ghostWalkTextures[3].loadFromFile("enemies/ghost4.png");
 
 // ===== SKELETON ANIMATION FRAMES =====
 const int skel =4;
 Texture skelWalkTextures[4];
-skelWalkTextures[0].loadFromFile("skel1.png");
-skelWalkTextures[1].loadFromFile("skel2.png");
-skelWalkTextures[2].loadFromFile("skel3.png");
-skelWalkTextures[3].loadFromFile("skel4.png");
+skelWalkTextures[0].loadFromFile("enemies/skel1.png");
+skelWalkTextures[1].loadFromFile("enemies/skel2.png");
+skelWalkTextures[2].loadFromFile("enemies/skel3.png");
+skelWalkTextures[3].loadFromFile("enemies/skel4.png");
 
 
 const int skelAnimationFrames = 4;
@@ -1503,7 +1499,7 @@ if(ghost_dir[i] == 1)
     float skel_jump_timer[9];      // Timer for each skeleton
     float skel_next_jump_time[9];  // Random time until next jump (4-5 seconds)
     Texture skelTexture;
-    skelTexture.loadFromFile("skeleton.png");
+    skelTexture.loadFromFile("enemies/skeleton.png");
    
     // ===== ENEMY STUN SYSTEM ===== (FIXED)
     bool ghost_stunned[8];     // One for each ghost
@@ -1524,10 +1520,10 @@ if(ghost_dir[i] == 1)
     }
     // ===== POWER-UP SYSTEM =====
     Texture extraLifeTex, powerTex, rangeTex, speedTex;
-    extraLifeTex.loadFromFile("extralife.png");
-    powerTex.loadFromFile("power.png");
-    rangeTex.loadFromFile("range.png");
-    speedTex.loadFromFile("speed.png");
+    extraLifeTex.loadFromFile("props/extralife.png");
+    powerTex.loadFromFile("props/power.png");
+    rangeTex.loadFromFile("props/range.png");
+    speedTex.loadFromFile("props/speed.png");
 
     float powerup_x[4];
     float powerup_y[4];
@@ -1638,7 +1634,7 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
     Sprite invisSprite[3];
 
     Texture invisTexture;
-    invisTexture.loadFromFile("invisible.png");  // You need this image file!
+    invisTexture.loadFromFile("enemies/invisible.png");  
 
     for(int i = 0; i < invisible_men; i++)
     {
@@ -1685,22 +1681,22 @@ Texture chelnovShootTextures[4];
 Texture chelnovVacuumTextures[4];
 
 // Load walking frames (0-3)
-chelnovWalkTextures[0].loadFromFile("chelnov_walk1.png");
-chelnovWalkTextures[1].loadFromFile("chelnov_walk2.png");
-chelnovWalkTextures[2].loadFromFile("chelnov_walk3.png");
-chelnovWalkTextures[3].loadFromFile("chelnov_walk4.png");
+chelnovWalkTextures[0].loadFromFile("enemies/chelnov_walk1.png");
+chelnovWalkTextures[1].loadFromFile("enemies/chelnov_walk2.png");
+chelnovWalkTextures[2].loadFromFile("enemies/chelnov_walk3.png");
+chelnovWalkTextures[3].loadFromFile("enemies/chelnov_walk4.png");
 
 // Load shooting frames (4-7)
-chelnovShootTextures[0].loadFromFile("chelnov_shoot1.png");
-chelnovShootTextures[1].loadFromFile("chelnov_shoot2.png");
-chelnovShootTextures[2].loadFromFile("chelnov_shoot3.png");
-chelnovShootTextures[3].loadFromFile("chelnov_shoot4.png");
+chelnovShootTextures[0].loadFromFile("enemies/chelnov_shoot1.png");
+chelnovShootTextures[1].loadFromFile("enemies/chelnov_shoot2.png");
+chelnovShootTextures[2].loadFromFile("enemies/chelnov_shoot3.png");
+chelnovShootTextures[3].loadFromFile("enemies/chelnov_shoot4.png");
 
 // Load vacuum frames (8-11)
-chelnovVacuumTextures[0].loadFromFile("chelnov_vacuum1.png");
-chelnovVacuumTextures[1].loadFromFile("chelnov_vacuum2.png");
-chelnovVacuumTextures[2].loadFromFile("chelnov_vacuum3.png");
-chelnovVacuumTextures[3].loadFromFile("chelnov_vacuum4.png");
+chelnovVacuumTextures[0].loadFromFile("enemies/chelnov_vacuum1.png");
+chelnovVacuumTextures[1].loadFromFile("enemies/chelnov_vacuum2.png");
+chelnovVacuumTextures[2].loadFromFile("enemies/chelnov_vacuum3.png");
+chelnovVacuumTextures[3].loadFromFile("enemies/chelnov_vacuum4.png");
 
 // Chelnov animation state tracking
 int chelnovCurrentFrame[4];
@@ -1948,7 +1944,7 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
             ghost_y[hit_enemy_index] = -1000;
             score += 100;
             combo++;
-            cout << "[HIT] Ghost defeated! Score: " << score << endl;
+            
         }
         else if (hit_enemy_type == 1)  // Skeleton
         {
@@ -1957,7 +1953,7 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
             skel_y[hit_enemy_index] = -1000;
             score += 150;
             combo++;
-            cout << "[HIT] Skeleton defeated! Score: " << score << endl;
+            
         }
         else if (hit_enemy_type == 2)  // Invisible Man
         {
@@ -1966,7 +1962,7 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
             invis_y[hit_enemy_index] = -1000;
             score += 200;
             combo++;
-            cout << "[HIT] Invisible Man defeated! Score: " << score << endl;
+           
         }
         else if (hit_enemy_type == 3)  // Chelnov
         {
@@ -1975,7 +1971,7 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
             chelnov_y[hit_enemy_index] = -1000;
             score += 250;
             combo++;
-            cout << "[HIT] Chelnov defeated! Score: " << score << endl;
+            
         }
     }
 }
@@ -2149,7 +2145,7 @@ for(int i = 0; i < invisible_men; i++)
                 {
                     invis_x[i] = tx * cell_size;
                     invis_y[i] = ty * cell_size;
-                    cout << "[INVISIBLE] Teleported!" << endl;
+                   
                     break;
                 }
                 attempts++;
@@ -2160,7 +2156,7 @@ for(int i = 0; i < invisible_men; i++)
             // Go INVISIBLE
             invis_is_invisible[i] = true;
             invis_invisible_timer[i] = 0.8f;
-            cout << "[INVISIBLE] Became invisible!" << endl;
+           
         }
     }
    
@@ -2210,9 +2206,7 @@ for(int i = 0; i < chelnovs; i++)
                 chelnov_proj_vy[p] = 0.0f;  // NO vertical movement
                 chelnov_proj_active[p] = true;
                 chelnov_proj_lifetime[p] = 0.0f;
-               
-                cout << "[CHELNOV] Chelnov " << i << " fired projectile!" << endl;
-                break;
+                 break;
             }
         }
     }
@@ -2343,8 +2337,7 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
             combo = 0;
             comboMultiplier = 1.0f;
             chelnov_proj_active[p] = false;
-           
-            cout << "[CHELNOV] Projectile hit player!" << endl;
+          
             continue;
         }
     }
@@ -2398,7 +2391,6 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
             comboMultiplier = 1.0f;
             chelnov_proj_active[p] = false;
            
-            cout << "[CHELNOV] Projectile hit player!" << endl;
             continue;
         }
     }
@@ -2750,24 +2742,24 @@ if(!playerDead)
                 if(powerup_type[i] == 0)  // EXTRA_LIFE
                 {
                     playerLives++;
-                    cout << "[POWERUP] Extra Life! Lives: " << playerLives << endl;
+                   
                 }
                 else if(powerup_type[i] == 1)  // POWER
                 {
                     currentSuckStrength = baseSuckStrength * 2.0f;
-                    cout << "[POWERUP] Power Boost! Suction: " << currentSuckStrength << endl;
+                   
                 }
                 else if(powerup_type[i] == 2)  // RANGE
                 {
                     currentVacuumRange = baseVacuumRange * 1.5f;
-                    cout << "[POWERUP] Range Boost! Range: " << currentVacuumRange << endl;
+                   
                 }
                 else if(powerup_type[i] == 3)  // SPEED
                 {
                     speed = baseSpeed * 2.0f;
                     speedBoostActive = true;
                     speedBoostTimer.restart();
-                    cout << "[POWERUP] Speed Boost! Speed: " << speed << endl;
+                  
                 }
                 
                 powerup_active[i] = false;
@@ -2784,7 +2776,7 @@ if(speedBoostActive)
     {
         speed = baseSpeed;
         speedBoostActive = false;
-        cout << "[POWERUP] Speed boost expired." << endl;
+       
     }
 }
 if(currentLevel == 1 && !levelComplete)
@@ -2796,14 +2788,13 @@ if(currentLevel == 1 && !levelComplete)
     {
         levelComplete = true;
         levelCompleteClock.restart();
-        cout << "[LEVEL 1 COMPLETE] Moving to Level 2 in 3 seconds..." << endl;
+       
     }
 }
 
 // Wait 3 seconds then transition
 if(levelComplete && levelCompleteClock.getElapsedTime().asSeconds() >= levelCompleteDelay)
 {
-    cout << "[TRANSITION] Starting Level 2!" << endl;
     currentLevel = 2;
       playerLives=3;
       maxCapacity=5;
@@ -2888,7 +2879,6 @@ if(combo > 0)
    
     if(platformTime >= 20.0f)
     {
-        cout << "[PLATFORM] 20 seconds passed - regenerating platform!" << endl;
         generate_random_slanted_platform(lvl, height, width, true);  // true = clear old platform
         platformChangeClock.restart();
     }
@@ -2921,7 +2911,6 @@ if(currentLevel == 2 && level2EnemiesSpawning)
                     invis_active[idx] = true;
                     invis_dir[idx] = (rand() % 2 == 0) ? -1 : 1;
                     invisSprite[idx].setPosition(invis_x[idx], invis_y[idx]);
-                    cout << "[SPAWN] Invisible Man " << (idx+1) << " spawned!" << endl;
                     break;
                 }
             }
@@ -2942,7 +2931,6 @@ if(currentLevel == 2 && level2EnemiesSpawning)
                     chelnov_active[idx] = true;
                     chelnov_dir[idx] = (rand() % 2 == 0) ? -1 : 1;
                     chelnovSprite[idx].setPosition(chelnov_x[idx], chelnov_y[idx]);
-                    cout << "[SPAWN] Chelnov " << (idx+1) << " spawned!" << endl;
                     break;
                 }
             }
@@ -2963,7 +2951,6 @@ if(currentLevel == 2 && level2EnemiesSpawning)
                     ghost_active[idx] = true;
                     ghost_dir[idx] = (rand() % 2 == 0) ? -1 : 1;
                     ghostSprite[idx].setPosition(ghost_x[idx], ghost_y[idx]);
-                    cout << "[SPAWN] Ghost " << (idx+1) << " spawned!" << endl;
                     break;
                 }
             }
@@ -2991,7 +2978,6 @@ if(currentLevel == 2 && level2EnemiesSpawning)
                     skelSprite[idx].setTexture(skelTexture);
                     skelSprite[idx].setScale(2, 2);
                     skelSprite[idx].setPosition(skel_x[idx], skel_y[idx]);
-                    cout << "[SPAWN] Skeleton " << (idx+1) << " spawned!" << endl;
                     break;
                 }
             }
@@ -3003,8 +2989,7 @@ if(currentLevel == 2 && level2EnemiesSpawning)
         if(enemiesSpawned >= 20)
         {
             level2EnemiesSpawning = false;
-            cout << "[LEVEL 2] All enemies spawned!" << endl;
-        }
+             }
     }
 }
 // ====== CHECK LEVEL COMPLETION ======
@@ -3083,7 +3068,7 @@ if(levelComplete && currentLevel == 1)
 // After 3 seconds, load Level 2
 if(elapsed >= levelCompleteDelay)
 {
-    cout << "[TRANSITION] Starting Level 2!" << endl;
+    cout << "Starting Level 2!" << endl;
     currentLevel = 2;
    
     // 1. Reset Lives to 3 (This ensures the count starts fresh)
