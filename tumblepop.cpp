@@ -12,24 +12,19 @@ using namespace std;
 int screen_x = 1136;
 int screen_y = 896;
 
-// Get character-specific speed multiplier
-// characterIndex: 0 = green (1.5x speed), 1 = yellow (1.2x speed)
-// baseSpeed: the normal movement speed
-// Returns: modified speed based on character
 float get_character_speed(int characterIndex, float baseSpeed)
 {
     if(characterIndex == 0)
     {
-        return baseSpeed * 1.5f;  // Green character - faster
+        return baseSpeed * 1.5f;  
     }
     else if(characterIndex == 1)
     {
-        return baseSpeed * 1.2f;  // Yellow character - medium speed
+        return baseSpeed * 1.2f;  
     }
-    return baseSpeed;  // Default speed
+    return baseSpeed;  
 }
 
-// Vacuum and Shooting
 
 void update_vacuum(float player_x, float player_y, int vacuumDirection, float vacuum_range, float suck_strength,
     float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts, float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel, float invis_x[], float invis_y[], bool invis_active[], bool invis_stunned[], float invis_stun_timer[], int invis_count, float chelnov_x[], float chelnov_y[], bool chelnov_active[], bool chelnov_stunned[], float chelnov_stun_timer[], int chelnov_count,
@@ -50,13 +45,8 @@ void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_v
 
 bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count,float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts,float skel_x[], float skel_y[], bool skel_active[], int total_skels,float invis_x[], float invis_y[], bool invis_active[], int total_invis, float chelnov_x[], float chelnov_y[], bool chelnov_active[], int total_chelnov, int& hit_projectile, int& hit_enemy_index, int& hit_enemy_type);
 
-   
-// Level 2 helper functions
 bool is_platform_reachable(char** lvl, int x, int y, int width, int height);
 
-
-// Check if all enemies are defeated then level  completed
-// here ghost_active[] and skel_active[] means alivee
 bool check_level_complete(bool ghost_active[], int total_ghosts,bool skel_active[], int total_skels,bool invis_active[], int total_invis, bool chelnov_active[], int total_chelnov)
 {
     for(int i = 0; i < total_ghosts; i++)
@@ -95,13 +85,8 @@ bool is_platform_reachable(char** lvl, int x, int y, int width, int height)
     return has_neighbor || y == height-2;
     }
 
-
-// Next move to level 2
-// char** lvl represents 2D aray of map
-// int height, int width are screen height and width
-
 void change_to_level2(char** lvl, int height, int width)
-{ // Clear entire level
+{ 
     for(int i = 0; i < height; i++)
     {
         for(int j = 0; j < width; j++)
@@ -110,7 +95,7 @@ void change_to_level2(char** lvl, int height, int width)
         }
     }
    
-    // Bottom floor (row 8)
+    // Bottom floor 
     for(int j = 0; j < width; ++j)
         lvl[height-6][j] = '#';
    
@@ -122,13 +107,11 @@ void change_to_level2(char** lvl, int height, int width)
     for(int i = 0; i < height-6; ++i)
         lvl[i][width-1] = '#';
    
-    // Top ceiling (row 0)
+    // Top ceiling 
     for(int j = 0; j < width; ++j)
         lvl[0][j] = '#';
    
-   
     generate_random_slanted_platform(lvl, height, width, false);
-   
   
 }
 void generate_random_slanted_platform(char** lvl, int height, int width, bool clearOld)
@@ -146,13 +129,11 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
             }
         }
     }
-   
-    // STEP 2: DEFINE RAMP PROPERTIES
+  
     int length = 5;
     int attempts = 0;
     bool placed = false;
    
-    // STEP 3 & 4: TRY TO PLACE AND VALIDATE
     while(attempts < 100 && !placed)
     {
         int direction = rand() % 2;
@@ -160,7 +141,7 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
        
         start_y = 6 + (rand() % 2);
        
-        if (direction == 0) { // / Ramp (Up-Right)
+        if (direction == 0) { 
             start_x = 4 + rand() % 3;
         } else { // \ Ramp (Up-Left)
             start_x = 10 + rand() % 3;
@@ -174,15 +155,15 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
            
          
             int x_slope = (direction == 0) ? start_x + i : start_x - i;
-            int x_block = (direction == 0) ? x_slope + 1 : x_slope - 1;  // SWAPPED!
+            int x_block = (direction == 0) ? x_slope + 1 : x_slope - 1;  
            
-            // Bounds Check
+          
             if(x_slope <= 0 || x_slope >= width-1 || x_block <= 0 || x_block >= width-1 || y <= 0 || y >= height-6)
             {
                 valid = false;
                 break;
             }
-            // Check if both tiles are empty
+            
             if (lvl[y][x_slope] != ' ' || lvl[y][x_block] != ' ')
             {
                 valid = false;
@@ -202,7 +183,7 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
                
                
                 int x_slope = (direction == 0) ? start_x + i : start_x - i;
-                int x_block = (direction == 0) ? x_slope + 1 : x_slope - 1;  // SWAPPED!
+                int x_block = (direction == 0) ? x_slope + 1 : x_slope - 1;  
                
                
                 lvl[y][x_slope] = slope_char;
@@ -216,7 +197,6 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
         attempts++;
     }
    
-    // ===== STEP 6: BACKUP PLATFORM IF FAILED =====
     if(!placed)
     {
        
@@ -228,9 +208,6 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
 }
 
 
-// Next display level 2 window
-// window this displays SFML window
-// height and width are screen dmensions and cell_size is size of screen in pixels
 void display_level(RenderWindow& window, char**lvl, Texture& bgTex, Sprite& bgSprite,
                    Texture& blockTexture, Sprite& blockSprite,
                    const int height, const int width, const int cell_size)
@@ -241,21 +218,21 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex, Sprite& bgSp
     {
         for (int j = 0; j < width; j++)
         {
-            // Draw normal solid blocks
+           
             if (lvl[i][j] == '#')
             {
                 blockSprite.setPosition(j * cell_size, i * cell_size);
                 window.draw(blockSprite);
             }
-            // Draw UP-RIGHT slope (/) using stair-step blocks
+           
             else if (lvl[i][j] == '/')
             {
-                // Use your existing blockSprite, just scaled smaller!
-                int mini_size = cell_size / 4;  // Each mini-block is 16x16 pixels
+              
+                int mini_size = cell_size / 4;  
                
-                blockSprite.setScale(0.25f, 0.25f);  // Make it 1/4 size
+                blockSprite.setScale(0.25f, 0.25f);  
                
-                // Bottom row (4 blocks)
+                
                 for(int k = 0; k < 4; k++)
                 {
                     blockSprite.setPosition(j * cell_size + k * mini_size,
@@ -263,7 +240,7 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex, Sprite& bgSp
                     window.draw(blockSprite);
                 }
                
-                // Third row (3 blocks)
+               
                 for(int k = 1; k < 4; k++)
                 {
                     blockSprite.setPosition(j * cell_size + k * mini_size,
@@ -271,7 +248,6 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex, Sprite& bgSp
                     window.draw(blockSprite);
                 }
                
-                // Second row (2 blocks)
                 for(int k = 2; k < 4; k++)
                 {
                     blockSprite.setPosition(j * cell_size + k * mini_size,
@@ -279,21 +255,20 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex, Sprite& bgSp
                     window.draw(blockSprite);
                 }
                
-                // Top row (1 block)
+               
                 blockSprite.setPosition(j * cell_size + 48, i * cell_size);
                 window.draw(blockSprite);
-               
-                // Reset scale back to normal for regular blocks
+             
                 blockSprite.setScale(1.0f, 1.0f);
             }
-            // Draw UP-LEFT slope (\) using stair-step blocks
+         
             else if (lvl[i][j] == '\\')
             {
-                int mini_size = cell_size / 4;  // Each mini-block is 16x16 pixels
+                int mini_size = cell_size / 4;  
                
-                blockSprite.setScale(0.25f, 0.25f);  // Make it 1/4 size
+                blockSprite.setScale(0.25f, 0.25f);  
                
-                // Bottom row (4 blocks)
+               
                 for(int k = 0; k < 4; k++)
                 {
                     blockSprite.setPosition(j * cell_size + k * mini_size,
@@ -301,7 +276,7 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex, Sprite& bgSp
                     window.draw(blockSprite);
                 }
                
-                // Third row (3 blocks - left side)
+               
                 for(int k = 0; k < 3; k++)
                 {
                     blockSprite.setPosition(j * cell_size + k * mini_size,
@@ -309,7 +284,7 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex, Sprite& bgSp
                     window.draw(blockSprite);
                 }
                
-                // Second row (2 blocks - left side)
+               
                 for(int k = 0; k < 2; k++)
                 {
                     blockSprite.setPosition(j * cell_size + k * mini_size,
@@ -317,42 +292,35 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex, Sprite& bgSp
                     window.draw(blockSprite);
                 }
                
-                // Top row (1 block - left corner)
+                
                 blockSprite.setPosition(j * cell_size, i * cell_size);
                 window.draw(blockSprite);
                
-                // Reset scale back to normal
+               
                 blockSprite.setScale(1.0f, 1.0f);
             }
         }
     }
 }
 
-// This functioin is to check if player is not standing on the blocks then it must fall
-// char** lvl is a 2D array for map
-// player_x and player_y are the current horizontal and vertical position of player
-// Pheight and Pwidth are players height and wdth in pixels of players collision with block
-// offset_y is the prediction of players vertical position
-// speed = players constant speed
-// terminal_Velocity is the maximum downward speed that the player can achieve
-// onGround checks if player is on the ground
+
 void player_gravity(char** lvl, float& offset_y, float& velocityY, bool& onGround, const float& gravity, float& terminal_Velocity, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth)
 {
     int col_mid = (player_x + Pwidth / 2) / cell_size;
 int row_feet = (player_y + Pheight) / cell_size;
 
-// 2. Define the tiles around the player's feet
+
 char tile_center = lvl[row_feet][col_mid];
 char tile_left = lvl[row_feet][col_mid - 1];
 char tile_right = lvl[row_feet][col_mid + 1];
 
-// 3. Check for SLIDING condition (override if feet touch a sliding surface OR are next to one)
+
 if (row_feet >= 0 && row_feet < Pheight && col_mid >= 1 && col_mid < Pwidth - 1)
 {
     if (tile_center == '/' || tile_left == '/' || tile_right == '/')
     {
-        // Detected Up-Right slope (/) anywhere near feet. Must slide LEFT.
-        player_x -= 2.5f; // FIX: Slide Left (Downhill)
+        
+        player_x -= 2.5f; 
         velocityY = 1.5f;
         onGround = false;
         player_y += velocityY;
@@ -360,145 +328,123 @@ if (row_feet >= 0 && row_feet < Pheight && col_mid >= 1 && col_mid < Pwidth - 1)
     }
     else if (tile_center == '\\' || tile_left == '\\' || tile_right == '\\')
     {
-        // Detected Up-Left slope (\) anywhere near feet. Must slide RIGHT.
-        player_x += 2.5f; // FIX: Slide Right (Downhill)
+       
+        player_x += 2.5f; 
         velocityY = 1.5f;
         onGround = false;
         player_y += velocityY;
         return;
     }
 }
-    // Apply gravity first (increase downward velocity)
+    
     if (!onGround)
     {
-        // increse velocity so player falls faster
+        
         velocityY += gravity;
-        // Prevent falling jut too fast by putting it eual to terminal velocity
+       
         if (velocityY >= terminal_Velocity)
         {
             velocityY = terminal_Velocity;
         }
     }
    
-    // Copying current player position to offset_y
+ 
     offset_y = player_y;
-    // Predicts new vertical velocity after applyong the current vertical velocity
+   
     offset_y += velocityY;
    
-    // ===== ONLY CHECK TOP BOUNDARY (ROW 0) - Player can jump through all other blocks =====
-    if (velocityY < 0)  // Moving upward (jumping)
+   
+    if (velocityY < 0)  
     {
         int top_y = (int)(offset_y) / cell_size;
        
-        // Only check if trying to go into or above row 0 (top ceiling)
+       
         if(top_y <= 0)
         {
             int left_x = (int)(player_x) / cell_size;
             int mid_x = (int)(player_x + Pwidth / 2) / cell_size;
             int right_x = (int)(player_x + Pwidth) / cell_size;
            
-            // Check if hitting the TOP ROW blocks
+           
             if(lvl[0][left_x] == '#' || lvl[0][mid_x] == '#' || lvl[0][right_x] == '#')
             {
-                // Hit top ceiling - stop upward movement
+                
                 velocityY = 0;
-                player_y = cell_size;  // Position just below row 0
+                player_y = cell_size;  
                 onGround = false;
                 return;
             }
         }
        
-        // If not hitting top row, move freely upward through other blocks
+       
         player_y = offset_y;
         onGround = false;
         return;
     }
    
-    // CRITICAL FIX: Only check GROUND collision when FALLING DOWN (velocityY > 0)
-    // This allows player to jump UP through platforms without getting stuck
+   
     if (velocityY > 0)
     {
-        // Check three points below the player (left, center, right) for collision with blocks
-        // for bottom collision check the predicted top value + height of player gives players bottom posiiton
-        // next dividing it by cell_size to convert to pixels and finally convert to integer to discard decimal parts
+       
         char bottom_left_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x ) / cell_size];
-        // Right sid checks bootom and right side of the player
+       
         char bottom_right_down = lvl[(int)(offset_y  + Pheight) / cell_size][(int)(player_x + Pwidth) / cell_size];
-        // for middle part check bootom and center of players width by dividing Players wdith by 2
+      
         char bottom_mid_down = lvl[(int)(offset_y + Pheight) / cell_size][(int)(player_x + Pwidth / 2) / cell_size];
 
         if (bottom_left_down == '#' || bottom_mid_down == '#' || bottom_right_down == '#')
         {
-            // Hit ground - stop on platform
+          
             onGround = true;
             velocityY = 0;
-            // Don't update player_y - stay on top of block
+           
         }
         else
         {
-            // if player is not on ground then update its vertical position to move down
+            
             player_y = offset_y;
             onGround = false;
         }
     }
     else
     {
-        // When jumping UP (velocityY <= 0), move freely through blocks
+        
         player_y = offset_y;
         onGround = false;
     }
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Check player collison with left wall
-// char** lvl is a 2D array for map
-// player_x and player_y are the current horizontal and vertical position of player
-// Pheight and Pwidth are players height and wdth in pixels of players collision with block
-// offset_x is the prediction of players horizontal position
 void player_left_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
 {
-    // moving left if there is no wall
+   
     offset_x = player_x;    
     offset_x -= speed;      
 
-    // Check three points on the left side of the player (top, middle, bottom)
+   
     char left_top = lvl[(int)(player_y) / cell_size][(int)(offset_x) / cell_size];
     char left_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x) / cell_size];
     char left_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x) / cell_size];
 
     if (left_top == '#' || left_mid == '#' || left_bottom == '#')
     {
-       // collision occurs so dont move and stay still
+       
         offset_x = player_x ;
     }
     else
     {
-        // no collisions ocuur player is safe to move left
+       
         player_x = offset_x;
     }
 }
 
-// RIGHT COLLISION - same as left but to the right
+
 void player_right_collision(char** lvl, float& offset_x, float& player_x, float& player_y, const int cell_size, int& Pheight, int& Pwidth, float speed)
 {
     offset_x = player_x;
     offset_x += speed;
 
-    // Check three points on the right side of the player (top, middle, bottom)
+    
     char right_top = lvl[(int)(player_y) / cell_size][(int)(offset_x + Pwidth) / cell_size];
     char right_mid = lvl[(int)(player_y + Pheight/2) / cell_size][(int)(offset_x + Pwidth) / cell_size];
     char right_bottom = lvl[(int)(player_y + Pheight) / cell_size][(int)(offset_x + Pwidth) / cell_size];
@@ -513,14 +459,13 @@ void player_right_collision(char** lvl, float& offset_x, float& player_x, float&
     }
 }
 
-// CEILING COLLISION  this prevents moving up into blocks
 void player_ceiling_collision(char** lvl, float& offset_y, float& velocityY, float& player_x, float& player_y, const int cell_size, int& Pwidth)
 {
-    // predicting next position
+    
     offset_y = player_y;
     offset_y += velocityY;
 
-    // Check three points on the top of the player (left, middle, right)
+  
     char top_left = lvl[(int)(offset_y) / cell_size][(int)(player_x) / cell_size];
     char top_mid = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth/2) / cell_size];
     char top_right = lvl[(int)(offset_y) / cell_size][(int)(player_x + Pwidth) / cell_size];
@@ -535,34 +480,26 @@ void player_ceiling_collision(char** lvl, float& offset_y, float& velocityY, flo
     }
 }
 
-//Check collision between player and they enemies
-//PlayerWidth and PlayerHeight are players height and width
-//whre enemy idth and height = enemy_size
-//player_x and player_y are players top left points
-//enemy_x and enemy_y are enemies top and left points
 bool check_player_enemy_collision(
     float player_x, float player_y, int PlayerWidth, int PlayerHeight,
     float enemy_x, float enemy_y, int enemy_size)
 {
-   // checking players collision with enemy by horizontal and vertical overlapping
+  
     return (player_x < enemy_x + enemy_size &&
             player_x + PlayerWidth > enemy_x &&
             player_y < enemy_y + enemy_size &&
             player_y + PlayerHeight > enemy_y);
 }
 
-// Respawn player from top
-// player_x = players horizontal position and player_y is players vertical position
-// velocityY = vertical speed meanng howfast is player movng down
-// playerDead check if player is dead
+
 void respawn_player(float& player_x, float& player_y, float& velocityY, bool& playerDead)
 {
-    player_x = 500;       // resets players poistion
+    player_x = 500;       
     player_y = 150;
-    velocityY = 0;       // stop falling
-    playerDead = false;  // player is alive again
+    velocityY = 0;       
+    playerDead = false;  
 }
-// Check power-up collision with player
+
 bool check_powerup_collision(float player_x, float player_y, int PlayerWidth, int PlayerHeight,
                             float powerup_x, float powerup_y, int powerup_size)
 {
@@ -572,19 +509,18 @@ bool check_powerup_collision(float player_x, float player_y, int PlayerWidth, in
             player_y + PlayerHeight > powerup_y);
 }
 
-// Power-up spawning function (0=EXTRA_LIFE, 1=POWER, 2=RANGE, 3=SPEED)
 void spawn_powerup(float& powerup_x, float& powerup_y, bool& powerup_active,
                    int& powerup_type, Sprite& powerup_sprite, Clock& spawn_timer,
                    bool& has_spawned, char** lvl, int width, int height,
                    int cell_size, int type, Texture& texture)
 {
-    if(has_spawned) return;  // Already spawned in this level
+    if(has_spawned) return;  
    
     powerup_type = type;
     powerup_sprite.setTexture(texture);
     powerup_sprite.setScale(2, 2);
    
-    // Find random valid spawn position
+ 
     int attempts = 0;
     while(attempts < 50)
     {
@@ -604,26 +540,13 @@ void spawn_powerup(float& powerup_x, float& powerup_y, bool& powerup_active,
         attempts++;
     }
    
-    // Fallback spawn
+    
     powerup_x = 400;
     powerup_y = 300;
     powerup_active = true;
     has_spawned = true;
     spawn_timer.restart();
 }
-
-// ============================================================================
-// FUNCTION DEFINITIONS (Vacuum and Shooting)
-// ============================================================================
-
-//This function is used for sucking ghost and skeletons
-//player_x/player_y represents position of player top orleft
-//PlayerWidth/PlayerHeight shows player's sprite size
-//ghost_x[], ghost_y[], ghost_active[], ghosts shows ghost positions + active flags + count
-//skel_x[], skel_y[], skel_active[], skel is skeletons same as ghosts
-//cell_size indicates tile size to compute centers
-//suck_strength shows how fast the enemies are pulled
-//vacuumDirection indiactes 0=left,1=up,2=right,3=down
 
 void update_vacuum(
     float player_x, float player_y, int vacuumDirection,
@@ -632,7 +555,7 @@ void update_vacuum(
     float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel,
     float invis_x[], float invis_y[], bool invis_active[], bool invis_stunned[], float invis_stun_timer[], int invis_count,
     float chelnov_x[], float chelnov_y[], bool chelnov_active[], bool chelnov_stunned[], float chelnov_stun_timer[], int chelnov_count,
-    bool chelnov_is_shooting[],  // <--- ADD THIS PARAMETER
+    bool chelnov_is_shooting[],  
     const int cell_size, bool vacuum_on,
     int captured[], int &cap_count, int max_capacity, int &score)
 {
@@ -699,7 +622,7 @@ void update_vacuum(
         }
     }
 
-    // Process skeletons (type 1)
+   
     for (int i = 0; i < skel; i++)
     {
         if (!skel_active[i]) continue;
@@ -743,7 +666,6 @@ void update_vacuum(
         }
     }
 
-    // Process Invisible Men (type 2) - NEW
     for (int i = 0; i < invis_count; i++)
     {
         if (!invis_active[i]) continue;
@@ -769,7 +691,7 @@ void update_vacuum(
 
                 if (distance < capture_distance && cap_count < max_capacity)
                 {
-                    captured[cap_count] = 2;  // Invisible Man type
+                    captured[cap_count] = 2;  
                     cap_count = cap_count + 1;
                     invis_active[i] = false;
                     invis_stunned[i] = false;
@@ -787,15 +709,15 @@ void update_vacuum(
         }
     }
 
-// Process Chelnovs (type 3) - CANNOT BE CAPTURED WHILE SHOOTING
+
 for (int i = 0; i < chelnov_count; i++)
 {
     if (!chelnov_active[i]) continue;
    
-    // CRITICAL: Cannot capture during shooting phase
+    
     if (chelnov_is_shooting[i])
     {
-        continue;  // Skip this Chelnov - invincible while shooting
+        continue; 
     }
 
     float chelnov_center_x = chelnov_x[i] + cell_size / 2.0f;
@@ -842,7 +764,7 @@ void shoot_single_enemy(float player_x, float player_y, int vacuum_dir,
                        float shot_enemy_x[], float shot_enemy_y[],
                        float shot_velocity_x[], float shot_velocity_y[],
                        int shot_enemy_type[], bool shot_is_active[],
-                       float shot_lifetime[],  // NEW: Add lifetime parameter
+                       float shot_lifetime[],  
                        int& shot_count)
 {
     if (cap_count <= 0)
@@ -850,11 +772,9 @@ void shoot_single_enemy(float player_x, float player_y, int vacuum_dir,
         return;
     }
 
-    // LIFO: Pop last captured enemy
     cap_count = cap_count - 1;
     int shot_type = captured[cap_count];
    
-    // Find next available projectile slot
     int slot = -1;
     for(int i = 0; i < 20; i++)
     {
@@ -880,22 +800,22 @@ void shoot_single_enemy(float player_x, float player_y, int vacuum_dir,
 
     float projectile_speed = 10.0f;
     
-    if (vacuum_dir == 0) // left
+    if (vacuum_dir == 0) 
     {
         shot_velocity_x[slot] = -projectile_speed;
         shot_velocity_y[slot] = 0.0f;
     }
-    else if (vacuum_dir == 1) // up
+    else if (vacuum_dir == 1) 
     {
         shot_velocity_x[slot] = 0.0f;
         shot_velocity_y[slot] = -projectile_speed;
     }
-    else if (vacuum_dir == 2) // right
+    else if (vacuum_dir == 2) 
     {
         shot_velocity_x[slot] = projectile_speed;
         shot_velocity_y[slot] = 0.0f;
     }
-    else // down (3)
+    else 
     {
         shot_velocity_x[slot] = 0.0f;
         shot_velocity_y[slot] = projectile_speed;
@@ -909,7 +829,7 @@ void shoot_burst_mode(float player_x, float player_y, int vacuum_dir,
                      float shot_enemy_x[], float shot_enemy_y[],
                      float shot_velocity_x[], float shot_velocity_y[],
                      int shot_enemy_type[], bool shot_is_active[],
-                     float shot_lifetime[],  // NEW: Add lifetime parameter
+                     float shot_lifetime[],  
                      int& shot_count)
 {
   
@@ -919,16 +839,16 @@ void shoot_burst_mode(float player_x, float player_y, int vacuum_dir,
     {
         shoot_single_enemy(player_x, player_y, vacuum_dir, captured, cap_count,
                           shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
-                          shot_enemy_type, shot_is_active, shot_lifetime, shot_count);  // NEW: Pass lifetime
+                          shot_enemy_type, shot_is_active, shot_lifetime, shot_count);  
     }
    
   
 }
-// Updadte all projectile positions and physics
+
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
                        float shot_velocity_x[], float shot_velocity_y[],
-                       bool shot_is_active[], float shot_lifetime[],  // NEW: Add lifetime parameter
-                       float deltaTime, float max_lifetime,  // NEW: Add deltaTime and max_lifetime
+                       bool shot_is_active[], float shot_lifetime[],  
+                       float deltaTime, float max_lifetime,  
                        int shot_count,
                        char** lvl, int cell_size, int height)
 {
@@ -939,10 +859,9 @@ void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
             continue;
         }
 
-        // NEW: Update lifetime
+        
         shot_lifetime[i] += deltaTime;
        
-        // NEW: Check if projectile has exceeded lifetime
         if (shot_lifetime[i] >= max_lifetime)
         {
             shot_is_active[i] = false;
@@ -950,17 +869,16 @@ void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
             continue;
         }
 
-        // Move projectile
+      
         shot_enemy_x[i] = shot_enemy_x[i] + shot_velocity_x[i];
         shot_enemy_y[i] = shot_enemy_y[i] + shot_velocity_y[i];
 
-        // Add gravity for horizontal shots
+        
         if (shot_velocity_x[i] != 0.0f)
         {
             shot_velocity_y[i] = shot_velocity_y[i] + 0.3f;
         }
 
-        // Check screen bounds
         if (shot_enemy_x[i] < 0 || shot_enemy_x[i] > 1136)
         {
             shot_is_active[i] = false;
@@ -975,7 +893,7 @@ void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
             continue;
         }
 
-        // Check platform collision
+      
         int col = (int)(shot_enemy_x[i] / cell_size);
         int row = (int)(shot_enemy_y[i] / cell_size);
 
@@ -983,7 +901,7 @@ void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
         {
             if (lvl[row][col] == '#')
             {
-                // Bounce off blocks
+              
                 if (shot_velocity_x[i] != 0.0f)
                 {
                     shot_velocity_x[i] = -shot_velocity_x[i];
@@ -996,24 +914,6 @@ void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Check if projectiles hit any active enemies
 bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
                           bool shot_is_active[], int shot_count,
                           float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts,
@@ -1030,7 +930,7 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
     {
         if (!shot_is_active[proj]) continue;
 
-        // Check ghosts (type 0)
+        
         for (int g = 0; g < total_ghosts; g++)
         {
             if (!ghost_active[g]) continue;
@@ -1048,7 +948,7 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
             }
         }
 
-        // Check skeletons (type 1)
+       
         for (int s = 0; s < total_skels; s++)
         {
             if (!skel_active[s]) continue;
@@ -1066,7 +966,7 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
             }
         }
 
-        // Check Invisible Men (type 2)
+     
         for (int inv = 0; inv < total_invis; inv++)
         {
             if (!invis_active[inv]) continue;
@@ -1084,7 +984,7 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
             }
         }
 
-        // Check Chelnovs (type 3)
+       
         for (int ch = 0; ch < total_chelnov; ch++)
         {
             if (!chelnov_active[ch]) continue;
@@ -1105,22 +1005,19 @@ bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[],
 
     return false;
 }
-// ============================================================================
-// MAIN GAME LOOP
-// ============================================================================
 
 int main()
 {
-    // Create window
+    
     RenderWindow window(VideoMode(screen_x, screen_y), "Tumble-POP", Style::Resize);
     window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(60);
 
     //level specifics
-    const int cell_size = 64;  // tile dimension in pixels
-    const int height = 14;     // tiles vertically
-    const int width = 18;      // tiles horizontally
-    char** lvl;        // Level management variables
+    const int cell_size = 64;  
+    const int height = 14;     
+    const int width = 18;      
+    char** lvl;        
    
  
 
@@ -1128,15 +1025,14 @@ int main()
 int currentLevel = 1;
 bool levelComplete = false;
 Clock levelCompleteClock;
-const float levelCompleteDelay = 3.0f;         // 2D dynamic array representing map cells
+const float levelCompleteDelay = 3.0f;         
 
-    //level and background textures and sprites
+  
     Texture bgTex;
     Sprite bgSprite;
     Texture blockTexture;
     Sprite blockSprite;
 
-    // load background & block textures (files must exist)
     bgTex.loadFromFile("Assets/bg/bg.png");
     bgSprite.setTexture(bgTex);
     bgSprite.setPosition(0,0);
@@ -1144,38 +1040,35 @@ const float levelCompleteDelay = 3.0f;         // 2D dynamic array representing 
     blockTexture.loadFromFile("Assets/bg/block1.png");
     blockSprite.setTexture(blockTexture);
 
-    //player data (position, speed, size etc.)
     float player_x = 500;
     float player_y = 150;
 
     float speed = 5;
 
-    const float jumpStrength = -20; // negative -> upward
-    const float gravity = 1;        // gravity per frame
+    const float jumpStrength = -20; 
+    const float gravity = 1;        
     bool onGround = false;
 
     float offset_x = 0;
     float offset_y = 0;
     float velocityY = 0;
 
-    float terminal_Velocity = 20;   // clamp falling speed
+    float terminal_Velocity = 20;   
 
     int PlayerHeight = 102;
     int PlayerWidth = 96;
    
-    // ===== SCORING SYSTEM =====
+    
 int score = 0;
-int combo = 0;  // Track consecutive kills without taking damage
+int combo = 0;  
 float comboMultiplier = 1.0f;
-bool tookDamage = false;  // Track if player took any damage in the level
+bool tookDamage = false; 
 
 Font scoreFont;
 Text scoreText;
 Text comboText;
 
-Clock levelTimer;  // Timer for level completion speed
-
-// Load font
+Clock levelTimer;  
 scoreFont.loadFromFile("Assets/txt/Roboto-Regular.ttf");
 
 scoreText.setFont(scoreFont);
@@ -1189,9 +1082,7 @@ comboText.setFillColor(Color::Yellow);
 comboText.setPosition(20, 50);
 
 
-levelTimer.restart();  // Start timing the level
-
- // ===== PLAYER LIVES SYSTEM =====
+levelTimer.restart();  
     int playerLives = 3;
     bool playerDead = false;
     Clock deathClock;
@@ -1207,7 +1098,7 @@ const int animationFrames = 4;
 Texture walkTextures[4];        
 int currentFrame = 0;  
 int frameCounter = 0;          
-const int frameDelay = 10;      // (lower = faster)
+const int frameDelay = 10;      
 bool isWalking = false;        
 
     // Music objects and settings
@@ -1222,12 +1113,11 @@ bool isWalking = false;
     lvlMusic.setVolume(40);
    
 
-    // ===== PLAYER SELECTION MENU =====
-    const int playerOptionsCount = 2;   // number of characters
+    //PLAYER SELECTION MENnU
+    const int playerOptionsCount = 2;   
     Texture playerOptions[playerOptionsCount];
     Sprite playerOptionSprite[playerOptionsCount];
 
-    // Load textures for each character (must exist)
     playerOptions[0].loadFromFile("Assets/players/player1.png");
     playerOptions[1].loadFromFile("Assets/players/player2.png");
 
@@ -1241,13 +1131,12 @@ bagOptions[1].loadFromFile("Assets/props/bag2.png");
     {
         bagOptionSprite[i].setTexture(bagOptions[i]);
         bagOptionSprite[i].setScale(2,2);
-        bagOptionSprite[i].setPosition(300 + i*300+73, 200+41);  // Changed from 300+41 to 200+41
+        bagOptionSprite[i].setPosition(300 + i*300+73, 200+41);  
         playerOptionSprite[i].setTexture(playerOptions[i]);
         playerOptionSprite[i].setScale(3,3);
-        playerOptionSprite[i].setPosition(300 + i*300, 200); // Changed from 300 to 200
+        playerOptionSprite[i].setPosition(300 + i*300, 200); 
     }
 
-    // ===== DESCRIPTION IMAGES =====
     Texture descTextures[2];
     Sprite descSprites[2];
    
@@ -1255,18 +1144,17 @@ bagOptions[1].loadFromFile("Assets/props/bag2.png");
     descTextures[1].loadFromFile("Assets/txt/yellowdesc.png");
    
     descSprites[0].setTexture(descTextures[0]);
-    descSprites[0].setPosition(200, 300);  // Moved right (280→320) and up (500→400)
+    descSprites[0].setPosition(200, 300);  
    
     descSprites[1].setTexture(descTextures[1]);
-    descSprites[1].setPosition(500, 300);  // Moved right (580→620) and up (500→400)
+    descSprites[1].setPosition(500, 300);  
 
    
-    // Selection variables
     int selectedIndex = 0;
     bool playerChosen = false;
     menuMusic.play(); // play menu music
 
-    // Simple menu loop (blocks until player chosen)
+  
     while(!playerChosen && window.isOpen())
     {
         Event ev;
@@ -1292,12 +1180,12 @@ bagOptions[1].loadFromFile("Assets/props/bag2.png");
             }
         }
 
-        // apply chosen texture to PlayerSprite for preview
+       
         PlayerTexture = playerOptions[selectedIndex];
         PlayerSprite.setTexture(PlayerTexture);
         PlayerSprite.setScale(3,3);
         PlayerSprite.setPosition(player_x, player_y);
-        // Load walking animation frames based on selected player
+        // next Loading walking animation frames based on selected player
 if(selectedIndex == 0)
 {
     walkTextures[0].loadFromFile("Assets/players/player1walk1.png");
@@ -1317,7 +1205,7 @@ else if(selectedIndex == 1)
 bagSprite.setScale(2, 2);
 
         window.clear();
-        // highlight selected option
+       
         for(int i = 0; i < playerOptionsCount; i++)
         {
             if(i == selectedIndex)
@@ -1333,15 +1221,14 @@ bagSprite.setScale(2, 2);
 
             window.draw(bagOptionSprite[i]);
             window.draw(playerOptionSprite[i]);
-            window.draw(descSprites[i]);  // This draws the description images
+            window.draw(descSprites[i]);  
         }
         window.display();
     }
-  speed = get_character_speed(selectedIndex, speed);  // Use 'speed' directly instead of 'baseSpeed'
-bool isJumping = false;  // Track if jumping (unused now but available)
+  speed = get_character_speed(selectedIndex, speed);  
+bool isJumping = false;  
    
 
-    // collision flags and char placeholders (many used locally later)
     bool up_collide = false;
     bool left_collide = false;
     bool right_collide = false;
@@ -1366,15 +1253,14 @@ bool isJumping = false;  // Track if jumping (unused now but available)
     char top_mid_up = '\0';
     char top_left_up = '\0';
 
-    // Vacuum system
+    
     bool vacuumActive = false;
-    int vacuumDirection = 0; // 0=left, 1=up, 2=right, 3=down
+    int vacuumDirection = 0; 
 
-    // Vacuum textures and sprites for each direction
+
     Texture vacuumLeftTex, vacuumUpTex, vacuumRightTex, vacuumDownTex;
     Sprite vacuumLeftSprite, vacuumUpSprite, vacuumRightSprite, vacuumDownSprite;
 
-    // Load vacuum textures (add this after loading PlayerTexture)
     if(selectedIndex==0)
     {
     
@@ -1390,7 +1276,6 @@ bool isJumping = false;  // Track if jumping (unused now but available)
     vacuumDownTex.loadFromFile("Assets/players/down1.png");
     }
 
-    // Setup vacuum sprites and scale them
     vacuumLeftSprite.setTexture(vacuumLeftTex);
     vacuumLeftSprite.setScale(3, 3);
 
@@ -1403,16 +1288,14 @@ bool isJumping = false;  // Track if jumping (unused now but available)
     vacuumDownSprite.setTexture(vacuumDownTex);
     vacuumDownSprite.setScale(3, 3);
 
-    // LASER BEAM SETUP
     Texture laserTex;
     Sprite laserSprite;
-    bool laserLoaded = laserTex.loadFromFile("Assets/props/lazer.png"); // try to load laser image
+    bool laserLoaded = laserTex.loadFromFile("Assets/props/lazer.png"); 
     if(laserLoaded)
     {
         laserSprite.setTexture(laserTex);
     }
 
-    //creating level array (dynamic 2D char array)
     lvl = new char* [height];
     for (int i = 0; i < height; i += 1)
     {
@@ -1421,7 +1304,6 @@ bool isJumping = false;  // Track if jumping (unused now but available)
     lvlMusic.play();
     lvlMusic.setLoop(true);
 
-    // Initialize level cells to empty space ' '
     for(int i = 0; i < height; i += 1)
     {
         for (int j = 0; j < width; j += 1)
@@ -1430,34 +1312,25 @@ bool isJumping = false;  // Track if jumping (unused now but available)
         }
     }
 
-    
-    /////  BOTTOM BLOCKS
     for (int j = 0; j < width; ++j) 
     lvl[8][j] = '#'; 
     
     lvl[5][6] = '#'; lvl[5][7] = '#'; lvl[5][8] = '#';
     lvl[5][9] = '#'; lvl[5][10] = '#'; lvl[5][11] = '#';
 
-    ////  LEFT SIDE wall
     for(int i = 0; i <=7 ; ++i)
      lvl[i][0] = '#';
 
-    ////  RIGHT PART wall
     for(int i = 0; i <=7; ++i)
      lvl[i][17] = '#';
 
-    ////  RIGHT FORWARD PART (these were set originally, maybe misnamed)
     lvl[3][0] = '#'; lvl[3][1] = '#'; lvl[3][2] = '#'; lvl[3][3] = '#';
-    
-
-    ////  LEFT FORWARD PART
+  
     lvl[3][14] = '#'; lvl[3][15] = '#'; lvl[3][16] = '#'; lvl[3][17] = '#';
     
 
-    ///  UPPER PART (top ceiling)
     for (int j = 0; j < width; ++j) lvl[0][j] = '#';
 
-    // ================= GHOST SETUP =================
     const int ghosts = 8;
 
     float ghost_x[8];
@@ -1467,20 +1340,20 @@ bool isJumping = false;  // Track if jumping (unused now but available)
     float ghost_velocityY[8];
     bool ghost_onGround[8];
     Sprite ghostSprite[8];
-    bool ghost_active[8];  // active flag per ghost
+    bool ghost_active[8];  
      const int ghostAnimationFrames = 4;
      Texture ghostWalkTextures[4];
-     int ghostCurrentFrame[8];      // cuuurrent frame for each ghost
-int ghostFrameCounter[8];      // Frame counter for each ghost
-const int ghostFrameDelay = 10; // aniimation speed
+     int ghostCurrentFrame[8];      
+int ghostFrameCounter[8];      
+const int ghostFrameDelay = 10; 
 
-// Load ghost walking animation frames
+
 ghostWalkTextures[0].loadFromFile("Assets/enemies/ghost1.png");
 ghostWalkTextures[1].loadFromFile("Assets/enemies/ghost2.png");
 ghostWalkTextures[2].loadFromFile("Assets/enemies/ghost3.png");
 ghostWalkTextures[3].loadFromFile("Assets/enemies/ghost4.png");
 
-// ===== SKELETON ANIMATION FRAMES =====
+
 const int skel =4;
 Texture skelWalkTextures[4];
 skelWalkTextures[0].loadFromFile("Assets/enemies/skel1.png");
@@ -1502,20 +1375,18 @@ for(int i = 0; i < skel; i++)
 }
 
 
-   
-    //spawning ghosts
-srand(time(0)); // seed RNG
+  
+srand(time(0)); 
 
 for(int i = 0; i < ghosts; i++)
 {
-    // pick random tile that is empty and has ground below
+   
     while(true)
     {
         int tx = rand() % width;
         int ty = rand() % (height - 1);
 
-        // Player spawns at row 4, platform is at row 5, columns 6-11
-        // Exclude spawning on the player's starting platform
+       
         bool onPlayerPlatform = (ty == 4 && tx >= 6 && tx <= 11);
        
         if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#' && !onPlayerPlatform)
@@ -1527,14 +1398,13 @@ for(int i = 0; i < ghosts; i++)
     }
 
         ghost_speed[i] = 1;
-        ghost_dir[i] = (rand() % 2 == 0) ? -1 : 1; // left or right
+        ghost_dir[i] = (rand() % 2 == 0) ? -1 : 1; 
         ghost_velocityY[i]=0;
         ghost_onGround[i]=false;
         ghost_active[i]=true;
        
         ghostSprite[i].setTexture(ghostWalkTextures[0]);
-        ghostSprite[i].setScale(2, 2);   // increase ghost size
-// Flip sprite if starting direction is right
+        ghostSprite[i].setScale(2, 2); 
 if(ghost_dir[i] == 1)
 {
     ghostSprite[i].setScale(-2, 2);
@@ -1553,18 +1423,18 @@ if(ghost_dir[i] == 1)
     Sprite skelSprite[9];
     bool skel_active[9];
  
-    float skel_jump_timer[9];      // Timer for each skeleton
-    float skel_next_jump_time[9];  // Random time until next jump (4-5 seconds)
+    float skel_jump_timer[9];      
+    float skel_next_jump_time[9];  
     Texture skelTexture;
     skelTexture.loadFromFile("Assets/enemies/skeleton.png");
    
-    // ===== ENEMY STUN SYSTEM ===== (FIXED)
-    bool ghost_stunned[8];     // One for each ghost
+  
+    bool ghost_stunned[8];     
     float ghost_stun_timer[8];
-    bool skel_stunned[9];      // One for each skeleton
+    bool skel_stunned[9];      
     float skel_stun_timer[9];
    
-    // Initialize all to false/0
+   
     for(int i = 0; i < ghosts; i++)
     {
         ghost_stunned[i] = false;
@@ -1575,7 +1445,7 @@ if(ghost_dir[i] == 1)
         skel_stunned[i] = false;
         skel_stun_timer[i] = 0.0f;
     }
-    // ===== POWER-UP SYSTEM =====
+    
     Texture extraLifeTex, powerTex, rangeTex, speedTex;
     extraLifeTex.loadFromFile("Assets/props/extralife.png");
     powerTex.loadFromFile("Assets/props/power.png");
@@ -1619,13 +1489,13 @@ srand(time(0));
 
 for(int i = 0; i < skel; i++)
 {
-    // pick random platform tile (empty + ground below)
+    
     while(true)
     {
         int tx = rand() % width;
         int ty = rand() % (height - 1);
 
-        // Exclude spawning on the player's starting platform
+        // Exclude spawning on the player starting platform
         bool onPlayerPlatform = (ty == 4 && tx >= 6 && tx <= 11);
        
         if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#' && !onPlayerPlatform)
@@ -1642,9 +1512,9 @@ for(int i = 0; i < skel; i++)
         skel_onGround[i]=false;
         skel_active[i]=true;
        
-        // ADD THESE TIMER INITIALIZATIONS:
-        skel_jump_timer[i] = 0.0f;                                    // Start timer at 0
-        skel_next_jump_time[i] = 10.0f + (rand() % 2);                // Random 4-5 seconds
+        
+        skel_jump_timer[i] = 0.0f;                                    
+        skel_next_jump_time[i] = 10.0f + (rand() % 2);                
        
         skelSprite[i].setTexture(skelTexture);
         skelSprite[i].setScale(2, 2);
@@ -1656,30 +1526,29 @@ for(int i = 0; i < skel; i++)
     Event ev;
     bool xKeyPressed=false;
    
-    // Released enemies (projectiles) - for shooting captured enemies
+   
     float shot_enemy_x[20];
     float shot_enemy_y[20];
     float shot_velocity_x[20];
     float shot_velocity_y[20];
-    int shot_enemy_type[20];  // 0=ghost, 1=skeleton
+    int shot_enemy_type[20];  
     bool shot_is_active[20];
-    float shot_lifetime[20];      //How long projectile has been alive
-const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
+    float shot_lifetime[20];      
+const float max_lifetime = 7.0f;  
    int shot_projectile_count=0;
 
-    // Initialize shot array
+ 
     for (int i = 0; i < 20; i++)
     {
         shot_is_active[i] = false;
-         shot_lifetime[i] = 0.0f;  // Initialize lifetime
+         shot_lifetime[i] = 0.0f;  
     }
 
-    // Key press tracking (for single-shot detection)
+    
     bool previous_E_pressed = false;
     bool previous_Q_pressed = false;
    
-    // ================= LEVEL 2 ENEMY SETUP =================
-    // INVISIBLE MAN (3 total)
+  
     const int invisible_men = 3;
     float invis_x[3];
     float invis_y[3];
@@ -1695,7 +1564,7 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
 
     for(int i = 0; i < invisible_men; i++)
     {
-        invis_active[i] = false;  // Start inactive, spawn sequentially
+        invis_active[i] = false;  
         invis_stunned[i] = false;
         invis_stun_timer[i] = 0.0f;
         invis_speed[i] = 1.5f;
@@ -1703,7 +1572,7 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
         invisSprite[i].setTexture(invisTexture);
         invisSprite[i].setScale(2, 2);
     }
-    // ===== INVISIBLE MAN TELEPORT SYSTEM =====
+    
 float invis_teleport_timer[3];
 const float invis_teleport_interval = 2.5f;
 bool invis_is_invisible[3];
@@ -1717,7 +1586,7 @@ for(int i = 0; i < invisible_men; i++)
     invis_invisible_timer[i] = 0.0f;
 }
 
-    // CHELNOV (4 total)
+
     const int chelnovs = 4;
     float chelnov_x[4];
     float chelnov_y[4];
@@ -1728,7 +1597,7 @@ for(int i = 0; i < invisible_men; i++)
     float chelnov_stun_timer[4];
     Sprite chelnovSprite[4];
 
-   // Load Chelnov animation frames
+   // Loading Chelnov animation frames
 const int chelnovWalkFrames = 4;
 const int chelnovShootFrames = 4;
 const int chelnovVacuumFrames = 4;
@@ -1737,25 +1606,24 @@ Texture chelnovWalkTextures[4];
 Texture chelnovShootTextures[4];
 Texture chelnovVacuumTextures[4];
 
-// Load walking frames (0-3)
+// next Load walking frames 
 chelnovWalkTextures[0].loadFromFile("Assets/enemies/chelnov_walk1.png");
 chelnovWalkTextures[1].loadFromFile("Assets/enemies/chelnov_walk2.png");
 chelnovWalkTextures[2].loadFromFile("Assets/enemies/chelnov_walk3.png");
 chelnovWalkTextures[3].loadFromFile("Assets/enemies/chelnov_walk4.png");
 
-// Load shooting frames (4-7)
+// next Load shooting frames 
 chelnovShootTextures[0].loadFromFile("Assets/enemies/chelnov_shoot1.png");
 chelnovShootTextures[1].loadFromFile("Assets/enemies/chelnov_shoot2.png");
 chelnovShootTextures[2].loadFromFile("Assets/enemies/chelnov_shoot3.png");
 chelnovShootTextures[3].loadFromFile("Assets/enemies/chelnov_shoot4.png");
 
-// Load vacuum frames (8-11)
+// Load vacuum frames 
 chelnovVacuumTextures[0].loadFromFile("Assets/enemies/chelnov_vacuum1.png");
 chelnovVacuumTextures[1].loadFromFile("Assets/enemies/chelnov_vacuum2.png");
 chelnovVacuumTextures[2].loadFromFile("Assets/enemies/chelnov_vacuum3.png");
 chelnovVacuumTextures[3].loadFromFile("Assets/enemies/chelnov_vacuum4.png");
 
-// Chelnov animation state tracking
 int chelnovCurrentFrame[4];
 int chelnovFrameCounter[4];
 const int chelnovFrameDelay = 8;
@@ -1765,11 +1633,10 @@ ChelnovState chelnovState[4];
 
 // Chelnov shooting system
 float chelnov_shoot_timer[4];
-const float chelnov_shoot_interval = 4.0f;  // Shoot every 4 seconds
-const float chelnov_shoot_duration = 1.0f;  // 1 second shooting animation
+const float chelnov_shoot_interval = 4.0f;  
+const float chelnov_shoot_duration = 1.0f;  
 bool chelnov_is_shooting[4];
 
-// Chelnov projectiles (4 enemies × 1 projectile each = 4 max)
 const int max_chelnov_projectiles = 10;
 float chelnov_proj_x[10];
 float chelnov_proj_y[10];
@@ -1780,7 +1647,7 @@ float chelnov_proj_lifetime[10];
 const float chelnov_proj_speed = 8.0f;
 const float chelnov_proj_max_lifetime = 5.0f;
 
-// Initialize projectiles
+
 for(int i = 0; i < max_chelnov_projectiles; i++)
 {
     chelnov_proj_active[i] = false;
@@ -1806,25 +1673,25 @@ for(int i = 0; i < chelnovs; i++)
     chelnov_is_shooting[i] = false;
 }
 
-    // Sequential spawn tracking for Level 2
+   
     Clock enemySpawnClock;
     int enemiesSpawned = 0;
-    const float spawnInterval = 2.5f;  // Spawn an enemy every 2.5 seconds
+    const float spawnInterval = 2.5f;  
     bool level2EnemiesSpawning = false;
-    // Platform spawning for Level 2
+  
    
 Clock platformChangeClock;
 bool platformNeedsRegen = true;
    
-     // ===== SUCKING CAPACITY =====
+ 
      int captured[10];
-    int cap_count = 0;           // Current count of sucked enemies
-    int maxCapacity = 3;       // Maximum enemies that can be sucked at once
+    int cap_count = 0;          
+    int maxCapacity = 3;       
    
 
-// ADD DELTA TIME CLOCK FOR SKELETON JUMP TIMING:
+
     Clock deltaClock;
-    //main loop
+ 
     while (window.isOpen())
     {
     float deltaTime = deltaClock.restart().asSeconds();
@@ -1841,11 +1708,11 @@ bool platformNeedsRegen = true;
 
             if (ev.type == Event::KeyPressed)
             {
-                // KeyPressed event remains for possible future logic
+                
             }
         }
 
-        // pressing escape to close
+   
         if (Keyboard::isKeyPressed(Keyboard::Escape))
         {
             window.close();
@@ -1853,32 +1720,32 @@ bool platformNeedsRegen = true;
 
         window.clear();
 
-        // draw level and apply gravity to player
+      
        display_level(window, lvl, bgTex, bgSprite, blockTexture, blockSprite, height, width, cell_size);
        player_gravity(lvl,offset_y,velocityY,onGround,gravity,terminal_Velocity, player_x, player_y, cell_size, PlayerHeight, PlayerWidth);
-        ///*** // Moving the character left and right using arrow keys'
+        /// Moving the character left and right using arrow keys'
         if(!playerDead) // Only allow controls if alive
         {
         isWalking = false;
         if(Keyboard::isKeyPressed(Keyboard::Key::Right ))
         {
-            // attempt to move right with collision check
+         
             player_right_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
            
             bagSprite.setScale(-2,2);
             PlayerSprite.setScale(-3,3);
-            facingRight = true;// flip horizontally to face right
+            facingRight = true;
             isWalking=true;
         }
        
         if(Keyboard::isKeyPressed(Keyboard::Key::Left))
         {
-            // attempt to move left
+          
             player_left_collision(lvl, offset_x, player_x, player_y, cell_size, PlayerHeight, PlayerWidth, speed);
            
             bagSprite.setScale(2,2);
             PlayerSprite.setScale(3,3);
-            facingRight=false; // normal facing left
+            facingRight=false; 
             isWalking = true;
         }
         if(isWalking)
@@ -1898,7 +1765,6 @@ bool platformNeedsRegen = true;
         PlayerSprite.setTexture(PlayerTexture);
         }
        
-        // Jump with up if on ground
         if(Keyboard::isKeyPressed(Keyboard::Key::Up))
         {
             if(onGround)
@@ -1907,34 +1773,32 @@ bool platformNeedsRegen = true;
             }
         }
 
-        // ============= VACUUM CONTROL WITH WASD =============
+      
         if(Keyboard::isKeyPressed(Keyboard::Key::W))
         {
             vacuumActive = true;
-            vacuumDirection = 1; // Up
+            vacuumDirection = 1; 
         }
         else if(Keyboard::isKeyPressed(Keyboard::Key::A))
         {
             vacuumActive = true;
-            vacuumDirection = 0; // Left
+            vacuumDirection = 0; 
         }
         else if(Keyboard::isKeyPressed(Keyboard::Key::S))
         {
             vacuumActive = true;
-            vacuumDirection = 3; // Down
+            vacuumDirection = 3; 
         }
         else if(Keyboard::isKeyPressed(Keyboard::Key::D))
         {
             vacuumActive = true;
-            vacuumDirection = 2; // Right
+            vacuumDirection = 2; 
         }
         else
         {
-            vacuumActive = false; // No vacuum key pressed
+            vacuumActive = false; 
         }
-} //end of player controls if alive
-       
-        // ============= VACUUM SUCKING WITH Space KEY =============
+} 
         xKeyPressed = Keyboard::isKeyPressed(Keyboard::Key::Space);
 
         if(xKeyPressed && vacuumActive)
@@ -1944,18 +1808,16 @@ bool platformNeedsRegen = true;
     skel_x, skel_y, skel_active, skel_stunned, skel_stun_timer, skel,
     invis_x, invis_y, invis_active, invis_stunned, invis_stun_timer, invisible_men,
     chelnov_x, chelnov_y, chelnov_active, chelnov_stunned, chelnov_stun_timer, chelnovs,
-    chelnov_is_shooting,  // <--- ADD THIS PARAMETER
+    chelnov_is_shooting,  /
     cell_size, true, captured, cap_count, maxCapacity, score
 );
         }
 
 
-       
-// ============= SHOOTING CONTROLS - E AND Q KEYS =============
+
         bool E_key_pressed = Keyboard::isKeyPressed(Keyboard::E);
         bool Q_key_pressed = Keyboard::isKeyPressed(Keyboard::Q);
 
-        // E key = Single Shot (shoot one enemy at a time)
         if (E_key_pressed && !previous_E_pressed)
         {
             if (cap_count > 0)
@@ -1966,7 +1828,7 @@ bool platformNeedsRegen = true;
             }
         }
 
-        // Q key = Burst Shot (shoot ALL captured enemies at once)
+      
         if (Q_key_pressed && !previous_Q_pressed)
         {
             if (cap_count > 0)
@@ -1994,7 +1856,7 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
     {
         shot_is_active[hit_projectile] = false;
 
-        if (hit_enemy_type == 0)  // Ghost
+        if (hit_enemy_type == 0)  
         {
             ghost_active[hit_enemy_index] = false;
             ghost_x[hit_enemy_index] = -1000;
@@ -2034,36 +1896,35 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
 }
 
 
-        // Update key states for next frame
+      
         previous_E_pressed = E_key_pressed;
         previous_Q_pressed = Q_key_pressed;
 
-        // Update all projectile physics
+     
        update_projectiles(shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
-                  shot_is_active, shot_lifetime, deltaTime, max_lifetime,  // ADD these 3 parameters
+                  shot_is_active, shot_lifetime, deltaTime, max_lifetime,  
                   shot_projectile_count, lvl, cell_size, height);
        
-        // ============= DRAW PLAYER OR VACUUM =============
     if(!playerDead)
     {
         if(vacuumActive)
         {
-            // Draw vacuum sprite based on direction (placed at player's top-left)
+            
             switch(vacuumDirection)
             {
-                case 0: // Left
+                case 0: 
                     vacuumLeftSprite.setPosition(player_x, player_y);
                     window.draw(vacuumLeftSprite);
                     break;
-                case 1: // Up
+                case 1: 
                     vacuumUpSprite.setPosition(player_x, player_y);
                     window.draw(vacuumUpSprite);
                     break;
-                case 2: // Right
+                case 2: 
                     vacuumRightSprite.setPosition(player_x, player_y);
                     window.draw(vacuumRightSprite);
                     break;
-                case 3: // Down
+                case 3: 
                     vacuumDownSprite.setPosition(player_x, player_y);
                     window.draw(vacuumDownSprite);
                     break;
@@ -2071,7 +1932,7 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
         }
         else
         {
-            // Draw normal player sprite when vacuum is not active
+            
             if(facingRight){
             bagSprite.setPosition(player_x-70+100, player_y+41);
             PlayerSprite.setPosition(player_x+100, player_y);
@@ -2085,28 +1946,28 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
             window.draw(PlayerSprite);
         }
 }
-       // *** LASER BEAM DRAWING WHEN Space IS PRESSED ***
+      
         if(xKeyPressed && vacuumActive && laserLoaded)
         {
             float laser_x = player_x + PlayerWidth/2;
             float laser_y = player_y + PlayerHeight/2;
 
-            // Position laser in front of vacuum based on direction (no rotation needed)
+           
             switch(vacuumDirection)
             {
-                case 0: // Left
+                case 0: 
                     laserSprite.setScale(3, 2);
                     laserSprite.setPosition(laser_x - 190, laser_y - 20);
                     break;
-                case 1: // Up
+                case 1: 
                     laserSprite.setScale(2, 3);
                     laserSprite.setPosition(laser_x - 20, laser_y - 150);
                     break;
-                case 2: // Right
+                case 2: 
                     laserSprite.setScale(-3, 2);
                     laserSprite.setPosition(laser_x + 190, laser_y - 20);
                     break;
-                case 3: // Down
+                case 3: 
                     laserSprite.setScale(2, 3);
                     laserSprite.setPosition(laser_x - 20, laser_y + 50);
                     break;
@@ -2115,33 +1976,32 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
         }
 
 
-// Draw all active projectiles (shot enemies) 
 for (int i = 0; i < 20; i++)
 {
     if (shot_is_active[i])
     {
-        if(shot_enemy_type[i] == 0) // Ghost
+        if(shot_enemy_type[i] == 0) 
         {
             ghostSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
             ghostSprite[0].setColor(Color(255, 100, 100));
             window.draw(ghostSprite[0]);
             ghostSprite[0].setColor(Color::White);
         }
-        else if(shot_enemy_type[i] == 1) // Skeleton
+        else if(shot_enemy_type[i] == 1) 
         {
             skelSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
             skelSprite[0].setColor(Color(255, 100, 100));
             window.draw(skelSprite[0]);
             skelSprite[0].setColor(Color::White);
         }
-        else if(shot_enemy_type[i] == 2) // Invisible Man
+        else if(shot_enemy_type[i] == 2) 
         {
             invisSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
             invisSprite[0].setColor(Color(255, 100, 100));
             window.draw(invisSprite[0]);
             invisSprite[0].setColor(Color::White);
         }
-        else if(shot_enemy_type[i] == 3) // Chelnov
+        else if(shot_enemy_type[i] == 3) 
         {
             chelnovSprite[0].setPosition(shot_enemy_x[i], shot_enemy_y[i]);
             chelnovSprite[0].setColor(Color(255, 100, 100));
@@ -2152,12 +2012,11 @@ for (int i = 0; i < 20; i++)
 }
 
 
-// ====== INVISIBLE MAN MOVEMENT WITH TELEPORT ======
 for(int i = 0; i < invisible_men; i++)
 {
     if(!invis_active[i]) continue;
    
-    // Update invisibility effect
+    
     if(invis_is_invisible[i])
     {
         invis_invisible_timer[i] -= deltaTime;
@@ -2166,11 +2025,11 @@ for(int i = 0; i < invisible_men; i++)
             invis_is_invisible[i] = false;
         }
        
-        // DON'T DRAW when invisible - they disappear completely!
+      
         continue;
     }
    
-    // If stunned, show normal sprite
+    
     if(invis_stunned[i])
     {
         invisSprite[i].setPosition(invis_x[i], invis_y[i]);
@@ -2178,18 +2037,17 @@ for(int i = 0; i < invisible_men; i++)
         continue;
     }
    
-    // Update teleport timer
     invis_teleport_timer[i] += deltaTime;
    
-    // Random teleportation event
+    
     if(invis_teleport_timer[i] >= invis_teleport_interval)
     {
         invis_teleport_timer[i] = 0.0f;
        
-        // 70% chance to teleport, 30% chance to go invisible
+        
         if(rand() % 100 < 70)
         {
-            // TELEPORT to random platform
+           
             int attempts = 0;
             while(attempts < 10)
             {
@@ -2208,17 +2066,17 @@ for(int i = 0; i < invisible_men; i++)
         }
         else
         {
-            // Go INVISIBLE
+            
             invis_is_invisible[i] = true;
             invis_invisible_timer[i] = 0.8f;
            
         }
     }
    
-    // Normal left-right movement
+    
     invis_x[i] += invis_speed[i] * invis_dir[i];
    
-    // Check boundaries and turn around
+    
     int tile_x = invis_x[i] / cell_size;
    
     if(tile_x <= 1 || tile_x >= width-2)
@@ -2230,35 +2088,35 @@ for(int i = 0; i < invisible_men; i++)
     window.draw(invisSprite[i]);
 }
 
-// ====== CHELNOV MOVEMENT WITH SHOOTING ======
+
 for(int i = 0; i < chelnovs; i++)
 {
     if(!chelnov_active[i]) continue;
    
-    // Update shoot timer
+    
     chelnov_shoot_timer[i] += deltaTime;
    
-    // Check if it's time to shoot
+
     if(!chelnov_is_shooting[i] && chelnov_shoot_timer[i] >= chelnov_shoot_interval && !chelnov_stunned[i])
     {
-        // Start shooting
+      
         chelnov_is_shooting[i] = true;
         chelnov_shoot_timer[i] = 0.0f;
         chelnovState[i] = SHOOTING;
         chelnovCurrentFrame[i] = 0;
        
-        // Fire projectile HORIZONTALLY - aim at player's X position only
+       
         float player_dx = player_x - chelnov_x[i];
-        int fire_direction = (player_dx > 0) ? 1 : -1;  // Left or right based on player
+        int fire_direction = (player_dx > 0) ? 1 : -1;  
        
         for(int p = 0; p < max_chelnov_projectiles; p++)
         {
             if(!chelnov_proj_active[p])
             {
-                chelnov_proj_x[p] = chelnov_x[i] + 32;  // Center of Chelnov
+                chelnov_proj_x[p] = chelnov_x[i] + 32;  
                 chelnov_proj_y[p] = chelnov_y[i] + 32;
-                chelnov_proj_vx[p] = chelnov_proj_speed * fire_direction;  // Move toward player
-                chelnov_proj_vy[p] = 0.0f;  // NO vertical movement
+                chelnov_proj_vx[p] = chelnov_proj_speed * fire_direction; 
+                chelnov_proj_vy[p] = 0.0f; 
                 chelnov_proj_active[p] = true;
                 chelnov_proj_lifetime[p] = 0.0f;
                  break;
@@ -2266,7 +2124,7 @@ for(int i = 0; i < chelnovs; i++)
         }
     }
    
-    // Handle shooting duration
+ 
     if(chelnov_is_shooting[i])
     {
         if(chelnov_shoot_timer[i] >= chelnov_shoot_duration)
@@ -2277,7 +2135,7 @@ for(int i = 0; i < chelnovs; i++)
         }
     }
    
-    // If stunned, show vacuum animation
+    
     if(chelnov_stunned[i])
     {
         chelnovState[i] = VACUUMED;
@@ -2295,7 +2153,7 @@ for(int i = 0; i < chelnovs; i++)
         continue;
     }
    
-    // MOVEMENT - Only if NOT shooting
+    
     if(!chelnov_is_shooting[i])
     {
         chelnov_x[i] += chelnov_speed[i] * chelnov_dir[i];
@@ -2303,13 +2161,12 @@ for(int i = 0; i < chelnovs; i++)
         int tile_x = chelnov_x[i] / cell_size;
         int tile_y = chelnov_y[i] / cell_size;
        
-        // Check walls
+      
         if(tile_x <= 1 || tile_x >= width-2)
         {
             chelnov_dir[i] *= -1;
         }
        
-        // Check edges and turn around
         int next_tile_x = (chelnov_x[i] + chelnov_dir[i] * chelnov_speed[i] * 10) / cell_size;
         int check_ground_y = (chelnov_y[i] + 64 + 5) / cell_size;
        
@@ -2321,7 +2178,7 @@ for(int i = 0; i < chelnovs; i++)
             }
         }
        
-        // Animate walking
+      
         chelnovFrameCounter[i]++;
         if(chelnovFrameCounter[i] >= chelnovFrameDelay)
         {
@@ -2330,7 +2187,7 @@ for(int i = 0; i < chelnovs; i++)
             chelnovSprite[i].setTexture(chelnovWalkTextures[chelnovCurrentFrame[i]]);
         }
     }
-    else  // SHOOTING - animate but don't move
+    else  
     {
         chelnovFrameCounter[i]++;
         if(chelnovFrameCounter[i] >= chelnovFrameDelay)
@@ -2341,7 +2198,7 @@ for(int i = 0; i < chelnovs; i++)
         }
     }
    
-    // Flip sprite based on direction
+  
     if(chelnov_dir[i] == 1)
         chelnovSprite[i].setScale(-2, 2);
     else
@@ -2351,12 +2208,11 @@ for(int i = 0; i < chelnovs; i++)
     window.draw(chelnovSprite[i]);
 }
 
-// ====== UPDATE CHELNOV PROJECTILES ======
 for(int p = 0; p < max_chelnov_projectiles; p++)
 {
     if(!chelnov_proj_active[p]) continue;
    
-    // Update lifetime
+   
     chelnov_proj_lifetime[p] += deltaTime;
     if(chelnov_proj_lifetime[p] >= chelnov_proj_max_lifetime)
     {
@@ -2364,10 +2220,9 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
         continue;
     }
    
-    // Move projectile HORIZONTALLY ONLY
+
     chelnov_proj_x[p] += chelnov_proj_vx[p];
-   
-    // Check screen bounds
+  
     if(chelnov_proj_x[p] < 0 || chelnov_proj_x[p] > screen_x ||
        chelnov_proj_y[p] < 0 || chelnov_proj_y[p] > screen_y)
     {
@@ -2375,7 +2230,7 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
         continue;
     }
    
-    // Check collision with player
+    
     if(!playerDead)
     {
         float dx = chelnov_proj_x[p] - (player_x + PlayerWidth/2);
@@ -2384,7 +2239,7 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
        
         if(dist < 40)
         {
-            // Hit player!
+            
             playerDead = true;
             deathClock.restart();
             score -= 50;
@@ -2397,30 +2252,29 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
         }
     }
    
-    // Draw projectile (red circle)
+    
     CircleShape projShape(8);
     projShape.setFillColor(Color::Red);
     projShape.setPosition(chelnov_proj_x[p] - 8, chelnov_proj_y[p] - 8);
     window.draw(projShape);
 }
-// ====== UPDATE CHELNOV PROJECTILES ======
+
 for(int p = 0; p < max_chelnov_projectiles; p++)
 {
     if(!chelnov_proj_active[p]) continue;
    
-    // Update lifetime
+   
     chelnov_proj_lifetime[p] += deltaTime;
     if(chelnov_proj_lifetime[p] >= chelnov_proj_max_lifetime)
     {
         chelnov_proj_active[p] = false;
         continue;
     }
-   
-    // Move projectile
+ 
     chelnov_proj_x[p] += chelnov_proj_vx[p];
     chelnov_proj_y[p] += chelnov_proj_vy[p];
    
-    // Check screen bounds
+  
     if(chelnov_proj_x[p] < 0 || chelnov_proj_x[p] > screen_x ||
        chelnov_proj_y[p] < 0 || chelnov_proj_y[p] > screen_y)
     {
@@ -2428,7 +2282,7 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
         continue;
     }
    
-    // Check collision with player
+   
     if(!playerDead)
     {
         float dx = chelnov_proj_x[p] - (player_x + PlayerWidth/2);
@@ -2437,7 +2291,7 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
        
         if(dist < 40)
         {
-            // Hit player!
+           
             playerDead = true;
             deathClock.restart();
             score -= 50;
@@ -2450,13 +2304,13 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
         }
     }
    
-    // Draw projectile (red circle)
+   
     CircleShape projShape(8);
     projShape.setFillColor(Color::Red);
     projShape.setPosition(chelnov_proj_x[p] - 8, chelnov_proj_y[p] - 8);
     window.draw(projShape);
 }
-        // ====== GHOST MOVEMENT WITH ANIMATION ======
+        
 for(int i = 0; i < ghosts; i++)
 {
     if(!ghost_active[i]) continue;
@@ -2500,7 +2354,7 @@ for(int i = 0; i < ghosts; i++)
             ghost_x[i] = nextX;
         }
        
-        // ANIMATE GHOST
+        
         ghostFrameCounter[i]++;
         if(ghostFrameCounter[i] >= ghostFrameDelay)
         {
@@ -2514,7 +2368,6 @@ for(int i = 0; i < ghosts; i++)
     window.draw(ghostSprite[i]);
 }
 
-        // ====== SKELETON MOVEMENT WITH ANIMATION ======
 for(int j = 0; j < skel; j++)
 {
     if(!skel_active[j]) continue;
@@ -2625,7 +2478,7 @@ for(int j = 0; j < skel; j++)
             }
         }
        
-        // ANIMATE SKELETON
+        /
         skelFrameCounter[j]++;
         if(skelFrameCounter[j] >= skelFrameDelay)
         {
@@ -2638,13 +2491,13 @@ for(int j = 0; j < skel; j++)
     skelSprite[j].setPosition(skel_x[j], skel_y[j]);
     window.draw(skelSprite[j]);
 }
-  // ====== CHECK PLAYER-ENEMY COLLISIONS ======
+  
 if(!playerDead)
 {
-    // Check ghost collisions
+    
     for(int i = 0; i < ghosts; i++)
     {
-        if(ghost_active[i] && !ghost_stunned[i])  // FIXED: Don't collide with stunned ghosts!
+        if(ghost_active[i] && !ghost_stunned[i])  
         {
             if(check_player_enemy_collision(player_x, player_y, PlayerWidth, PlayerHeight,
                                ghost_x[i], ghost_y[i], 64))
@@ -2652,37 +2505,37 @@ if(!playerDead)
     playerDead = true;
 
     deathClock.restart();
-    score -= 50;  // PENALTY: Take Damage
+    score -= 50;  
     if(score < 0) score = 0;
-    combo = 0;  // Reset combo on damage
+    combo = 0;  
     comboMultiplier = 1.0f;
     break;
 }
         }
     }
    
-    // Check skeleton collisions
+    
     if(!playerDead)
     {
         for(int i = 0; i < skel; i++)
         {
-            if(skel_active[i] && !skel_stunned[i])  // FIXED: Don't collide with stunned skeletons!
+            if(skel_active[i] && !skel_stunned[i])  
             {
                if(check_player_enemy_collision(player_x, player_y, PlayerWidth, PlayerHeight,
                                skel_x[i], skel_y[i], 64))
 {
     playerDead = true;
     deathClock.restart();
-    score -= 50;  // PENALTY: Take Damage
+    score -= 50;  
     if(score < 0) score = 0;
-    combo = 0;  // Reset combo on damage
+    combo = 0;  
     comboMultiplier = 1.0f;
     break;
 }
             }
         }
     }
-    // Check Invisible Man collisions
+  
 if(!playerDead)
 {
     for(int i = 0; i < invisible_men; i++)
@@ -2704,7 +2557,7 @@ if(!playerDead)
     }
 }
 
-// Check Chelnov collisions
+
 if(!playerDead)
 {
     for(int i = 0; i < chelnovs; i++)
@@ -2784,7 +2637,7 @@ if(currentLevel == 2 && !level2PowerUpSpawned)
     }
 }
 
-// Power-up collision detection
+
 if(!playerDead)
 {
     for(int i = 0; i < 4; i++)
@@ -2794,7 +2647,7 @@ if(!playerDead)
             if(check_powerup_collision(player_x, player_y, PlayerWidth, PlayerHeight,
                                       powerup_x[i], powerup_y[i], 64))
             {
-                if(powerup_type[i] == 0)  // EXTRA_LIFE
+                if(powerup_type[i] == 0)  
                 {
                     playerLives++;
                    
@@ -2824,7 +2677,6 @@ if(!playerDead)
     }
 }
 
-// Speed boost timer
 if(speedBoostActive)
 {
     if(speedBoostTimer.getElapsedTime().asSeconds() >= speedBoostDuration)
@@ -2847,7 +2699,7 @@ if(currentLevel == 1 && !levelComplete)
     }
 }
 
-// Wait 3 seconds then transition
+// Wait 3 seconds after level 1 completesthen transition
 if(levelComplete && levelCompleteClock.getElapsedTime().asSeconds() >= levelCompleteDelay)
 {
     currentLevel = 2;
@@ -2855,20 +2707,20 @@ if(levelComplete && levelCompleteClock.getElapsedTime().asSeconds() >= levelComp
       maxCapacity=5;
     levelComplete = false;
    
-    // Reset level
+   
     change_to_level2(lvl, height, width);
  
    
-    // Activate Level 2 enemies
+    
     level2EnemiesSpawning = true;
     enemySpawnClock.restart();
     enemiesSpawned = 0;
    
-    // Reset platform timer
+  
     platformChangeClock.restart();
     platformNeedsRegen = false;
    
-    // Reset player position
+   
     player_x = 500;
     player_y = 150;
     velocityY = 0;
@@ -2876,12 +2728,11 @@ if(levelComplete && levelCompleteClock.getElapsedTime().asSeconds() >= levelComp
 
 
        
-       // ====== HANDLE PLAYER DEATH AND RESPAWN ======
+       
         if(playerDead)
         {
             float elapsedTime = deathClock.getElapsedTime().asSeconds();
-           
-            // Make player blink during death
+          
             if((int)(elapsedTime * 4) % 2 == 0)
             {
                 PlayerSprite.setColor(Color(255, 255, 255, 100));
@@ -2907,38 +2758,38 @@ if(levelComplete && levelCompleteClock.getElapsedTime().asSeconds() >= levelComp
                 }
                 else
                 {
-                // PENALTY: Death (all 3 lives lost)
+                
     score -= 200;
     if(score < 0) score = 0;
-                    // Game Over - close window
+                  
                     window.close();
                 }
             }
         }
 
-// Update and draw score
+
 scoreText.setString("Score: " + to_string(score) + "  Lives: " + to_string(playerLives));
 window.draw(scoreText);
 
-// Draw combo if active
+
 if(combo > 0)
 {
     comboText.setString("Combo: " + to_string(combo) + "x  Multiplier: " + to_string(comboMultiplier) + "x");
     window.draw(comboText);
 }
  
- // ====== CHECK LEVEL COMPLETION ======
+ 
  if(currentLevel == 2)
 {
     float platformTime = platformChangeClock.getElapsedTime().asSeconds();
    
     if(platformTime >= 20.0f)
     {
-        generate_random_slanted_platform(lvl, height, width, true);  // true = clear old platform
+        generate_random_slanted_platform(lvl, height, width, true);  
         platformChangeClock.restart();
     }
 }
- // ====== LEVEL 2 SEQUENTIAL ENEMY SPAWNING ======
+ 
 if(currentLevel == 2 && level2EnemiesSpawning)
 {
     float spawnElapsed = enemySpawnClock.getElapsedTime().asSeconds();
@@ -2947,13 +2798,11 @@ if(currentLevel == 2 && level2EnemiesSpawning)
     {
         enemySpawnClock.restart();
        
-        // Total enemies to spawn: 3 invisible + 4 chelnov + 4 ghosts + 9 skeletons = 20
-       
-        // Spawn invisible men first (0-2)
+        
         if(enemiesSpawned < 3)
         {
             int idx = enemiesSpawned;
-            // Find random spawn position
+          
             while(true)
             {
                 int tx = 2 + rand() % 14;
@@ -2970,7 +2819,7 @@ if(currentLevel == 2 && level2EnemiesSpawning)
                 }
             }
         }
-        // Then spawn chelnovs (3-6)
+       
         else if(enemiesSpawned >= 3 && enemiesSpawned < 7)
         {
             int idx = enemiesSpawned - 3;
@@ -2990,7 +2839,7 @@ if(currentLevel == 2 && level2EnemiesSpawning)
                 }
             }
         }
-        // Then spawn ghosts (7-10)
+        
         else if(enemiesSpawned >= 7 && enemiesSpawned < 11)
         {
             int idx = enemiesSpawned - 7;
@@ -3011,7 +2860,7 @@ if(currentLevel == 2 && level2EnemiesSpawning)
             }
         }
        
-        // Finally spawn skeletons (11-19) - now up to 9 skeletons in level 2
+        
         else if(enemiesSpawned >= 11 && enemiesSpawned < 20)
         {
             int idx = enemiesSpawned - 11;
@@ -3047,12 +2896,12 @@ if(currentLevel == 2 && level2EnemiesSpawning)
              }
     }
 }
-// ====== CHECK LEVEL COMPLETION ======
+
 if(!levelComplete && !playerDead)
 {
    if(currentLevel == 1)
 {
-    // For Level 1, pass empty arrays for invisible men and chelnov
+    
     bool empty_invis[3] = {false, false, false};
     bool empty_chelnov[4] = {false, false, false, false};
    
@@ -3068,7 +2917,7 @@ if(!levelComplete && !playerDead)
    
     else if(currentLevel == 2)
     {
-        // Check all Level 2 enemies
+        
         bool all_defeated = true;
        
         for(int i = 0; i < invisible_men; i++)
@@ -3094,12 +2943,11 @@ if(!levelComplete && !playerDead)
 }
    
 
-// ====== SHOW COMPLETION MESSAGE & MOVE TO LEVEL 2 ======
 if(levelComplete && currentLevel == 1)
 {
     float elapsed = levelCompleteClock.getElapsedTime().asSeconds();
    
-    // Draw "LEVEL 1 COMPLETE" message
+    
     Text completeText;
     completeText.setFont(scoreFont);
     completeText.setCharacterSize(60);
@@ -3116,27 +2964,23 @@ if(levelComplete && currentLevel == 1)
     nextText.setPosition(280, 450);
     window.draw(nextText);
  
-  // NOW FIX THE TIMING ISSUE
-// In main() function, find the level transition code (around line 2520-2570)
-// REPLACE the level 2 transition section with this:
-
-// After 3 seconds, load Level 2
+ 
 if(elapsed >= levelCompleteDelay)
 {
  
     currentLevel = 2;
    
-    // Reset Lives to 3 
+  
     playerLives = 3;
    
     levelComplete = false;
    
-    // Reset level map
+   
     change_to_level2(lvl, height, width);
    
     
     player_x = 500;
-    player_y = 4 * 64 - 102; // (Row 4 * cell_size) - PlayerHeight
+    player_y = 4 * 64 - 102; 
    
     velocityY = 0;
     cap_count = 0;
@@ -3144,7 +2988,6 @@ if(elapsed >= levelCompleteDelay)
 
    
 
-    // Deactivvate Level 1 enemies
     for(int i = 0; i < ghosts; i++)
     {
         ghost_active[i] = false;
@@ -3159,7 +3002,6 @@ if(elapsed >= levelCompleteDelay)
         skel_y[i] = -1000;
     }
 
-    // Start Level 2 sequential spawning
     level2EnemiesSpawning = true;
     enemiesSpawned = 0;
     enemySpawnClock.restart();
@@ -3183,13 +3025,11 @@ if(currentLevel == 2 && !levelComplete && !playerDead)
 {
     float platformElapsed = platformChangeClock.getElapsedTime().asSeconds();
    
-    if(platformElapsed >= 20.0f)  // Every 20 seconds
+    if(platformElapsed >= 20.0f)  
     {
         platformChangeClock.restart();
        
        
-       
-        // Clear old platform and generate new one
         generate_random_slanted_platform(lvl, height, width, false);
     }
 }
@@ -3206,7 +3046,7 @@ for(int i = 0; i < 4; i++)
 window.display();
 
 }
-//stopping music and deleting level array (cleanup)
+
     lvlMusic.stop();
     for (int i = 0; i < height; i++)
         delete[] lvl[i];
