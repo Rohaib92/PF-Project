@@ -525,24 +525,24 @@ bool check_powerup_collision(float player_x, float player_y, int PlayerWidth, in
 }
 
 // Power-up spawning function (0=EXTRA_LIFE, 1=POWER, 2=RANGE, 3=SPEED)
-void spawn_powerup(float& powerup_x, float& powerup_y, bool& powerup_active, 
+void spawn_powerup(float& powerup_x, float& powerup_y, bool& powerup_active,
                    int& powerup_type, Sprite& powerup_sprite, Clock& spawn_timer,
-                   bool& has_spawned, char** lvl, int width, int height, 
+                   bool& has_spawned, char** lvl, int width, int height,
                    int cell_size, int type, Texture& texture)
 {
     if(has_spawned) return;  // Already spawned in this level
-    
+   
     powerup_type = type;
     powerup_sprite.setTexture(texture);
     powerup_sprite.setScale(2, 2);
-    
+   
     // Find random valid spawn position
     int attempts = 0;
     while(attempts < 50)
     {
         int tx = 2 + rand() % (width - 4);
         int ty = 2 + rand() % (height - 3);
-        
+       
         // Must be empty space with ground below
         if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
         {
@@ -551,13 +551,13 @@ void spawn_powerup(float& powerup_x, float& powerup_y, bool& powerup_active,
             powerup_active = true;
             has_spawned = true;
             spawn_timer.restart();
-            
+           
             cout << "[POWERUP] Spawned type " << type << " at (" << powerup_x << ", " << powerup_y << ")" << endl;
             return;
         }
         attempts++;
     }
-    
+   
     // Fallback spawn
     powerup_x = 400;
     powerup_y = 300;
@@ -1297,7 +1297,7 @@ bagSprite.setScale(2, 2);
     }
   speed = get_character_speed(selectedIndex, speed);  // Use 'speed' directly instead of 'baseSpeed'
 bool isJumping = false;  // Track if jumping (unused now but available)
-    
+   
 
     // collision flags and char placeholders (many used locally later)
     bool up_collide = false;
@@ -1944,7 +1944,7 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
             ghost_y[hit_enemy_index] = -1000;
             score += 100;
             combo++;
-            
+           
         }
         else if (hit_enemy_type == 1)  // Skeleton
         {
@@ -1953,7 +1953,7 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
             skel_y[hit_enemy_index] = -1000;
             score += 150;
             combo++;
-            
+           
         }
         else if (hit_enemy_type == 2)  // Invisible Man
         {
@@ -1971,7 +1971,7 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
             chelnov_y[hit_enemy_index] = -1000;
             score += 250;
             combo++;
-            
+           
         }
     }
 }
@@ -2337,7 +2337,7 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
             combo = 0;
             comboMultiplier = 1.0f;
             chelnov_proj_active[p] = false;
-          
+         
             continue;
         }
     }
@@ -2674,11 +2674,11 @@ if(!playerDead)
 if(currentLevel == 1 && !level1PowerUpSpawned)
 {
     float elapsed = level1PowerUpTimer.getElapsedTime().asSeconds();
-    
+   
     if(elapsed >= 10.0f)
     {
         int randomType = rand() % 4;
-        
+       
         if(randomType == 0)
             spawn_powerup(powerup_x[0], powerup_y[0], powerup_active[0], powerup_type[0],
                          powerup_sprite[0], powerup_spawn_timer[0], powerup_has_spawned[0],
@@ -2695,7 +2695,7 @@ if(currentLevel == 1 && !level1PowerUpSpawned)
             spawn_powerup(powerup_x[3], powerup_y[3], powerup_active[3], powerup_type[3],
                          powerup_sprite[3], powerup_spawn_timer[3], powerup_has_spawned[3],
                          lvl, width, height, cell_size, 3, speedTex);
-        
+       
         level1PowerUpSpawned = true;
     }
 }
@@ -2703,11 +2703,11 @@ if(currentLevel == 1 && !level1PowerUpSpawned)
 if(currentLevel == 2 && !level2PowerUpSpawned)
 {
     float elapsed = level2PowerUpTimer.getElapsedTime().asSeconds();
-    
+   
     if(elapsed >= 15.0f)
     {
         int randomType = rand() % 4;
-        
+       
         if(randomType == 0)
             spawn_powerup(powerup_x[0], powerup_y[0], powerup_active[0], powerup_type[0],
                          powerup_sprite[0], powerup_spawn_timer[0], powerup_has_spawned[0],
@@ -2724,7 +2724,7 @@ if(currentLevel == 2 && !level2PowerUpSpawned)
             spawn_powerup(powerup_x[3], powerup_y[3], powerup_active[3], powerup_type[3],
                          powerup_sprite[3], powerup_spawn_timer[3], powerup_has_spawned[3],
                          lvl, width, height, cell_size, 3, speedTex);
-        
+       
         level2PowerUpSpawned = true;
     }
 }
@@ -2759,9 +2759,9 @@ if(!playerDead)
                     speed = baseSpeed * 2.0f;
                     speedBoostActive = true;
                     speedBoostTimer.restart();
-                  
+                 
                 }
-                
+               
                 powerup_active[i] = false;
                 score += 50;
             }
@@ -2802,7 +2802,7 @@ if(levelComplete && levelCompleteClock.getElapsedTime().asSeconds() >= levelComp
    
     // Reset level
     change_to_level2(lvl, height, width);
-  
+ 
    
     // Activate Level 2 enemies
     level2EnemiesSpawning = true;
@@ -3116,7 +3116,7 @@ if(elapsed >= levelCompleteDelay)
     enemySpawnClock.restart();
     level2PowerUpTimer.restart();
     level2PowerUpSpawned = false;
-    
+   
     for(int i = 0; i < 4; i++)
     {
         powerup_active[i] = false;
