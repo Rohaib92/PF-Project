@@ -2928,7 +2928,7 @@ if(currentLevel == 2 && !levelComplete && !playerDead)
     {
         platformChangeClock.restart();
        
-        cout << "\n[PLATFORM] ⏰ 20 seconds elapsed - REGENERATING slanted platform!\n" << endl;
+        cout << "\n[PLATFORM]20 seconds elapsed - REGENERATING slanted platform!\n" << endl;
        
         // Clear old platform and generate new one
         generate_random_slanted_platform(lvl, height, width, false);
