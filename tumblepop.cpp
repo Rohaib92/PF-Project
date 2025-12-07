@@ -514,6 +514,57 @@ void respawn_player(float& player_x, float& player_y, float& velocityY, bool& pl
     velocityY = 0;       // stop falling
     playerDead = false;  // player is alive again
 }
+// Check power-up collision with player
+bool check_powerup_collision(float player_x, float player_y, int PlayerWidth, int PlayerHeight,
+                            float powerup_x, float powerup_y, int powerup_size)
+{
+    return (player_x < powerup_x + powerup_size &&
+            player_x + PlayerWidth > powerup_x &&
+            player_y < powerup_y + powerup_size &&
+            player_y + PlayerHeight > powerup_y);
+}
+
+// Power-up spawning function (0=EXTRA_LIFE, 1=POWER, 2=RANGE, 3=SPEED)
+void spawn_powerup(float& powerup_x, float& powerup_y, bool& powerup_active, 
+                   int& powerup_type, Sprite& powerup_sprite, Clock& spawn_timer,
+                   bool& has_spawned, char** lvl, int width, int height, 
+                   int cell_size, int type, Texture& texture)
+{
+    if(has_spawned) return;  // Already spawned in this level
+    
+    powerup_type = type;
+    powerup_sprite.setTexture(texture);
+    powerup_sprite.setScale(2, 2);
+    
+    // Find random valid spawn position
+    int attempts = 0;
+    while(attempts < 50)
+    {
+        int tx = 2 + rand() % (width - 4);
+        int ty = 2 + rand() % (height - 3);
+        
+        // Must be empty space with ground below
+        if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
+        {
+            powerup_x = tx * cell_size;
+            powerup_y = ty * cell_size;
+            powerup_active = true;
+            has_spawned = true;
+            spawn_timer.restart();
+            
+            cout << "[POWERUP] Spawned type " << type << " at (" << powerup_x << ", " << powerup_y << ")" << endl;
+            return;
+        }
+        attempts++;
+    }
+    
+    // Fallback spawn
+    powerup_x = 400;
+    powerup_y = 300;
+    powerup_active = true;
+    has_spawned = true;
+    spawn_timer.restart();
+}
 
 // ============================================================================
 // FUNCTION DEFINITIONS (Vacuum and Shooting)
@@ -1248,9 +1299,9 @@ bagSprite.setScale(2, 2);
         }
         window.display();
     }
-  float baseSpeed = 5;
-    speed = get_character_speed(selectedIndex, baseSpeed);
-    bool isJumping = false;  // Track if jumping (unused now but available)
+  speed = get_character_speed(selectedIndex, speed);  // Use 'speed' directly instead of 'baseSpeed'
+bool isJumping = false;  // Track if jumping (unused now but available)
+    
 
     // collision flags and char placeholders (many used locally later)
     bool up_collide = false;
@@ -1471,6 +1522,43 @@ if(ghost_dir[i] == 1)
         skel_stunned[i] = false;
         skel_stun_timer[i] = 0.0f;
     }
+    // ===== POWER-UP SYSTEM =====
+    Texture extraLifeTex, powerTex, rangeTex, speedTex;
+    extraLifeTex.loadFromFile("extralife.png");
+    powerTex.loadFromFile("power.png");
+    rangeTex.loadFromFile("range.png");
+    speedTex.loadFromFile("speed.png");
+
+    float powerup_x[4];
+    float powerup_y[4];
+    bool powerup_active[4];
+    int powerup_type[4];
+    Sprite powerup_sprite[4];
+    Clock powerup_spawn_timer[4];
+    bool powerup_has_spawned[4];
+
+    for(int i = 0; i < 4; i++)
+    {
+        powerup_active[i] = false;
+        powerup_has_spawned[i] = false;
+        powerup_type[i] = i;
+    }
+
+    Clock level1PowerUpTimer;
+    Clock level2PowerUpTimer;
+    bool level1PowerUpSpawned = false;
+    bool level2PowerUpSpawned = false;
+
+    Clock speedBoostTimer;
+    bool speedBoostActive = false;
+    const float speedBoostDuration = 15.0f;
+
+    float baseSpeed = speed;
+    float baseSuckStrength = 4.0f;
+    float baseVacuumRange = 200.0f;
+
+    float currentSuckStrength = baseSuckStrength;
+    float currentVacuumRange = baseVacuumRange;
    
    
 //spawning skeletons
@@ -1687,6 +1775,10 @@ bool platformNeedsRegen = true;
     while (window.isOpen())
     {
     float deltaTime = deltaClock.restart().asSeconds();
+    if(currentLevel == 1 && level1PowerUpTimer.getElapsedTime().asSeconds() == 0.0f)
+        {
+            level1PowerUpTimer.restart();
+        }
         while (window.pollEvent(ev))
         {
             if (ev.type == Event::Closed)
@@ -1794,8 +1886,7 @@ bool platformNeedsRegen = true;
 
         if(xKeyPressed && vacuumActive)
         {
-           update_vacuum(
-    player_x, player_y, vacuumDirection, 200.0f, 4.0f,
+           update_vacuum(player_x, player_y, vacuumDirection, currentVacuumRange,currentSuckStrength ,
     ghost_x, ghost_y, ghost_active, ghost_stunned, ghost_stun_timer, ghosts,
     skel_x, skel_y, skel_active, skel_stunned, skel_stun_timer, skel,
     invis_x, invis_y, invis_active, invis_stunned, invis_stun_timer, invisible_men,
@@ -2588,6 +2679,114 @@ if(!playerDead)
     }
 }
 }
+if(currentLevel == 1 && !level1PowerUpSpawned)
+{
+    float elapsed = level1PowerUpTimer.getElapsedTime().asSeconds();
+    
+    if(elapsed >= 10.0f)
+    {
+        int randomType = rand() % 4;
+        
+        if(randomType == 0)
+            spawn_powerup(powerup_x[0], powerup_y[0], powerup_active[0], powerup_type[0],
+                         powerup_sprite[0], powerup_spawn_timer[0], powerup_has_spawned[0],
+                         lvl, width, height, cell_size, 0, extraLifeTex);
+        else if(randomType == 1)
+            spawn_powerup(powerup_x[1], powerup_y[1], powerup_active[1], powerup_type[1],
+                         powerup_sprite[1], powerup_spawn_timer[1], powerup_has_spawned[1],
+                         lvl, width, height, cell_size, 1, powerTex);
+        else if(randomType == 2)
+            spawn_powerup(powerup_x[2], powerup_y[2], powerup_active[2], powerup_type[2],
+                         powerup_sprite[2], powerup_spawn_timer[2], powerup_has_spawned[2],
+                         lvl, width, height, cell_size, 2, rangeTex);
+        else
+            spawn_powerup(powerup_x[3], powerup_y[3], powerup_active[3], powerup_type[3],
+                         powerup_sprite[3], powerup_spawn_timer[3], powerup_has_spawned[3],
+                         lvl, width, height, cell_size, 3, speedTex);
+        
+        level1PowerUpSpawned = true;
+    }
+}
+
+if(currentLevel == 2 && !level2PowerUpSpawned)
+{
+    float elapsed = level2PowerUpTimer.getElapsedTime().asSeconds();
+    
+    if(elapsed >= 15.0f)
+    {
+        int randomType = rand() % 4;
+        
+        if(randomType == 0)
+            spawn_powerup(powerup_x[0], powerup_y[0], powerup_active[0], powerup_type[0],
+                         powerup_sprite[0], powerup_spawn_timer[0], powerup_has_spawned[0],
+                         lvl, width, height, cell_size, 0, extraLifeTex);
+        else if(randomType == 1)
+            spawn_powerup(powerup_x[1], powerup_y[1], powerup_active[1], powerup_type[1],
+                         powerup_sprite[1], powerup_spawn_timer[1], powerup_has_spawned[1],
+                         lvl, width, height, cell_size, 1, powerTex);
+        else if(randomType == 2)
+            spawn_powerup(powerup_x[2], powerup_y[2], powerup_active[2], powerup_type[2],
+                         powerup_sprite[2], powerup_spawn_timer[2], powerup_has_spawned[2],
+                         lvl, width, height, cell_size, 2, rangeTex);
+        else
+            spawn_powerup(powerup_x[3], powerup_y[3], powerup_active[3], powerup_type[3],
+                         powerup_sprite[3], powerup_spawn_timer[3], powerup_has_spawned[3],
+                         lvl, width, height, cell_size, 3, speedTex);
+        
+        level2PowerUpSpawned = true;
+    }
+}
+
+// Power-up collision detection
+if(!playerDead)
+{
+    for(int i = 0; i < 4; i++)
+    {
+        if(powerup_active[i])
+        {
+            if(check_powerup_collision(player_x, player_y, PlayerWidth, PlayerHeight,
+                                      powerup_x[i], powerup_y[i], 64))
+            {
+                if(powerup_type[i] == 0)  // EXTRA_LIFE
+                {
+                    playerLives++;
+                    cout << "[POWERUP] Extra Life! Lives: " << playerLives << endl;
+                }
+                else if(powerup_type[i] == 1)  // POWER
+                {
+                    currentSuckStrength = baseSuckStrength * 2.0f;
+                    cout << "[POWERUP] Power Boost! Suction: " << currentSuckStrength << endl;
+                }
+                else if(powerup_type[i] == 2)  // RANGE
+                {
+                    currentVacuumRange = baseVacuumRange * 1.5f;
+                    cout << "[POWERUP] Range Boost! Range: " << currentVacuumRange << endl;
+                }
+                else if(powerup_type[i] == 3)  // SPEED
+                {
+                    speed = baseSpeed * 2.0f;
+                    speedBoostActive = true;
+                    speedBoostTimer.restart();
+                    cout << "[POWERUP] Speed Boost! Speed: " << speed << endl;
+                }
+                
+                powerup_active[i] = false;
+                score += 50;
+            }
+        }
+    }
+}
+
+// Speed boost timer
+if(speedBoostActive)
+{
+    if(speedBoostTimer.getElapsedTime().asSeconds() >= speedBoostDuration)
+    {
+        speed = baseSpeed;
+        speedBoostActive = false;
+        cout << "[POWERUP] Speed boost expired." << endl;
+    }
+}
 if(currentLevel == 1 && !levelComplete)
 {
     if(check_level_complete(ghost_active, ghosts,
@@ -2911,6 +3110,14 @@ if(elapsed >= levelCompleteDelay)
     level2EnemiesSpawning = true;
     enemiesSpawned = 0;
     enemySpawnClock.restart();
+    level2PowerUpTimer.restart();
+    level2PowerUpSpawned = false;
+    
+    for(int i = 0; i < 4; i++)
+    {
+        powerup_active[i] = false;
+        powerup_has_spawned[i] = false;
+    }
 
     // IMPORTANT: Start platform timer NOW (first platform already exists)
     // Next platform will spawn after 20 seconds
@@ -2935,6 +3142,15 @@ if(currentLevel == 2 && !levelComplete && !playerDead)
     }
 }
 
+for(int i = 0; i < 4; i++)
+{
+    if(powerup_active[i])
+    {
+        float bobOffset = sin(powerup_spawn_timer[i].getElapsedTime().asSeconds() * 3.0f) * 5.0f;
+        powerup_sprite[i].setPosition(powerup_x[i], powerup_y[i] + bobOffset);
+        window.draw(powerup_sprite[i]);
+    }
+}
 window.display();
 
 }
