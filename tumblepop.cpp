@@ -40,6 +40,7 @@ void update_vacuum(float player_x, float player_y, int vacuumDirection, float va
     const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
     
     void generate_random_slanted_platform(char** lvl, int height, int width);
+    
 void shoot_single_enemy(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
 void shoot_burst_mode(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], bool shot_is_active[], float shot_lifetime[], float deltaTime, float max_lifetime, int shot_count, char** lvl, int cell_size, int height);
@@ -167,122 +168,87 @@ void change_to_level2(char** lvl, int height, int width)
 
 void generate_random_slanted_platform(char** lvl, int height, int width)
 {
-    // Clear any existing slanted platforms (but keep static platforms and starting platform)
-    for(int i = 2; i < height-6; i++)
-    {
-        for(int j = 2; j < width-2; j++)
-        {
-            // Only clear blocks that are NOT walls or floor
-            if(lvl[i][j] == '#' && i != 0 && i != height-6 && j != 0 && j != width-1)
-            {
-                // Don't clear static platforms (rows 2, 4, 6) or starting platform (row 5, columns 7-10)
-                bool isStaticPlatform = (i == 2 && ((j >= 2 && j <= 5) || (j >= 12 && j <= 15))) ||
-                                       (i == 4 && ((j >= 2 && j <= 4) || (j >= 13 && j <= 15))) ||
-                                       (i == 6 && ((j >= 2 && j <= 6) || (j >= 11 && j <= 15))) ||
-                                       (i == 5 && j >= 7 && j <= 10);
-               
-                if(!isStaticPlatform)
-                {
-                    lvl[i][j] = ' ';
-                }
-            }
-        }
-    }
-   
-    // Generate new SLANTED platform (diagonal blocks - 1 block wide)
-    int direction = rand() % 2; // 0 = ascending left-to-right, 1 = ascending right-to-left
-    int length = 6;  // 6 blocks long
-   
+    int start_x = -1;
+    int start_y = -1;
     int attempts = 0;
-    bool placed = false;
    
-    while(attempts < 50 && !placed)
+    while(attempts < 50 && start_x == -1)
     {
-        int start_x, start_y;
+        int rand_x = 3 + rand() % 12;  // Random X between 3-14
+        int rand_y = 7 + rand() % 3;    // Random Y between 7-9 (accessible area)
        
-        if(direction == 0) // Ascending left to right
+        // Check if this position is valid (empty and has ground below)
+        if(rand_y + 1 < height && lvl[rand_y][rand_x] == ' ' && lvl[rand_y + 1][rand_x] == '#')
         {
-            start_x = 3 + rand() % 5;  // Start x: 3-7
-            start_y = 7;               // Start from row 7
-        }
-        else // Ascending right to left
-        {
-            start_x = 10 + rand() % 5; // Start x: 10-14
-            start_y = 7;               // Start from row 7
-        }
-       
-        // Check if platform can be placed
-        bool valid = true;
-        for(int i = 0; i < length; i++)
-        {
-            int x = (direction == 0) ? start_x + i : start_x - i;
-            int y = start_y - i;  // Going UP
-           
-            // Check bounds
-            if(x <= 1 || x >= width-1 || y <= 1 || y >= height-6)
-            {
-                valid = false;
-                break;
-            }
-           
-            // Check if space is empty
-            if(lvl[y][x] != ' ')
-            {
-                valid = false;
-                break;
-            }
-        }
-       
-        // Place the DIAGONAL BLOCKS (1 block wide - sliding staircase)
-        if(valid)
-        {
-            if(direction == 0) // Left-to-right ascending
-            {
-                // Creates diagonal like:
-                //      #
-                //     #
-                //    #
-                //   #
-                //  #
-                // #
-                for(int i = 0; i < length; i++)
-                {
-                    int x = start_x + i;  // Step right by 1
-                    int y = start_y - i;  // Step up by 1
-                    lvl[y][x] = '#';      // Single block
-                }
-            }
-            else // Right-to-left ascending
-            {
-                // Creates diagonal like:
-                // #
-                //  #
-                //   #
-                //    #
-                //     #
-                //      #
-                for(int i = 0; i < length; i++)
-                {
-                    int x = start_x - i;  // Step left by 1
-                    int y = start_y - i;  // Step up by 1
-                    lvl[y][x] = '#';      // Single block
-                }
-            }
-           
-            placed = true;
-            cout << "[PLATFORM] DIAGONAL sliding platform created! Direction: "
-                 << (direction == 0 ? "/ (up-right)" : "\\ (up-left)")
-                 << " - SINGLE BLOCK WIDTH for sliding!" << endl;
+            start_x = rand_x;
+            start_y = rand_y;
+            lvl[start_y][start_x] = '#';  // Place first block
         }
        
         attempts++;
     }
    
-    if(!placed)
+    if(start_x == -1)
     {
-        cout << "[PLATFORM] Failed to place slanted platform after 50 attempts!" << endl;
+        cout << "[PLATFORM] Failed to find valid starting position!" << endl;
+        return;
     }
+   
+    // ===== SLOPE FORMULA: y = mx + b =====
+    // We use: new_y = start_y + (slope * (new_x - start_x))
+    // Choose random slope direction and steepness
+   
+    int direction = rand() % 2;  // 0 = slope up-right, 1 = slope up-left
+    float slope = 0.5f + (rand() % 3) * 0.25f;  // Slope: 0.5, 0.75, or 1.0
+    int platform_length = 6 + rand() % 3;  // Length: 6-8 blocks
+   
+    cout << "[PLATFORM] Starting position: (" << start_x << ", " << start_y 
+         << ") | Direction: " << (direction == 0 ? "right" : "left") 
+         << " | Slope: " << slope << " | Length: " << platform_length << endl;
+   
+    // ===== PLACE BLOCKS USING SLOPE FORMULA =====
+    for(int step = 1; step < platform_length; step++)
+    {
+        int block_x;
+        int block_y;
+       
+        if(direction == 0)  // Up-right slope (moving right, going up)
+        {
+            block_x = start_x + step;
+            // Using slope formula: y = start_y - (slope * step)
+            // Negative because Y increases downward but we want to go UP
+            block_y = start_y - (int)(slope * step);
+        }
+        else  // Up-left slope (moving left, going up)
+        {
+            block_x = start_x - step;
+            block_y = start_y - (int)(slope * step);
+        }
+       
+        // ===== BOUNDS CHECK =====
+        if(block_x <= 1 || block_x >= width - 1 || block_y <= 1 || block_y >= height - 6)
+        {
+            cout << "[PLATFORM] Slope hit boundary at step " << step << endl;
+            break;
+        }
+       
+        // ===== CHECK FOR COLLISION WITH EXISTING BLOCKS =====
+        if(lvl[block_y][block_x] != ' ')
+        {
+            cout << "[PLATFORM] Slope hit existing block at (" << block_x << ", " << block_y << ")" << endl;
+            break;
+        }
+       
+        // ===== PLACE BLOCK =====
+        lvl[block_y][block_x] = '#';
+        
+        cout << "[BLOCK] Placed at (" << block_x << ", " << block_y << ")" << endl;
+    }
+   
+    cout << "[PLATFORM] Slanted platform generated successfully!" << endl;
 }
+   
+    
 
 // Next display level 2 window
 // window this displays SFML window
@@ -325,6 +291,7 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSpr
         }
     }
 }
+
 
 
 // This functioin is to check if player is not standing on the blocks then it must fall
@@ -1417,7 +1384,7 @@ const int ghostFrameDelay = 10; // aniimation speed
 ghostWalkTextures[0].loadFromFile("ghost1.png");
 ghostWalkTextures[1].loadFromFile("ghost2.png");
 ghostWalkTextures[2].loadFromFile("ghost3.png");
-ghostWalkTextures[3].loadFromFile("ghost4.png");\
+ghostWalkTextures[3].loadFromFile("ghost4.png");
 
 // ===== SKELETON ANIMATION FRAMES =====
 const int skel =4;
