@@ -1137,11 +1137,11 @@ const float levelCompleteDelay = 3.0f;         // 2D dynamic array representing 
     Sprite blockSprite;
 
     // load background & block textures (files must exist)
-    bgTex.loadFromFile("bg/bg.png");
+    bgTex.loadFromFile("Assets/bg/bg.png");
     bgSprite.setTexture(bgTex);
     bgSprite.setPosition(0,0);
 
-    blockTexture.loadFromFile("bg/block1.png");
+    blockTexture.loadFromFile("Assets/bg/block1.png");
     blockSprite.setTexture(blockTexture);
 
     //player data (position, speed, size etc.)
@@ -1176,7 +1176,7 @@ Text comboText;
 Clock levelTimer;  // Timer for level completion speed
 
 // Load font
-scoreFont.loadFromFile("txt/Roboto-Regular.ttf");
+scoreFont.loadFromFile("Assets/txt/Roboto-Regular.ttf");
 
 scoreText.setFont(scoreFont);
 scoreText.setCharacterSize(30);
@@ -1213,11 +1213,11 @@ bool isWalking = false;
     // Music objects and settings
     Music menuMusic;
     Music lvlMusic;
-    menuMusic.openFromFile("music/bgmus.ogg");
+    menuMusic.openFromFile("Assets/music/bgmus.ogg");
     menuMusic.setLoop(true);
     menuMusic.setVolume(40);
 
-    lvlMusic.openFromFile("music/mus.ogg");
+    lvlMusic.openFromFile("Assets/music/mus.ogg");
     lvlMusic.setLoop(true);
     lvlMusic.setVolume(40);
    
@@ -1228,14 +1228,14 @@ bool isWalking = false;
     Sprite playerOptionSprite[playerOptionsCount];
 
     // Load textures for each character (must exist)
-    playerOptions[0].loadFromFile("players/player1.png");
-    playerOptions[1].loadFromFile("players/player2.png");
+    playerOptions[0].loadFromFile("Assets/players/player1.png");
+    playerOptions[1].loadFromFile("Assets/players/player2.png");
 
 const int bagOptionsCount = 2;
 Texture bagOptions[bagOptionsCount];
 Sprite bagOptionSprite[bagOptionsCount];
-bagOptions[0].loadFromFile("props/bag1.png");
-bagOptions[1].loadFromFile("props/bag2.png");
+bagOptions[0].loadFromFile("Assets/props/bag1.png");
+bagOptions[1].loadFromFile("Assets/props/bag2.png");
     /// Set positions and scale for menu display
     for(int i = 0; i < playerOptionsCount; i++)
     {
@@ -1251,8 +1251,8 @@ bagOptions[1].loadFromFile("props/bag2.png");
     Texture descTextures[2];
     Sprite descSprites[2];
    
-    descTextures[0].loadFromFile("txt/greendesc.png");
-    descTextures[1].loadFromFile("txt/yellowdesc.png");
+    descTextures[0].loadFromFile("Assets/txt/greendesc.png");
+    descTextures[1].loadFromFile("Assets/txt/yellowdesc.png");
    
     descSprites[0].setTexture(descTextures[0]);
     descSprites[0].setPosition(200, 300);  // Moved right (280→320) and up (500→400)
@@ -1300,17 +1300,17 @@ bagOptions[1].loadFromFile("props/bag2.png");
         // Load walking animation frames based on selected player
 if(selectedIndex == 0)
 {
-    walkTextures[0].loadFromFile("players/player1walk1.png");
-    walkTextures[1].loadFromFile("players/player1walk2.png");
-    walkTextures[2].loadFromFile("players/player1walk3.png");
-    walkTextures[3].loadFromFile("players/player1walk4.png");
+    walkTextures[0].loadFromFile("Assets/players/player1walk1.png");
+    walkTextures[1].loadFromFile("Assets/players/player1walk2.png");
+    walkTextures[2].loadFromFile("Assets/players/player1walk3.png");
+    walkTextures[3].loadFromFile("Assets/players/player1walk4.png");
 }
 else if(selectedIndex == 1)
 {
-    walkTextures[0].loadFromFile("players/player2walk1.png");
-    walkTextures[1].loadFromFile("players/player2walk2.png");
-    walkTextures[2].loadFromFile("players/player2walk3.png");
-    walkTextures[3].loadFromFile("players/player2walk4.png");
+    walkTextures[0].loadFromFile("Assets/players/player2walk1.png");
+    walkTextures[1].loadFromFile("Assets/players/player2walk2.png");
+    walkTextures[2].loadFromFile("Assets/players/player2walk3.png");
+    walkTextures[3].loadFromFile("Assets/players/player2walk4.png");
 }
         bagTexture = bagOptions[selectedIndex];
         bagSprite.setTexture(bagTexture);
@@ -1378,17 +1378,16 @@ bool isJumping = false;  // Track if jumping (unused now but available)
     if(selectedIndex==0)
     {
     
-    vacuumLeftTex.loadFromFile("players/left.png");  // default player with vacuum left
-    vacuumUpTex.loadFromFile("players/up.png");
-    vacuumRightTex.loadFromFile("players/right.png");
-    vacuumDownTex.loadFromFile("players/down.png");
+    vacuumLeftTex.loadFromFile("Assets/players/left.png");  
+    vacuumRightTex.loadFromFile("Assets/players/right.png");
+    vacuumDownTex.loadFromFile("Assets/players/down.png");
     }
     else
     {
-    vacuumLeftTex.loadFromFile("players/left1.png");  // default player with vacuum left
-    vacuumUpTex.loadFromFile("players/up1.png");
-    vacuumRightTex.loadFromFile("players/right1.png");
-    vacuumDownTex.loadFromFile("players/down1.png");
+    vacuumLeftTex.loadFromFile("Assets/players/left1.png");  
+    vacuumUpTex.loadFromFile("Assets/players/up1.png");
+    vacuumRightTex.loadFromFile("Assets/players/right1.png");
+    vacuumDownTex.loadFromFile("Assets/players/down1.png");
     }
 
     // Setup vacuum sprites and scale them
@@ -1407,7 +1406,7 @@ bool isJumping = false;  // Track if jumping (unused now but available)
     // LASER BEAM SETUP
     Texture laserTex;
     Sprite laserSprite;
-    bool laserLoaded = laserTex.loadFromFile("props/lazer.png"); // try to load laser image
+    bool laserLoaded = laserTex.loadFromFile("Assets/props/lazer.png"); // try to load laser image
     if(laserLoaded)
     {
         laserSprite.setTexture(laserTex);
@@ -1476,18 +1475,18 @@ int ghostFrameCounter[8];      // Frame counter for each ghost
 const int ghostFrameDelay = 10; // aniimation speed
 
 // Load ghost walking animation frames
-ghostWalkTextures[0].loadFromFile("enemies/ghost1.png");
-ghostWalkTextures[1].loadFromFile("enemies/ghost2.png");
-ghostWalkTextures[2].loadFromFile("enemies/ghost3.png");
-ghostWalkTextures[3].loadFromFile("enemies/ghost4.png");
+ghostWalkTextures[0].loadFromFile("Assets/enemies/ghost1.png");
+ghostWalkTextures[1].loadFromFile("Assets/enemies/ghost2.png");
+ghostWalkTextures[2].loadFromFile("Assets/enemies/ghost3.png");
+ghostWalkTextures[3].loadFromFile("Assets/enemies/ghost4.png");
 
 // ===== SKELETON ANIMATION FRAMES =====
 const int skel =4;
 Texture skelWalkTextures[4];
-skelWalkTextures[0].loadFromFile("enemies/skel1.png");
-skelWalkTextures[1].loadFromFile("enemies/skel2.png");
-skelWalkTextures[2].loadFromFile("enemies/skel3.png");
-skelWalkTextures[3].loadFromFile("enemies/skel4.png");
+skelWalkTextures[0].loadFromFile("Assets/enemies/skel1.png");
+skelWalkTextures[1].loadFromFile("Assets/enemies/skel2.png");
+skelWalkTextures[2].loadFromFile("Assets/enemies/skel3.png");
+skelWalkTextures[3].loadFromFile("Assets/enemies/skel4.png");
 
 
 const int skelAnimationFrames = 4;
@@ -1557,7 +1556,7 @@ if(ghost_dir[i] == 1)
     float skel_jump_timer[9];      // Timer for each skeleton
     float skel_next_jump_time[9];  // Random time until next jump (4-5 seconds)
     Texture skelTexture;
-    skelTexture.loadFromFile("enemies/skeleton.png");
+    skelTexture.loadFromFile("Assets/enemies/skeleton.png");
    
     // ===== ENEMY STUN SYSTEM ===== (FIXED)
     bool ghost_stunned[8];     // One for each ghost
@@ -1578,10 +1577,10 @@ if(ghost_dir[i] == 1)
     }
     // ===== POWER-UP SYSTEM =====
     Texture extraLifeTex, powerTex, rangeTex, speedTex;
-    extraLifeTex.loadFromFile("props/extralife.png");
-    powerTex.loadFromFile("props/power.png");
-    rangeTex.loadFromFile("props/range.png");
-    speedTex.loadFromFile("props/speed.png");
+    extraLifeTex.loadFromFile("Assets/props/extralife.png");
+    powerTex.loadFromFile("Assets/props/power.png");
+    rangeTex.loadFromFile("Assets/props/range.png");
+    speedTex.loadFromFile("Assets/props/speed.png");
 
     float powerup_x[4];
     float powerup_y[4];
@@ -1692,7 +1691,7 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
     Sprite invisSprite[3];
 
     Texture invisTexture;
-    invisTexture.loadFromFile("enemies/invisible.png");  
+    invisTexture.loadFromFile("Assets/enemies/invisible.png");  
 
     for(int i = 0; i < invisible_men; i++)
     {
@@ -1739,22 +1738,22 @@ Texture chelnovShootTextures[4];
 Texture chelnovVacuumTextures[4];
 
 // Load walking frames (0-3)
-chelnovWalkTextures[0].loadFromFile("enemies/chelnov_walk1.png");
-chelnovWalkTextures[1].loadFromFile("enemies/chelnov_walk2.png");
-chelnovWalkTextures[2].loadFromFile("enemies/chelnov_walk3.png");
-chelnovWalkTextures[3].loadFromFile("enemies/chelnov_walk4.png");
+chelnovWalkTextures[0].loadFromFile("Assets/enemies/chelnov_walk1.png");
+chelnovWalkTextures[1].loadFromFile("Assets/enemies/chelnov_walk2.png");
+chelnovWalkTextures[2].loadFromFile("Assets/enemies/chelnov_walk3.png");
+chelnovWalkTextures[3].loadFromFile("Assets/enemies/chelnov_walk4.png");
 
 // Load shooting frames (4-7)
-chelnovShootTextures[0].loadFromFile("enemies/chelnov_shoot1.png");
-chelnovShootTextures[1].loadFromFile("enemies/chelnov_shoot2.png");
-chelnovShootTextures[2].loadFromFile("enemies/chelnov_shoot3.png");
-chelnovShootTextures[3].loadFromFile("enemies/chelnov_shoot4.png");
+chelnovShootTextures[0].loadFromFile("Assets/enemies/chelnov_shoot1.png");
+chelnovShootTextures[1].loadFromFile("Assets/enemies/chelnov_shoot2.png");
+chelnovShootTextures[2].loadFromFile("Assets/enemies/chelnov_shoot3.png");
+chelnovShootTextures[3].loadFromFile("Assets/enemies/chelnov_shoot4.png");
 
 // Load vacuum frames (8-11)
-chelnovVacuumTextures[0].loadFromFile("enemies/chelnov_vacuum1.png");
-chelnovVacuumTextures[1].loadFromFile("enemies/chelnov_vacuum2.png");
-chelnovVacuumTextures[2].loadFromFile("enemies/chelnov_vacuum3.png");
-chelnovVacuumTextures[3].loadFromFile("enemies/chelnov_vacuum4.png");
+chelnovVacuumTextures[0].loadFromFile("Assets/enemies/chelnov_vacuum1.png");
+chelnovVacuumTextures[1].loadFromFile("Assets/enemies/chelnov_vacuum2.png");
+chelnovVacuumTextures[2].loadFromFile("Assets/enemies/chelnov_vacuum3.png");
+chelnovVacuumTextures[3].loadFromFile("Assets/enemies/chelnov_vacuum4.png");
 
 // Chelnov animation state tracking
 int chelnovCurrentFrame[4];
