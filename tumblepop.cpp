@@ -1434,26 +1434,26 @@ bool isJumping = false;  // Track if jumping (unused now but available)
     
     /////  BOTTOM BLOCKS
     for (int j = 0; j < width; ++j) 
-    lvl[12][j] = '#'; 
+    lvl[8][j] = '#'; 
     
     lvl[5][6] = '#'; lvl[5][7] = '#'; lvl[5][8] = '#';
     lvl[5][9] = '#'; lvl[5][10] = '#'; lvl[5][11] = '#';
 
     ////  LEFT SIDE wall
-    for(int i = 0; i <=12; ++i)
+    for(int i = 0; i <=7 ; ++i)
      lvl[i][0] = '#';
 
     ////  RIGHT PART wall
-    for(int i = 0; i <=12; ++i)
+    for(int i = 0; i <=7; ++i)
      lvl[i][17] = '#';
 
     ////  RIGHT FORWARD PART (these were set originally, maybe misnamed)
     lvl[3][0] = '#'; lvl[3][1] = '#'; lvl[3][2] = '#'; lvl[3][3] = '#';
-    lvl[9][0] = '#'; lvl[9][1] = '#'; lvl[9][2] = '#'; lvl[9][3] = '#';
+    
 
     ////  LEFT FORWARD PART
     lvl[3][14] = '#'; lvl[3][15] = '#'; lvl[3][16] = '#'; lvl[3][17] = '#';
-     lvl[9][14] = '#'; lvl[9][15] = '#'; lvl[9][16] = '#'; lvl[9][17] = '#';
+    
 
     ///  UPPER PART (top ceiling)
     for (int j = 0; j < width; ++j) lvl[0][j] = '#';
