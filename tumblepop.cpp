@@ -32,23 +32,24 @@ float get_character_speed(int characterIndex, float baseSpeed)
 // Vacuum and Shooting
 
 void update_vacuum(float player_x, float player_y, int vacuumDirection, float vacuum_range, float suck_strength,
-    float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts,
-    float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel,
-    float invis_x[], float invis_y[], bool invis_active[], bool invis_stunned[], float invis_stun_timer[], int invis_count,
-    float chelnov_x[], float chelnov_y[], bool chelnov_active[], bool chelnov_stunned[], float chelnov_stun_timer[], int chelnov_count,
-    bool chelnov_is_shooting[],  // <--- ADD THIS PARAMETER
-    const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
+    float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts, float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel, float invis_x[], float invis_y[], bool invis_active[], bool invis_stunned[], float invis_stun_timer[], int invis_count, float chelnov_x[], float chelnov_y[], bool chelnov_active[], bool chelnov_stunned[], float chelnov_stun_timer[], int chelnov_count,
+bool chelnov_is_shooting[], const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
+
+
     void generate_random_slanted_platform(char** lvl, int height, int width, bool clearOld);
+    
+    
 void shoot_single_enemy(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
+
+
 void shoot_burst_mode(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
+
+
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], bool shot_is_active[], float shot_lifetime[], float deltaTime, float max_lifetime, int shot_count, char** lvl, int cell_size, int height);
 
-bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count,
-    float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts,
-    float skel_x[], float skel_y[], bool skel_active[], int total_skels,
-    float invis_x[], float invis_y[], bool invis_active[], int total_invis,
-    float chelnov_x[], float chelnov_y[], bool chelnov_active[], int total_chelnov,
-    int& hit_projectile, int& hit_enemy_index, int& hit_enemy_type);
+
+bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count,float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts,float skel_x[], float skel_y[], bool skel_active[], int total_skels,float invis_x[], float invis_y[], bool invis_active[], int total_invis, float chelnov_x[], float chelnov_y[], bool chelnov_active[], int total_chelnov, int& hit_projectile, int& hit_enemy_index, int& hit_enemy_type);
+
    
 // Level 2 helper functions
 bool is_platform_reachable(char** lvl, int x, int y, int width, int height);
@@ -56,10 +57,7 @@ bool is_platform_reachable(char** lvl, int x, int y, int width, int height);
 
 // Check if all enemies are defeated then level  completed
 // here ghost_active[] and skel_active[] means alivee
-bool check_level_complete(bool ghost_active[], int total_ghosts,
-                         bool skel_active[], int total_skels,
-                         bool invis_active[], int total_invis,
-                         bool chelnov_active[], int total_chelnov)
+bool check_level_complete(bool ghost_active[], int total_ghosts,bool skel_active[], int total_skels,bool invis_active[], int total_invis, bool chelnov_active[], int total_chelnov)
 {
     for(int i = 0; i < total_ghosts; i++)
     {
@@ -83,6 +81,8 @@ bool check_level_complete(bool ghost_active[], int total_ghosts,
    
     return true;
 }
+
+
 bool is_platform_reachable(char** lvl, int x, int y, int width, int height)
 {
     if (y <= 0 || lvl[y-1][x] == '#') return false;
@@ -99,9 +99,9 @@ bool is_platform_reachable(char** lvl, int x, int y, int width, int height)
 // Next move to level 2
 // char** lvl represents 2D aray of map
 // int height, int width are screen height and width
+
 void change_to_level2(char** lvl, int height, int width)
-{
-    // Clear entire level
+{ // Clear entire level
     for(int i = 0; i < height; i++)
     {
         for(int j = 0; j < width; j++)
@@ -126,20 +126,13 @@ void change_to_level2(char** lvl, int height, int width)
     for(int j = 0; j < width; ++j)
         lvl[0][j] = '#';
    
-    // ===== NO PLATFORMS AT ALL - COMPLETELY EMPTY! =====
-    // No starting platform
-    // No side platforms
-    // Only slanted platforms will spawn
    
-    // ===== SPAWN FIRST SLANTED PLATFORM IMMEDIATELY =====
     generate_random_slanted_platform(lvl, height, width, false);
    
-    cout << "[LEVEL 2] Level created - ONLY walls and slanted platforms!" << endl;
+  
 }
 void generate_random_slanted_platform(char** lvl, int height, int width, bool clearOld)
 {
-    cout << "[DEBUG] Starting platform generation (1:1 Slanted Tread Wedge)." << endl;
-    // STEP 1: CLEAR OLD SLANTED PLATFORMS
     if(clearOld)
     {
         for(int i = 2; i < height-6; i++)
@@ -179,7 +172,7 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
         {
             int y = start_y - i;
            
-            // FIXED: Slope is on the OUTSIDE, block is on the INSIDE
+         
             int x_slope = (direction == 0) ? start_x + i : start_x - i;
             int x_block = (direction == 0) ? x_slope + 1 : x_slope - 1;  // SWAPPED!
            
@@ -197,7 +190,7 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
             }
         }
        
-        // ===== STEP 5: PLACE THE RAMP WEDGE BLOCKS =====
+      
         if(valid)
         {
             char slope_char = (direction == 0) ? '/' : '\\';
@@ -206,20 +199,18 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
             {
                 int y = start_y - i;
                
-                // FIXED: Slope on LEFT for /, slope on RIGHT for \
+               
                
                 int x_slope = (direction == 0) ? start_x + i : start_x - i;
                 int x_block = (direction == 0) ? x_slope + 1 : x_slope - 1;  // SWAPPED!
                
-                // Place: /# for up-right, #\ for up-left
+               
                 lvl[y][x_slope] = slope_char;
                 lvl[y][x_block] = '#';
             }
            
             placed = true;
-            cout << "[PLATFORM] ✓ Slanted ramp created! Direction: "
-                 << (direction == 0 ? "/# (Up-Right)" : "#\\ (Up-Left)")
-                 << " | Start: (" << start_x << ", " << start_y << ")" << endl;
+            
         }
        
         attempts++;
@@ -228,7 +219,7 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
     // ===== STEP 6: BACKUP PLATFORM IF FAILED =====
     if(!placed)
     {
-        cout << "[PLATFORM] Failed - spawning backup!" << endl;
+       
         int backup_y = 4;
         for(int j = 7; j <= 10; ++j) {
             lvl[backup_y][j] = '#';
@@ -551,8 +542,6 @@ void spawn_powerup(float& powerup_x, float& powerup_y, bool& powerup_active,
             powerup_active = true;
             has_spawned = true;
             spawn_timer.restart();
-           
-            cout << "[POWERUP] Spawned type " << type << " at (" << powerup_x << ", " << powerup_y << ")" << endl;
             return;
         }
         attempts++;
@@ -642,7 +631,7 @@ void update_vacuum(
                     ghost_x[i] = -1000;
                     ghost_y[i] = -1000;
                     score = score + 50;
-                    cout << "[CAPTURE] Ghost captured! Total: " << cap_count << endl;
+                     
                 }
                 else
                 {
@@ -686,7 +675,7 @@ void update_vacuum(
                     skel_x[i] = -1000;
                     skel_y[i] = -1000;
                     score = score + 75;
-                    cout << "[CAPTURE] Skeleton captured! Total: " << cap_count << endl;
+                    
                 }
                 else
                 {
@@ -730,7 +719,7 @@ void update_vacuum(
                     invis_x[i] = -1000;
                     invis_y[i] = -1000;
                     score = score + 100;
-                    cout << "[CAPTURE] Invisible Man captured! Total: " << cap_count << endl;
+                     
                 }
                 else
                 {
@@ -780,7 +769,7 @@ for (int i = 0; i < chelnov_count; i++)
                 chelnov_x[i] = -1000;
                 chelnov_y[i] = -1000;
                 score = score + 125;
-                cout << "[CAPTURE] Chelnov captured! Total: " << cap_count << endl;
+               
             }
             else
             {
@@ -808,9 +797,6 @@ void shoot_single_enemy(float player_x, float player_y, int vacuum_dir,
     cap_count = cap_count - 1;
     int shot_type = captured[cap_count];
    
-    // ===== ADD DEBUG OUTPUT =====
-    cout << "[DEBUG] Shooting enemy type: " << shot_type << " from index: " << cap_count << endl;
-
     // Find next available projectile slot
     int slot = -1;
     for(int i = 0; i < 20; i++)
@@ -822,22 +808,21 @@ void shoot_single_enemy(float player_x, float player_y, int vacuum_dir,
         }
     }
    
-    if(slot == -1) // No available slots
+    if(slot == -1) 
     {
-        cout << "[WARN] No available projectile slots!" << endl;
+      
         return;
     }
 
-    // Create new projectile at the found slot
+    
     shot_enemy_x[slot] = player_x;
     shot_enemy_y[slot] = player_y;
-    shot_enemy_type[slot] = shot_type; // CRITICAL: Use the actual captured type!
+    shot_enemy_type[slot] = shot_type; 
     shot_is_active[slot] = true;
-    shot_lifetime[slot] = 0.0f;  // NEW: Reset lifetime to 0
+    shot_lifetime[slot] = 0.0f;  
 
     float projectile_speed = 10.0f;
-
-    // Set velocity based on vacuum direction
+    
     if (vacuum_dir == 0) // left
     {
         shot_velocity_x[slot] = -projectile_speed;
@@ -859,7 +844,7 @@ void shoot_single_enemy(float player_x, float player_y, int vacuum_dir,
         shot_velocity_y[slot] = projectile_speed;
     }
    
-    cout << "[SHOOT] Created projectile in slot " << slot << " with type " << shot_type << endl;
+   
 }
 
 void shoot_burst_mode(float player_x, float player_y, int vacuum_dir,
@@ -870,9 +855,9 @@ void shoot_burst_mode(float player_x, float player_y, int vacuum_dir,
                      float shot_lifetime[],  // NEW: Add lifetime parameter
                      int& shot_count)
 {
-    cout << "[BURST] Starting burst mode! Captured count: " << cap_count << endl;
+  
    
-    // Shoot all captured enemies in LIFO order
+    
     while (cap_count > 0)
     {
         shoot_single_enemy(player_x, player_y, vacuum_dir, captured, cap_count,
@@ -880,9 +865,9 @@ void shoot_burst_mode(float player_x, float player_y, int vacuum_dir,
                           shot_enemy_type, shot_is_active, shot_lifetime, shot_count);  // NEW: Pass lifetime
     }
    
-    cout << "[BURST] Burst complete!" << endl;
+  
 }
-// Update all projectile positions and physics
+// Updadte all projectile positions and physics
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
                        float shot_velocity_x[], float shot_velocity_y[],
                        bool shot_is_active[], float shot_lifetime[],  // NEW: Add lifetime parameter
@@ -904,7 +889,7 @@ void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
         if (shot_lifetime[i] >= max_lifetime)
         {
             shot_is_active[i] = false;
-            cout << "[PROJECTILE] Projectile " << i << " expired after " << max_lifetime << " seconds" << endl;
+           
             continue;
         }
 
@@ -922,14 +907,14 @@ void update_projectiles(float shot_enemy_x[], float shot_enemy_y[],
         if (shot_enemy_x[i] < 0 || shot_enemy_x[i] > 1136)
         {
             shot_is_active[i] = false;
-            cout << "[PROJECTILE] Deactivated (out of bounds X)" << endl;
+           
             continue;
         }
        
         if (shot_enemy_y[i] < 0 || shot_enemy_y[i] > 896)
         {
             shot_is_active[i] = false;
-            cout << "[PROJECTILE] Deactivated (out of bounds Y)" << endl;
+           
             continue;
         }
 
@@ -1333,10 +1318,21 @@ bool isJumping = false;  // Track if jumping (unused now but available)
     Sprite vacuumLeftSprite, vacuumUpSprite, vacuumRightSprite, vacuumDownSprite;
 
     // Load vacuum textures (add this after loading PlayerTexture)
+    if(selectedIndex==0)
+    {
+    
     vacuumLeftTex.loadFromFile("players/left.png");  // default player with vacuum left
     vacuumUpTex.loadFromFile("players/up.png");
     vacuumRightTex.loadFromFile("players/right.png");
     vacuumDownTex.loadFromFile("players/down.png");
+    }
+    else
+    {
+    vacuumLeftTex.loadFromFile("players/left1.png");  // default player with vacuum left
+    vacuumUpTex.loadFromFile("players/up1.png");
+    vacuumRightTex.loadFromFile("players/right1.png");
+    vacuumDownTex.loadFromFile("players/down1.png");
+    }
 
     // Setup vacuum sprites and scale them
     vacuumLeftSprite.setTexture(vacuumLeftTex);
@@ -1378,24 +1374,29 @@ bool isJumping = false;  // Track if jumping (unused now but available)
         }
     }
 
-    // ====== Hard-coded blocks (level layout) ======
+    
     /////  BOTTOM BLOCKS
-    for (int j = 0; j < width; ++j) lvl[8][j] = '#'; // you can replace with loop like this
-    ////  BOTTOM UPPER PART
+    for (int j = 0; j < width; ++j) 
+    lvl[12][j] = '#'; 
+    
     lvl[5][6] = '#'; lvl[5][7] = '#'; lvl[5][8] = '#';
     lvl[5][9] = '#'; lvl[5][10] = '#'; lvl[5][11] = '#';
 
     ////  LEFT SIDE wall
-    for(int i = 0; i <=7; ++i) lvl[i][0] = '#';
+    for(int i = 0; i <=12; ++i)
+     lvl[i][0] = '#';
 
     ////  RIGHT PART wall
-    for(int i = 0; i <=7; ++i) lvl[i][17] = '#';
+    for(int i = 0; i <=12; ++i)
+     lvl[i][17] = '#';
 
     ////  RIGHT FORWARD PART (these were set originally, maybe misnamed)
     lvl[3][0] = '#'; lvl[3][1] = '#'; lvl[3][2] = '#'; lvl[3][3] = '#';
+    lvl[9][0] = '#'; lvl[9][1] = '#'; lvl[9][2] = '#'; lvl[9][3] = '#';
 
     ////  LEFT FORWARD PART
     lvl[3][14] = '#'; lvl[3][15] = '#'; lvl[3][16] = '#'; lvl[3][17] = '#';
+     lvl[9][14] = '#'; lvl[9][15] = '#'; lvl[9][16] = '#'; lvl[9][17] = '#';
 
     ///  UPPER PART (top ceiling)
     for (int j = 0; j < width; ++j) lvl[0][j] = '#';
@@ -2058,9 +2059,7 @@ if (check_projectile_hits(shot_enemy_x, shot_enemy_y, shot_is_active, shot_proje
         }
 
 
-
-  // ============= DRAW PROJECTILES =============
-// Draw all active projectiles (shot enemies) - use correct sprite based on type
+// Draw all active projectiles (shot enemies) 
 for (int i = 0; i < 20; i++)
 {
     if (shot_is_active[i])
@@ -3007,7 +3006,7 @@ if(!levelComplete && !playerDead)
         levelComplete = true;
         levelCompleteClock.restart();
         score += 500;
-        cout << "[LEVEL] Level 1 Complete!" << endl;
+      
     }
 }
    
@@ -3033,7 +3032,7 @@ if(!levelComplete && !playerDead)
             levelComplete = true;
             levelCompleteClock.restart();
             score += 1000;
-            cout << "[LEVEL] Level 2 Complete!" << endl;
+           
         }
     }
 }
@@ -3068,10 +3067,10 @@ if(levelComplete && currentLevel == 1)
 // After 3 seconds, load Level 2
 if(elapsed >= levelCompleteDelay)
 {
-    cout << "Starting Level 2!" << endl;
+ 
     currentLevel = 2;
    
-    // 1. Reset Lives to 3 (This ensures the count starts fresh)
+    // Reset Lives to 3 
     playerLives = 3;
    
     levelComplete = false;
@@ -3079,9 +3078,7 @@ if(elapsed >= levelCompleteDelay)
     // Reset level map
     change_to_level2(lvl, height, width);
    
-    // 2. Reset Player Position: Place player on the safe platform (Row 4)
-    // We calculate the Y position to put the *bottom* of the player sprite (PlayerHeight)
-    // exactly at the *top* of the safe platform (Row 4, or 4 * cell_size).
+    
     player_x = 500;
     player_y = 4 * 64 - 102; // (Row 4 * cell_size) - PlayerHeight
    
@@ -3089,13 +3086,9 @@ if(elapsed >= levelCompleteDelay)
     cap_count = 0;
     vacuumActive = false;
 
-    // ... (Deactivate Level 1 enemies, restart timers, etc.) ...
    
-    cout << "[LEVEL] Now in Level 2! First platform already placed." << endl;
 
-
-
-    // Deactivate Level 1 enemies
+    // Deactivvate Level 1 enemies
     for(int i = 0; i < ghosts; i++)
     {
         ghost_active[i] = false;
@@ -3123,12 +3116,11 @@ if(elapsed >= levelCompleteDelay)
         powerup_has_spawned[i] = false;
     }
 
-    // IMPORTANT: Start platform timer NOW (first platform already exists)
-    // Next platform will spawn after 20 seconds
+    
     platformChangeClock.restart();
 
     levelComplete = false;
-    cout << "[LEVEL] Now in Level 2! First platform already placed." << endl;
+   
 }
 }
 if(currentLevel == 2 && !levelComplete && !playerDead)
@@ -3139,7 +3131,7 @@ if(currentLevel == 2 && !levelComplete && !playerDead)
     {
         platformChangeClock.restart();
        
-        cout << "\n[PLATFORM] ⏰ 20 seconds elapsed - REGENERATING slanted platform!\n" << endl;
+       
        
         // Clear old platform and generate new one
         generate_random_slanted_platform(lvl, height, width, false);
