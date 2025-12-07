@@ -231,7 +231,9 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
 // Next display level 2 window
 // window this displays SFML window
 // height and width are screen dmensions and cell_size is size of screen in pixels
-void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSprite,Texture& blockTexture,Sprite& blockSprite, const int height, const int width, const int cell_size)
+void display_level(RenderWindow& window, char**lvl, Texture& bgTex, Sprite& bgSprite,
+                   Texture& blockTexture, Sprite& blockSprite,
+                   const int height, const int width, const int cell_size)
 {
     window.draw(bgSprite);
 
@@ -239,37 +241,92 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSpr
     {
         for (int j = 0; j < width; j++)
         {
+            // Draw normal solid blocks
             if (lvl[i][j] == '#')
             {
                 blockSprite.setPosition(j * cell_size, i * cell_size);
                 window.draw(blockSprite);
             }
+            // Draw UP-RIGHT slope (/) using stair-step blocks
             else if (lvl[i][j] == '/')
             {
-                ConvexShape slope;
-                slope.setPointCount(3);
-                slope.setPoint(0, Vector2f(0, cell_size));
-                slope.setPoint(1, Vector2f(cell_size, 0));
-                slope.setPoint(2, Vector2f(cell_size, cell_size));
-                slope.setPosition(j * cell_size, i * cell_size);
-                slope.setFillColor(Color(180, 120, 60));
-                window.draw(slope);
+                // Use your existing blockSprite, just scaled smaller!
+                int mini_size = cell_size / 4;  // Each mini-block is 16x16 pixels
+               
+                blockSprite.setScale(0.25f, 0.25f);  // Make it 1/4 size
+               
+                // Bottom row (4 blocks)
+                for(int k = 0; k < 4; k++)
+                {
+                    blockSprite.setPosition(j * cell_size + k * mini_size,
+                                           i * cell_size + 48);
+                    window.draw(blockSprite);
+                }
+               
+                // Third row (3 blocks)
+                for(int k = 1; k < 4; k++)
+                {
+                    blockSprite.setPosition(j * cell_size + k * mini_size,
+                                           i * cell_size + 32);
+                    window.draw(blockSprite);
+                }
+               
+                // Second row (2 blocks)
+                for(int k = 2; k < 4; k++)
+                {
+                    blockSprite.setPosition(j * cell_size + k * mini_size,
+                                           i * cell_size + 16);
+                    window.draw(blockSprite);
+                }
+               
+                // Top row (1 block)
+                blockSprite.setPosition(j * cell_size + 48, i * cell_size);
+                window.draw(blockSprite);
+               
+                // Reset scale back to normal for regular blocks
+                blockSprite.setScale(1.0f, 1.0f);
             }
+            // Draw UP-LEFT slope (\) using stair-step blocks
             else if (lvl[i][j] == '\\')
             {
-                ConvexShape slope;
-                slope.setPointCount(3);
-                slope.setPoint(0, Vector2f(0, 0));
-                slope.setPoint(1, Vector2f(0, cell_size));
-                slope.setPoint(2, Vector2f(cell_size, cell_size));
-                slope.setPosition(j * cell_size, i * cell_size);
-                slope.setFillColor(Color(180, 120, 60));
-                window.draw(slope);
+                int mini_size = cell_size / 4;  // Each mini-block is 16x16 pixels
+               
+                blockSprite.setScale(0.25f, 0.25f);  // Make it 1/4 size
+               
+                // Bottom row (4 blocks)
+                for(int k = 0; k < 4; k++)
+                {
+                    blockSprite.setPosition(j * cell_size + k * mini_size,
+                                           i * cell_size + 48);
+                    window.draw(blockSprite);
+                }
+               
+                // Third row (3 blocks - left side)
+                for(int k = 0; k < 3; k++)
+                {
+                    blockSprite.setPosition(j * cell_size + k * mini_size,
+                                           i * cell_size + 32);
+                    window.draw(blockSprite);
+                }
+               
+                // Second row (2 blocks - left side)
+                for(int k = 0; k < 2; k++)
+                {
+                    blockSprite.setPosition(j * cell_size + k * mini_size,
+                                           i * cell_size + 16);
+                    window.draw(blockSprite);
+                }
+               
+                // Top row (1 block - left corner)
+                blockSprite.setPosition(j * cell_size, i * cell_size);
+                window.draw(blockSprite);
+               
+                // Reset scale back to normal
+                blockSprite.setScale(1.0f, 1.0f);
             }
         }
     }
 }
-
 
 // This functioin is to check if player is not standing on the blocks then it must fall
 // char** lvl is a 2D array for map
