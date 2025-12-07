@@ -36,6 +36,7 @@ void update_vacuum(float player_x, float player_y, int vacuumDirection, float va
     float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel,
     float invis_x[], float invis_y[], bool invis_active[], bool invis_stunned[], float invis_stun_timer[], int invis_count,
     float chelnov_x[], float chelnov_y[], bool chelnov_active[], bool chelnov_stunned[], float chelnov_stun_timer[], int chelnov_count,
+    bool chelnov_is_shooting[],  // <--- ADD THIS PARAMETER
     const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
     
     void generate_random_slanted_platform(char** lvl, int height, int width);
@@ -577,6 +578,7 @@ void update_vacuum(
     float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel,
     float invis_x[], float invis_y[], bool invis_active[], bool invis_stunned[], float invis_stun_timer[], int invis_count,
     float chelnov_x[], float chelnov_y[], bool chelnov_active[], bool chelnov_stunned[], float chelnov_stun_timer[], int chelnov_count,
+    bool chelnov_is_shooting[],  // <--- ADD THIS PARAMETER
     const int cell_size, bool vacuum_on,
     int captured[], int &cap_count, int max_capacity, int &score)
 {
@@ -731,50 +733,55 @@ void update_vacuum(
         }
     }
 
-    // Process Chelnovs (type 3) - NEW
-    for (int i = 0; i < chelnov_count; i++)
+// Process Chelnovs (type 3) - CANNOT BE CAPTURED WHILE SHOOTING
+for (int i = 0; i < chelnov_count; i++)
+{
+    if (!chelnov_active[i]) continue;
+    
+    // CRITICAL: Cannot capture during shooting phase
+    if (chelnov_is_shooting[i])
     {
-        if (!chelnov_active[i]) continue;
+        continue;  // Skip this Chelnov - invincible while shooting
+    }
 
-        float chelnov_center_x = chelnov_x[i] + cell_size / 2.0f;
-        float chelnov_center_y = chelnov_y[i] + cell_size / 2.0f;
+    float chelnov_center_x = chelnov_x[i] + cell_size / 2.0f;
+    float chelnov_center_y = chelnov_y[i] + cell_size / 2.0f;
 
-        float dx = chelnov_center_x - player_center_x;
-        float dy = chelnov_center_y - player_center_y;
-        float distance_sq = dx * dx + dy * dy;
+    float dx = chelnov_center_x - player_center_x;
+    float dy = chelnov_center_y - player_center_y;
+    float distance_sq = dx * dx + dy * dy;
 
-        if (distance_sq < vacuum_range * vacuum_range && distance_sq > 1.0f)
+    if (distance_sq < vacuum_range * vacuum_range && distance_sq > 1.0f)
+    {
+        float distance = sqrt(distance_sq);
+        float to_chelnov_x = dx / distance;
+        float to_chelnov_y = dy / distance;
+        float dot = to_chelnov_x * dir_x + to_chelnov_y * dir_y;
+
+        if (dot > 0.5f)
         {
-            float distance = sqrt(distance_sq);
-            float to_chelnov_x = dx / distance;
-            float to_chelnov_y = dy / distance;
-            float dot = to_chelnov_x * dir_x + to_chelnov_y * dir_y;
+            chelnov_stunned[i] = true;
+            chelnov_stun_timer[i] = 1.5f;
 
-            if (dot > 0.5f)
+            if (distance < capture_distance && cap_count < max_capacity)
             {
-                chelnov_stunned[i] = true;
-                chelnov_stun_timer[i] = 1.5f;
-
-                if (distance < capture_distance && cap_count < max_capacity)
-                {
-                    captured[cap_count] = 3;  // Chelnov type
-                    cap_count = cap_count + 1;
-                    chelnov_active[i] = false;
-                    chelnov_stunned[i] = false;
-                    chelnov_x[i] = -1000;
-                    chelnov_y[i] = -1000;
-                    score = score + 125;
-                    cout << "[CAPTURE] Chelnov captured! Total: " << cap_count << endl;
-                }
-                else
-                {
-                    chelnov_x[i] -= to_chelnov_x * suck_strength;
-                    chelnov_y[i] -= to_chelnov_y * suck_strength;
-                }
+                captured[cap_count] = 3;
+                cap_count = cap_count + 1;
+                chelnov_active[i] = false;
+                chelnov_stunned[i] = false;
+                chelnov_x[i] = -1000;
+                chelnov_y[i] = -1000;
+                score = score + 125;
+                cout << "[CAPTURE] Chelnov captured! Total: " << cap_count << endl;
+            }
+            else
+            {
+                chelnov_x[i] -= to_chelnov_x * suck_strength;
+                chelnov_y[i] -= to_chelnov_y * suck_strength;
             }
         }
     }
-}
+}}
 
 void shoot_single_enemy(float player_x, float player_y, int vacuum_dir,
                        int captured[], int& cap_count,
@@ -1410,7 +1417,29 @@ const int ghostFrameDelay = 10; // aniimation speed
 ghostWalkTextures[0].loadFromFile("ghost1.png");
 ghostWalkTextures[1].loadFromFile("ghost2.png");
 ghostWalkTextures[2].loadFromFile("ghost3.png");
-ghostWalkTextures[3].loadFromFile("ghost4.png");
+ghostWalkTextures[3].loadFromFile("ghost4.png");\
+
+// ===== SKELETON ANIMATION FRAMES =====
+const int skel =4;
+Texture skelWalkTextures[4];
+skelWalkTextures[0].loadFromFile("skel1.png");
+skelWalkTextures[1].loadFromFile("skel2.png");
+skelWalkTextures[2].loadFromFile("skel3.png");
+skelWalkTextures[3].loadFromFile("skel4.png");
+
+
+const int skelAnimationFrames = 4;
+int skelCurrentFrame[4];
+int skelFrameCounter[4];
+const int skelFrameDelay = 10;
+
+// Initialize skeleton animation
+for(int i = 0; i < skel; i++)
+{
+    skelCurrentFrame[i] = 0;
+    skelFrameCounter[i] = 0;
+}
+
 
    
     //spawning ghosts
@@ -1454,28 +1483,25 @@ if(ghost_dir[i] == 1)
     ghostFrameCounter[i] = 0;
     }
 
-    // SKELETONS - similar setup
-    const int skel = 4;
-
-    float skel_x[4];
-    float skel_y[4];
-    float skel_speed[4];
-    int skel_dir[4];
-    float skel_velocityY[4];
-    bool skel_onGround[4];
-    Sprite skelSprite[4];
-    bool skel_active[4];
+    float skel_x[9];
+    float skel_y[9];
+    float skel_speed[9];
+    int skel_dir[9];
+    float skel_velocityY[9];
+    bool skel_onGround[9];
+    Sprite skelSprite[9];
+    bool skel_active[9];
  
-    float skel_jump_timer[4];      // Timer for each skeleton
-    float skel_next_jump_time[4];  // Random time until next jump (4-5 seconds)
+    float skel_jump_timer[9];      // Timer for each skeleton
+    float skel_next_jump_time[9];  // Random time until next jump (4-5 seconds)
     Texture skelTexture;
     skelTexture.loadFromFile("skeleton.png");
    
     // ===== ENEMY STUN SYSTEM ===== (FIXED)
     bool ghost_stunned[8];     // One for each ghost
     float ghost_stun_timer[8];
-    bool skel_stunned[4];      // One for each skeleton
-    float skel_stun_timer[4];
+    bool skel_stunned[9];      // One for each skeleton
+    float skel_stun_timer[9];
    
     // Initialize all to false/0
     for(int i = 0; i < ghosts; i++)
@@ -1579,6 +1605,19 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
         invisSprite[i].setTexture(invisTexture);
         invisSprite[i].setScale(2, 2);
     }
+    // ===== INVISIBLE MAN TELEPORT SYSTEM =====
+float invis_teleport_timer[3];
+const float invis_teleport_interval = 2.5f;
+bool invis_is_invisible[3];
+float invis_invisible_timer[3];
+
+// Initialize teleport system
+for(int i = 0; i < invisible_men; i++)
+{
+    invis_teleport_timer[i] = 0.0f;
+    invis_is_invisible[i] = false;
+    invis_invisible_timer[i] = 0.0f;
+}
 
     // CHELNOV (4 total)
     const int chelnovs = 4;
@@ -1591,19 +1630,83 @@ const float max_lifetime = 7.0f;  //Projectiles disappear after 3 seconds
     float chelnov_stun_timer[4];
     Sprite chelnovSprite[4];
 
-    Texture chelnovTexture;
-    chelnovTexture.loadFromFile("chelnov.png");  // You need this image file!
+   // Load Chelnov animation frames
+const int chelnovWalkFrames = 4;
+const int chelnovShootFrames = 4;
+const int chelnovVacuumFrames = 4;
 
-    for(int i = 0; i < chelnovs; i++)
-    {
-        chelnov_active[i] = false;  // Start inactive
-        chelnov_stunned[i] = false;
-        chelnov_stun_timer[i] = 0.0f;
-        chelnov_speed[i] = 1.2f;
-        chelnov_dir[i] = 1;
-        chelnovSprite[i].setTexture(chelnovTexture);
-        chelnovSprite[i].setScale(2, 2);
-    }
+Texture chelnovWalkTextures[4];
+Texture chelnovShootTextures[4];
+Texture chelnovVacuumTextures[4];
+
+// Load walking frames (0-3)
+chelnovWalkTextures[0].loadFromFile("chelnov_walk1.png");
+chelnovWalkTextures[1].loadFromFile("chelnov_walk2.png");
+chelnovWalkTextures[2].loadFromFile("chelnov_walk3.png");
+chelnovWalkTextures[3].loadFromFile("chelnov_walk4.png");
+
+// Load shooting frames (4-7)
+chelnovShootTextures[0].loadFromFile("chelnov_shoot1.png");
+chelnovShootTextures[1].loadFromFile("chelnov_shoot2.png");
+chelnovShootTextures[2].loadFromFile("chelnov_shoot3.png");
+chelnovShootTextures[3].loadFromFile("chelnov_shoot4.png");
+
+// Load vacuum frames (8-11)
+chelnovVacuumTextures[0].loadFromFile("chelnov_vacuum1.png");
+chelnovVacuumTextures[1].loadFromFile("chelnov_vacuum2.png");
+chelnovVacuumTextures[2].loadFromFile("chelnov_vacuum3.png");
+chelnovVacuumTextures[3].loadFromFile("chelnov_vacuum4.png");
+
+// Chelnov animation state tracking
+int chelnovCurrentFrame[4];
+int chelnovFrameCounter[4];
+const int chelnovFrameDelay = 8;
+
+enum ChelnovState { WALKING, SHOOTING, VACUUMED };
+ChelnovState chelnovState[4];
+
+// Chelnov shooting system
+float chelnov_shoot_timer[4];
+const float chelnov_shoot_interval = 4.0f;  // Shoot every 4 seconds
+const float chelnov_shoot_duration = 1.0f;  // 1 second shooting animation
+bool chelnov_is_shooting[4];
+
+// Chelnov projectiles (4 enemies × 1 projectile each = 4 max)
+const int max_chelnov_projectiles = 10;
+float chelnov_proj_x[10];
+float chelnov_proj_y[10];
+float chelnov_proj_vx[10];
+float chelnov_proj_vy[10];
+bool chelnov_proj_active[10];
+float chelnov_proj_lifetime[10];
+const float chelnov_proj_speed = 8.0f;
+const float chelnov_proj_max_lifetime = 5.0f;
+
+// Initialize projectiles
+for(int i = 0; i < max_chelnov_projectiles; i++)
+{
+    chelnov_proj_active[i] = false;
+    chelnov_proj_lifetime[i] = 0.0f;
+}
+
+for(int i = 0; i < chelnovs; i++)
+{
+    chelnov_active[i] = false;
+    chelnov_stunned[i] = false;
+    chelnov_stun_timer[i] = 0.0f;
+    chelnov_speed[i] = 1.2f;
+    chelnov_dir[i] = 1;
+    
+    chelnovSprite[i].setTexture(chelnovWalkTextures[0]);
+    chelnovSprite[i].setScale(2, 2);
+    
+    chelnovCurrentFrame[i] = 0;
+    chelnovFrameCounter[i] = 0;
+    chelnovState[i] = WALKING;
+    
+    chelnov_shoot_timer[i] = 0.0f;
+    chelnov_is_shooting[i] = false;
+}
 
     // Sequential spawn tracking for Level 2
     Clock enemySpawnClock;
@@ -1735,13 +1838,14 @@ Clock platformChangeClock;
         if(xKeyPressed && vacuumActive)
         {
            update_vacuum(
-        player_x, player_y, vacuumDirection, 200.0f, 4.0f,
-        ghost_x, ghost_y, ghost_active, ghost_stunned, ghost_stun_timer, ghosts,
-        skel_x, skel_y, skel_active, skel_stunned, skel_stun_timer, skel,
-        invis_x, invis_y, invis_active, invis_stunned, invis_stun_timer, invisible_men,
-        chelnov_x, chelnov_y, chelnov_active, chelnov_stunned, chelnov_stun_timer, chelnovs,
-        cell_size, true, captured, cap_count, maxCapacity, score
-    );
+    player_x, player_y, vacuumDirection, 200.0f, 4.0f,
+    ghost_x, ghost_y, ghost_active, ghost_stunned, ghost_stun_timer, ghosts,
+    skel_x, skel_y, skel_active, skel_stunned, skel_stun_timer, skel,
+    invis_x, invis_y, invis_active, invis_stunned, invis_stun_timer, invisible_men,
+    chelnov_x, chelnov_y, chelnov_active, chelnov_stunned, chelnov_stun_timer, chelnovs,
+    chelnov_is_shooting,  // <--- ADD THIS PARAMETER
+    cell_size, true, captured, cap_count, maxCapacity, score
+);
         }
 
 
@@ -1949,123 +2053,359 @@ for (int i = 0; i < 20; i++)
 }
 
 
-// ====== INVISIBLE MAN MOVEMENT (Level 2) ======
+// ====== INVISIBLE MAN MOVEMENT WITH TELEPORT ======
 for(int i = 0; i < invisible_men; i++)
 {
     if(!invis_active[i]) continue;
-   
+    
+    // Update invisibility effect
+    if(invis_is_invisible[i])
+    {
+        invis_invisible_timer[i] -= deltaTime;
+        if(invis_invisible_timer[i] <= 0)
+        {
+            invis_is_invisible[i] = false;
+        }
+        
+        // DON'T DRAW when invisible - they disappear completely!
+        continue;
+    }
+    
+    // If stunned, show normal sprite
     if(invis_stunned[i])
     {
         invisSprite[i].setPosition(invis_x[i], invis_y[i]);
         window.draw(invisSprite[i]);
         continue;
     }
-   
-    // Simple left-right movement
+    
+    // Update teleport timer
+    invis_teleport_timer[i] += deltaTime;
+    
+    // Random teleportation event
+    if(invis_teleport_timer[i] >= invis_teleport_interval)
+    {
+        invis_teleport_timer[i] = 0.0f;
+        
+        // 70% chance to teleport, 30% chance to go invisible
+        if(rand() % 100 < 70)
+        {
+            // TELEPORT to random platform
+            int attempts = 0;
+            while(attempts < 10)
+            {
+                int tx = 2 + rand() % 14;
+                int ty = 2 + rand() % 10;
+                
+                if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
+                {
+                    invis_x[i] = tx * cell_size;
+                    invis_y[i] = ty * cell_size;
+                    cout << "[INVISIBLE] Teleported!" << endl;
+                    break;
+                }
+                attempts++;
+            }
+        }
+        else
+        {
+            // Go INVISIBLE
+            invis_is_invisible[i] = true;
+            invis_invisible_timer[i] = 0.8f;
+            cout << "[INVISIBLE] Became invisible!" << endl;
+        }
+    }
+    
+    // Normal left-right movement
     invis_x[i] += invis_speed[i] * invis_dir[i];
-   
+    
     // Check boundaries and turn around
     int tile_x = invis_x[i] / cell_size;
-    int tile_y = invis_y[i] / cell_size;
-   
+    
     if(tile_x <= 1 || tile_x >= width-2)
     {
         invis_dir[i] *= -1;
     }
-   
+    
     invisSprite[i].setPosition(invis_x[i], invis_y[i]);
     window.draw(invisSprite[i]);
 }
 
-// ====== CHELNOV MOVEMENT (Level 2) ======
+// ====== CHELNOV MOVEMENT WITH SHOOTING ======
 for(int i = 0; i < chelnovs; i++)
 {
     if(!chelnov_active[i]) continue;
-   
+    
+    // Update shoot timer
+    chelnov_shoot_timer[i] += deltaTime;
+    
+    // Check if it's time to shoot
+    if(!chelnov_is_shooting[i] && chelnov_shoot_timer[i] >= chelnov_shoot_interval && !chelnov_stunned[i])
+    {
+        // Start shooting
+        chelnov_is_shooting[i] = true;
+        chelnov_shoot_timer[i] = 0.0f;
+        chelnovState[i] = SHOOTING;
+        chelnovCurrentFrame[i] = 0;
+        
+        // Fire projectile HORIZONTALLY - aim at player's X position only
+        float player_dx = player_x - chelnov_x[i];
+        int fire_direction = (player_dx > 0) ? 1 : -1;  // Left or right based on player
+        
+        for(int p = 0; p < max_chelnov_projectiles; p++)
+        {
+            if(!chelnov_proj_active[p])
+            {
+                chelnov_proj_x[p] = chelnov_x[i] + 32;  // Center of Chelnov
+                chelnov_proj_y[p] = chelnov_y[i] + 32;
+                chelnov_proj_vx[p] = chelnov_proj_speed * fire_direction;  // Move toward player
+                chelnov_proj_vy[p] = 0.0f;  // NO vertical movement
+                chelnov_proj_active[p] = true;
+                chelnov_proj_lifetime[p] = 0.0f;
+                
+                cout << "[CHELNOV] Chelnov " << i << " fired projectile!" << endl;
+                break;
+            }
+        }
+    }
+    
+    // Handle shooting duration
+    if(chelnov_is_shooting[i])
+    {
+        if(chelnov_shoot_timer[i] >= chelnov_shoot_duration)
+        {
+            chelnov_is_shooting[i] = false;
+            chelnovState[i] = WALKING;
+            chelnov_shoot_timer[i] = 0.0f;
+        }
+    }
+    
+    // If stunned, show vacuum animation
     if(chelnov_stunned[i])
     {
+        chelnovState[i] = VACUUMED;
+        
+        chelnovFrameCounter[i]++;
+        if(chelnovFrameCounter[i] >= chelnovFrameDelay)
+        {
+            chelnovFrameCounter[i] = 0;
+            chelnovCurrentFrame[i] = (chelnovCurrentFrame[i] + 1) % chelnovVacuumFrames;
+            chelnovSprite[i].setTexture(chelnovVacuumTextures[chelnovCurrentFrame[i]]);
+        }
+        
         chelnovSprite[i].setPosition(chelnov_x[i], chelnov_y[i]);
         window.draw(chelnovSprite[i]);
         continue;
     }
-   
-    // Simple left-right movement
-    chelnov_x[i] += chelnov_speed[i] * chelnov_dir[i];
-   
-    // Check boundaries and turn around
-    int tile_x = chelnov_x[i] / cell_size;
-    int tile_y = chelnov_y[i] / cell_size;
-   
-    if(tile_x <= 1 || tile_x >= width-2)
+    
+    // MOVEMENT - Only if NOT shooting
+    if(!chelnov_is_shooting[i])
     {
-        chelnov_dir[i] *= -1;
+        chelnov_x[i] += chelnov_speed[i] * chelnov_dir[i];
+        
+        int tile_x = chelnov_x[i] / cell_size;
+        int tile_y = chelnov_y[i] / cell_size;
+        
+        // Check walls
+        if(tile_x <= 1 || tile_x >= width-2)
+        {
+            chelnov_dir[i] *= -1;
+        }
+        
+        // Check edges and turn around
+        int next_tile_x = (chelnov_x[i] + chelnov_dir[i] * chelnov_speed[i] * 10) / cell_size;
+        int check_ground_y = (chelnov_y[i] + 64 + 5) / cell_size;
+        
+        if(check_ground_y < height && next_tile_x >= 0 && next_tile_x < width)
+        {
+            if(lvl[check_ground_y][next_tile_x] != '#')
+            {
+                chelnov_dir[i] *= -1;
+            }
+        }
+        
+        // Animate walking
+        chelnovFrameCounter[i]++;
+        if(chelnovFrameCounter[i] >= chelnovFrameDelay)
+        {
+            chelnovFrameCounter[i] = 0;
+            chelnovCurrentFrame[i] = (chelnovCurrentFrame[i] + 1) % chelnovWalkFrames;
+            chelnovSprite[i].setTexture(chelnovWalkTextures[chelnovCurrentFrame[i]]);
+        }
     }
-   
+    else  // SHOOTING - animate but don't move
+    {
+        chelnovFrameCounter[i]++;
+        if(chelnovFrameCounter[i] >= chelnovFrameDelay)
+        {
+            chelnovFrameCounter[i] = 0;
+            chelnovCurrentFrame[i] = (chelnovCurrentFrame[i] + 1) % chelnovShootFrames;
+            chelnovSprite[i].setTexture(chelnovShootTextures[chelnovCurrentFrame[i]]);
+        }
+    }
+    
+    // Flip sprite based on direction
+    if(chelnov_dir[i] == 1)
+        chelnovSprite[i].setScale(-2, 2);
+    else
+        chelnovSprite[i].setScale(2, 2);
+    
     chelnovSprite[i].setPosition(chelnov_x[i], chelnov_y[i]);
     window.draw(chelnovSprite[i]);
 }
-        // ====== GHOST MOVEMENT
-       for(int i = 0; i < ghosts; i++)
-{
-    if(!ghost_active[i]) continue; // skip inactive ghosts
 
- if(ghost_stunned[i])
+// ====== UPDATE CHELNOV PROJECTILES ======
+for(int p = 0; p < max_chelnov_projectiles; p++)
+{
+    if(!chelnov_proj_active[p]) continue;
+    
+    // Update lifetime
+    chelnov_proj_lifetime[p] += deltaTime;
+    if(chelnov_proj_lifetime[p] >= chelnov_proj_max_lifetime)
     {
-        // Just draw the ghost in place, don't move it
+        chelnov_proj_active[p] = false;
+        continue;
+    }
+    
+    // Move projectile HORIZONTALLY ONLY
+    chelnov_proj_x[p] += chelnov_proj_vx[p];
+    
+    // Check screen bounds
+    if(chelnov_proj_x[p] < 0 || chelnov_proj_x[p] > screen_x ||
+       chelnov_proj_y[p] < 0 || chelnov_proj_y[p] > screen_y)
+    {
+        chelnov_proj_active[p] = false;
+        continue;
+    }
+    
+    // Check collision with player
+    if(!playerDead)
+    {
+        float dx = chelnov_proj_x[p] - (player_x + PlayerWidth/2);
+        float dy = chelnov_proj_y[p] - (player_y + PlayerHeight/2);
+        float dist = sqrt(dx*dx + dy*dy);
+        
+        if(dist < 40)
+        {
+            // Hit player!
+            playerDead = true;
+            deathClock.restart();
+            score -= 50;
+            if(score < 0) score = 0;
+            combo = 0;
+            comboMultiplier = 1.0f;
+            chelnov_proj_active[p] = false;
+            
+            cout << "[CHELNOV] Projectile hit player!" << endl;
+            continue;
+        }
+    }
+    
+    // Draw projectile (red circle)
+    CircleShape projShape(8);
+    projShape.setFillColor(Color::Red);
+    projShape.setPosition(chelnov_proj_x[p] - 8, chelnov_proj_y[p] - 8);
+    window.draw(projShape);
+}
+// ====== UPDATE CHELNOV PROJECTILES ======
+for(int p = 0; p < max_chelnov_projectiles; p++)
+{
+    if(!chelnov_proj_active[p]) continue;
+    
+    // Update lifetime
+    chelnov_proj_lifetime[p] += deltaTime;
+    if(chelnov_proj_lifetime[p] >= chelnov_proj_max_lifetime)
+    {
+        chelnov_proj_active[p] = false;
+        continue;
+    }
+    
+    // Move projectile
+    chelnov_proj_x[p] += chelnov_proj_vx[p];
+    chelnov_proj_y[p] += chelnov_proj_vy[p];
+    
+    // Check screen bounds
+    if(chelnov_proj_x[p] < 0 || chelnov_proj_x[p] > screen_x ||
+       chelnov_proj_y[p] < 0 || chelnov_proj_y[p] > screen_y)
+    {
+        chelnov_proj_active[p] = false;
+        continue;
+    }
+    
+    // Check collision with player
+    if(!playerDead)
+    {
+        float dx = chelnov_proj_x[p] - (player_x + PlayerWidth/2);
+        float dy = chelnov_proj_y[p] - (player_y + PlayerHeight/2);
+        float dist = sqrt(dx*dx + dy*dy);
+        
+        if(dist < 40)
+        {
+            // Hit player!
+            playerDead = true;
+            deathClock.restart();
+            score -= 50;
+            if(score < 0) score = 0;
+            combo = 0;
+            comboMultiplier = 1.0f;
+            chelnov_proj_active[p] = false;
+            
+            cout << "[CHELNOV] Projectile hit player!" << endl;
+            continue;
+        }
+    }
+    
+    // Draw projectile (red circle)
+    CircleShape projShape(8);
+    projShape.setFillColor(Color::Red);
+    projShape.setPosition(chelnov_proj_x[p] - 8, chelnov_proj_y[p] - 8);
+    window.draw(projShape);
+}
+        // ====== GHOST MOVEMENT WITH ANIMATION ======
+for(int i = 0; i < ghosts; i++)
+{
+    if(!ghost_active[i]) continue;
+
+    if(ghost_stunned[i])
+    {
         ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
         window.draw(ghostSprite[i]);
-        continue;  // Skip all movement logic
+        continue;
     }
 
-    // Find tile coordinates for ground checks
     int bottomLeftX = ghost_x[i] / cell_size;
     int bottomRightX = (ghost_x[i] + 64) / cell_size;
     int bottomY = (ghost_y[i] + 64) / cell_size;
 
-    // If ghost stands on a block, mark onGround true
     if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
     {
         ghost_onGround[i] = true;
     }
 
-    // HORIZONTAL MOVEMENT - only if on ground
     if(ghost_onGround[i])
     {
         float nextX = ghost_x[i] + ghost_speed[i] * ghost_dir[i];
 
-        // front tile X coordinate (depending on direction)
         int frontTileX = (nextX + (ghost_dir[i] == 1 ? 64 : 0)) / cell_size;
         int midTileY = (ghost_y[i] + 32) / cell_size;
 
-        // edge check: if no ground ahead then turn
         int edgeCheckX = (nextX + (ghost_dir[i] == 1 ? 64 : 0)) / cell_size;
         int edgeCheckY = (ghost_y[i] + 64 + 1) / cell_size;
 
-        // Turn around if there's a wall ahead OR no ground ahead (edge)
         if(lvl[midTileY][frontTileX] == '#' || lvl[edgeCheckY][edgeCheckX] != '#')
         {
             ghost_dir[i] *= -1;
-        if(ghost_dir[i] == 1) // Now moving right
-    {
-        ghostSprite[i].setScale(-2, 2);
-       
-    }
-   
-   
-    else // Now moving left
-    {
-        ghostSprite[i].setScale(2, 2);
-               
-
-    }
-    }
-    else
-       
+            if(ghost_dir[i] == 1)
+                ghostSprite[i].setScale(-2, 2);
+            else
+                ghostSprite[i].setScale(2, 2);
+        }
+        else
         {
             ghost_x[i] = nextX;
         }
-       
-        // ANIMATE GHOST WHILE MOVING
+        
+        // ANIMATE GHOST
         ghostFrameCounter[i]++;
         if(ghostFrameCounter[i] >= ghostFrameDelay)
         {
@@ -2075,154 +2415,134 @@ for(int i = 0; i < chelnovs; i++)
         }
     }
 
-    // update sprite position and draw
     ghostSprite[i].setPosition(ghost_x[i], ghost_y[i]);
     window.draw(ghostSprite[i]);
 }
 
+        // ====== SKELETON MOVEMENT WITH ANIMATION ======
+for(int j = 0; j < skel; j++)
+{
+    if(!skel_active[j]) continue;
 
-       // ====== SKELETON MOVEMENT WITH GRAVITY AND TIMED JUMPING ======
-        for(int j = 0; j < skel; j++)
+    if(skel_stunned[j])
+    {
+        skelSprite[j].setPosition(skel_x[j], skel_y[j]);
+        window.draw(skelSprite[j]);
+        continue;
+    }
+
+    skel_jump_timer[j] += deltaTime;
+
+    if(!skel_onGround[j])
+    {
+        skel_velocityY[j] += gravity;
+        if(skel_velocityY[j] > terminal_Velocity)
         {
-            if(!skel_active[j]) continue;  // skip inactive skeletons
+            skel_velocityY[j] = terminal_Velocity;
+        }
+    }
 
-            if(skel_stunned[j])
+    float nextY = skel_y[j] + skel_velocityY[j];
+
+    if(skel_velocityY[j] < 0)
+    {
+        int top_y = (int)(nextY) / cell_size;
+        
+        if(top_y <= 0)
+        {
+            int left_x = (int)(skel_x[j]) / cell_size;
+            int mid_x = (int)(skel_x[j] + 32) / cell_size;
+            int right_x = (int)(skel_x[j] + 64) / cell_size;
+            
+            if(lvl[0][left_x] == '#' || lvl[0][mid_x] == '#' || lvl[0][right_x] == '#')
             {
-                // Just draw the skeleton in place, don't move it
-                skelSprite[j].setPosition(skel_x[j], skel_y[j]);
-                window.draw(skelSprite[j]);
-                continue;  // Skip all movement logic
-            }
-
-            // Update jump timer
-            skel_jump_timer[j] += deltaTime;
-
-            // Apply gravity first
-            if(!skel_onGround[j])
-            {
-                skel_velocityY[j] += gravity;
-                if(skel_velocityY[j] > terminal_Velocity)
-                {
-                    skel_velocityY[j] = terminal_Velocity;
-                }
-            }
-
-            // GRAVITY - predict next vertical position
-            float nextY = skel_y[j] + skel_velocityY[j];
-
-            // ===== ONLY CHECK TOP BOUNDARY (ROW 0) - Skeleton can jump through all other blocks =====
-            if(skel_velocityY[j] < 0)  // Moving upward (jumping)
-            {
-                int top_y = (int)(nextY) / cell_size;
-               
-                // Only check if trying to go into or above row 0 (top ceiling)
-                if(top_y <= 0)
-                {
-                    int left_x = (int)(skel_x[j]) / cell_size;
-                    int mid_x = (int)(skel_x[j] + 32) / cell_size;
-                    int right_x = (int)(skel_x[j] + 64) / cell_size;
-                   
-                    // Check if hitting the TOP ROW blocks
-                    if(lvl[0][left_x] == '#' || lvl[0][mid_x] == '#' || lvl[0][right_x] == '#')
-                    {
-                        // Hit top ceiling - stop upward movement
-                        skel_velocityY[j] = 0;
-                        skel_y[j] = cell_size;  // Position just below row 0
-                        skel_onGround[j] = false;
-                    }
-                    else
-                    {
-                        // Not hitting blocks, move freely
-                        skel_y[j] = nextY;
-                        skel_onGround[j] = false;
-                    }
-                }
-                else
-                {
-                    // If not near top row, move freely upward through other blocks
-                    skel_y[j] = nextY;
-                    skel_onGround[j] = false;
-                }
-            }
-            // Check ground collision when FALLING DOWN only (same as player)
-            else if(skel_velocityY[j] > 0)
-            {
-                // Check ground collision (bottom of skeleton)
-                int bottomLeftX = skel_x[j] / cell_size;
-                int bottomRightX = (skel_x[j] + 64) / cell_size;
-                int bottomY = (nextY + 64) / cell_size;
-
-                if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
-                {
-                    // landed on platform
-                    skel_onGround[j] = true;
-                    skel_velocityY[j] = 0;
-                    // Don't update position - stay on platform
-                }
-                else
-                {
-                    // falling
-                    skel_y[j] = nextY;
-                    skel_onGround[j] = false;
-                }
+                skel_velocityY[j] = 0;
+                skel_y[j] = cell_size;
+                skel_onGround[j] = false;
             }
             else
             {
-                // When jumping UP, move freely through blocks (like player)
                 skel_y[j] = nextY;
                 skel_onGround[j] = false;
             }
-
-            // HORIZONTAL MOVEMENT - only move left/right if on ground
-            if(skel_onGround[j])
-            {
-                // CHECK IF IT'S TIME TO JUMP (every 10-11 seconds)
-                if(skel_jump_timer[j] >= skel_next_jump_time[j])
-                {
-                    // JUMP! - Give skeleton upward velocity
-                    skel_velocityY[j] = -20.0f;  // Increased jump strength (higher jump)
-                    skel_onGround[j] = false;
-                   
-                    // Reset timer and set next random jump time (10-11 seconds)
-                    skel_jump_timer[j] = 0.0f;
-                    skel_next_jump_time[j] = 10.0f + (rand() % 2);  // Random 10 or 11 seconds
-                   
-                    // Randomly change direction 50% of the time
-                    if(rand() % 2 == 0)
-                    {
-                        skel_dir[j] *= -1;  // Turn around while jumping
-                    }
-                }
-                else
-                {
-                    // Normal walking - check for walls
-                    float nextp = skel_x[j] + skel_speed[j] * skel_dir[j];
-
-                    // Check the tile directly in front of the skeleton
-                    int frontskelX = (nextp + (skel_dir[j] == 1 ? 64 : 0)) / cell_size;
-                    int midTileY = (skel_y[j] + 32) / cell_size;
-
-                    // Check if there's a gap ahead (no ground to walk on)
-                    int edgeCheckX = (nextp + (skel_dir[j] == 1 ? 64 : 0)) / cell_size;
-                    int edgeCheckY = (skel_y[j] + 64 + 1) / cell_size;
-
-                    // Turn around if there's a wall OR edge ahead
-                    if(lvl[midTileY][frontskelX] == '#' || lvl[edgeCheckY][edgeCheckX] != '#')
-                    {
-                        skel_dir[j] *= -1;  // Turn around
-                    }
-                    else
-                    {
-                        // No obstacle - keep walking
-                        skel_x[j] = nextp;
-                    }
-                }
-            }
-
-            skelSprite[j].setPosition(skel_x[j], skel_y[j]);
-            window.draw(skelSprite[j]);
         }
- 
+        else
+        {
+            skel_y[j] = nextY;
+            skel_onGround[j] = false;
+        }
+    }
+    else if(skel_velocityY[j] > 0)
+    {
+        int bottomLeftX = skel_x[j] / cell_size;
+        int bottomRightX = (skel_x[j] + 64) / cell_size;
+        int bottomY = (nextY + 64) / cell_size;
+
+        if(lvl[bottomY][bottomLeftX] == '#' || lvl[bottomY][bottomRightX] == '#')
+        {
+            skel_onGround[j] = true;
+            skel_velocityY[j] = 0;
+        }
+        else
+        {
+            skel_y[j] = nextY;
+            skel_onGround[j] = false;
+        }
+    }
+    else
+    {
+        skel_y[j] = nextY;
+        skel_onGround[j] = false;
+    }
+
+    if(skel_onGround[j])
+    {
+        if(skel_jump_timer[j] >= skel_next_jump_time[j])
+        {
+            skel_velocityY[j] = -20.0f;
+            skel_onGround[j] = false;
+            
+            skel_jump_timer[j] = 0.0f;
+            skel_next_jump_time[j] = 10.0f + (rand() % 2);
+            
+            if(rand() % 2 == 0)
+            {
+                skel_dir[j] *= -1;
+            }
+        }
+        else
+        {
+            float nextp = skel_x[j] + skel_speed[j] * skel_dir[j];
+
+            int frontskelX = (nextp + (skel_dir[j] == 1 ? 64 : 0)) / cell_size;
+            int midTileY = (skel_y[j] + 32) / cell_size;
+
+            int edgeCheckX = (nextp + (skel_dir[j] == 1 ? 64 : 0)) / cell_size;
+            int edgeCheckY = (skel_y[j] + 64 + 1) / cell_size;
+
+            if(lvl[midTileY][frontskelX] == '#' || lvl[edgeCheckY][edgeCheckX] != '#')
+            {
+                skel_dir[j] *= -1;
+            }
+            else
+            {
+                skel_x[j] = nextp;
+            }
+        }
+        
+        // ANIMATE SKELETON
+        skelFrameCounter[j]++;
+        if(skelFrameCounter[j] >= skelFrameDelay)
+        {
+            skelFrameCounter[j] = 0;
+            skelCurrentFrame[j] = (skelCurrentFrame[j] + 1) % skelAnimationFrames;
+            skelSprite[j].setTexture(skelWalkTextures[skelCurrentFrame[j]]);
+        }
+    }
+
+    skelSprite[j].setPosition(skel_x[j], skel_y[j]);
+    window.draw(skelSprite[j]);
+}
   // ====== CHECK PLAYER-ENEMY COLLISIONS ======
 if(!playerDead)
 {
@@ -2442,7 +2762,8 @@ if(currentLevel == 2 && level2EnemiesSpawning)
                 }
             }
         }
-        // Finally spawn skeletons (11-19)
+        
+        // Finally spawn skeletons (11-19) - now up to 9 skeletons in level 2
         else if(enemiesSpawned >= 11 && enemiesSpawned < 20)
         {
             int idx = enemiesSpawned - 11;
@@ -2457,12 +2778,19 @@ if(currentLevel == 2 && level2EnemiesSpawning)
                     skel_y[idx] = ty * cell_size;
                     skel_active[idx] = true;
                     skel_dir[idx] = (rand() % 2 == 0) ? -1 : 1;
+                    skel_jump_timer[idx] = 0.0f;
+                    skel_next_jump_time[idx] = 2.0f + (rand() % 3);
+                    skel_stunned[idx] = false;
+                    skel_stun_timer[idx] = 0.0f;
+                    skelSprite[idx].setTexture(skelTexture);
+                    skelSprite[idx].setScale(2, 2);
                     skelSprite[idx].setPosition(skel_x[idx], skel_y[idx]);
                     cout << "[SPAWN] Skeleton " << (idx+1) << " spawned!" << endl;
                     break;
                 }
             }
         }
+        
        
         enemiesSpawned++;
        
@@ -2588,6 +2916,7 @@ if(elapsed >= levelCompleteDelay)
     cout << "[LEVEL] Now in Level 2! First platform already placed." << endl;
 }
 }
+
 window.display();
 
 }
