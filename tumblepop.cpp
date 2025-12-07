@@ -38,7 +38,13 @@ void update_vacuum(float player_x, float player_y, int vacuumDirection, float va
     float chelnov_x[], float chelnov_y[], bool chelnov_active[], bool chelnov_stunned[], float chelnov_stun_timer[], int chelnov_count,
     bool chelnov_is_shooting[],  // <--- ADD THIS PARAMETER
     const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
+<<<<<<< HEAD
     void generate_random_slanted_platform(char** lvl, int height, int width, bool clearOld);
+=======
+    
+    void generate_random_slanted_platform(char** lvl, int height, int width);
+    
+>>>>>>> e04ab792a9fab2c4e703eb89ec6051e652b8f303
 void shoot_single_enemy(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
 void shoot_burst_mode(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], bool shot_is_active[], float shot_lifetime[], float deltaTime, float max_lifetime, int shot_count, char** lvl, int cell_size, int height);
@@ -138,6 +144,7 @@ void change_to_level2(char** lvl, int height, int width)
 }
 void generate_random_slanted_platform(char** lvl, int height, int width, bool clearOld)
 {
+<<<<<<< HEAD
     cout << "[DEBUG] Starting platform generation (1:1 Slanted Tread Wedge)." << endl;
     // STEP 1: CLEAR OLD SLANTED PLATFORMS
     if(clearOld)
@@ -156,9 +163,13 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
    
     // STEP 2: DEFINE RAMP PROPERTIES
     int length = 5;
+=======
+    int start_x = -1;
+    int start_y = -1;
+>>>>>>> e04ab792a9fab2c4e703eb89ec6051e652b8f303
     int attempts = 0;
-    bool placed = false;
    
+<<<<<<< HEAD
     // STEP 3 & 4: TRY TO PLACE AND VALIDATE
     while(attempts < 100 && !placed)
     {
@@ -220,11 +231,25 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
             cout << "[PLATFORM] ✓ Slanted ramp created! Direction: "
                  << (direction == 0 ? "/# (Up-Right)" : "#\\ (Up-Left)")
                  << " | Start: (" << start_x << ", " << start_y << ")" << endl;
+=======
+    while(attempts < 50 && start_x == -1)
+    {
+        int rand_x = 3 + rand() % 12;  // Random X between 3-14
+        int rand_y = 7 + rand() % 3;    // Random Y between 7-9 (accessible area)
+       
+        // Check if this position is valid (empty and has ground below)
+        if(rand_y + 1 < height && lvl[rand_y][rand_x] == ' ' && lvl[rand_y + 1][rand_x] == '#')
+        {
+            start_x = rand_x;
+            start_y = rand_y;
+            lvl[start_y][start_x] = '#';  // Place first block
+>>>>>>> e04ab792a9fab2c4e703eb89ec6051e652b8f303
         }
        
         attempts++;
     }
    
+<<<<<<< HEAD
     // ===== STEP 6: BACKUP PLATFORM IF FAILED =====
     if(!placed)
     {
@@ -233,8 +258,69 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
         for(int j = 7; j <= 10; ++j) {
             lvl[backup_y][j] = '#';
         }
+=======
+    if(start_x == -1)
+    {
+        cout << "[PLATFORM] Failed to find valid starting position!" << endl;
+        return;
+>>>>>>> e04ab792a9fab2c4e703eb89ec6051e652b8f303
     }
+   
+    // ===== SLOPE FORMULA: y = mx + b =====
+    // We use: new_y = start_y + (slope * (new_x - start_x))
+    // Choose random slope direction and steepness
+   
+    int direction = rand() % 2;  // 0 = slope up-right, 1 = slope up-left
+    float slope = 0.5f + (rand() % 3) * 0.25f;  // Slope: 0.5, 0.75, or 1.0
+    int platform_length = 6 + rand() % 3;  // Length: 6-8 blocks
+   
+    cout << "[PLATFORM] Starting position: (" << start_x << ", " << start_y 
+         << ") | Direction: " << (direction == 0 ? "right" : "left") 
+         << " | Slope: " << slope << " | Length: " << platform_length << endl;
+   
+    // ===== PLACE BLOCKS USING SLOPE FORMULA =====
+    for(int step = 1; step < platform_length; step++)
+    {
+        int block_x;
+        int block_y;
+       
+        if(direction == 0)  // Up-right slope (moving right, going up)
+        {
+            block_x = start_x + step;
+            // Using slope formula: y = start_y - (slope * step)
+            // Negative because Y increases downward but we want to go UP
+            block_y = start_y - (int)(slope * step);
+        }
+        else  // Up-left slope (moving left, going up)
+        {
+            block_x = start_x - step;
+            block_y = start_y - (int)(slope * step);
+        }
+       
+        // ===== BOUNDS CHECK =====
+        if(block_x <= 1 || block_x >= width - 1 || block_y <= 1 || block_y >= height - 6)
+        {
+            cout << "[PLATFORM] Slope hit boundary at step " << step << endl;
+            break;
+        }
+       
+        // ===== CHECK FOR COLLISION WITH EXISTING BLOCKS =====
+        if(lvl[block_y][block_x] != ' ')
+        {
+            cout << "[PLATFORM] Slope hit existing block at (" << block_x << ", " << block_y << ")" << endl;
+            break;
+        }
+       
+        // ===== PLACE BLOCK =====
+        lvl[block_y][block_x] = '#';
+        
+        cout << "[BLOCK] Placed at (" << block_x << ", " << block_y << ")" << endl;
+    }
+   
+    cout << "[PLATFORM] Slanted platform generated successfully!" << endl;
 }
+   
+    
 
 
 // Next display level 2 window
@@ -278,6 +364,7 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSpr
         }
     }
 }
+
 
 
 // This functioin is to check if player is not standing on the blocks then it must fall
@@ -1374,7 +1461,7 @@ const int ghostFrameDelay = 10; // aniimation speed
 ghostWalkTextures[0].loadFromFile("ghost1.png");
 ghostWalkTextures[1].loadFromFile("ghost2.png");
 ghostWalkTextures[2].loadFromFile("ghost3.png");
-ghostWalkTextures[3].loadFromFile("ghost4.png");\
+ghostWalkTextures[3].loadFromFile("ghost4.png");
 
 // ===== SKELETON ANIMATION FRAMES =====
 const int skel =4;
