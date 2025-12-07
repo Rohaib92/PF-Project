@@ -31,31 +31,25 @@ float get_character_speed(int characterIndex, float baseSpeed)
 
 // Vacuum and Shooting
 
-void update_vacuum(float player_x, float player_y, int vacuumDirection, float vacuum_range, float suck_strength, 
-    float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts, 
+void update_vacuum(float player_x, float player_y, int vacuumDirection, float vacuum_range, float suck_strength,
+    float ghost_x[], float ghost_y[], bool ghost_active[], bool ghost_stunned[], float ghost_stun_timer[], int ghosts,
     float skel_x[], float skel_y[], bool skel_active[], bool skel_stunned[], float skel_stun_timer[], int skel,
     float invis_x[], float invis_y[], bool invis_active[], bool invis_stunned[], float invis_stun_timer[], int invis_count,
     float chelnov_x[], float chelnov_y[], bool chelnov_active[], bool chelnov_stunned[], float chelnov_stun_timer[], int chelnov_count,
     bool chelnov_is_shooting[],  // <--- ADD THIS PARAMETER
     const int cell_size, bool vacuum_on, int captured[], int &cap_count, int max_capacity, int &score);
-<<<<<<< HEAD
     void generate_random_slanted_platform(char** lvl, int height, int width, bool clearOld);
-=======
-    
-    void generate_random_slanted_platform(char** lvl, int height, int width);
-    
->>>>>>> e04ab792a9fab2c4e703eb89ec6051e652b8f303
 void shoot_single_enemy(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
 void shoot_burst_mode(float player_x, float player_y, int vacuum_dir, int captured[], int& cap_count, float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], int shot_enemy_type[], bool shot_is_active[], int& shot_count);
 void update_projectiles(float shot_enemy_x[], float shot_enemy_y[], float shot_velocity_x[], float shot_velocity_y[], bool shot_is_active[], float shot_lifetime[], float deltaTime, float max_lifetime, int shot_count, char** lvl, int cell_size, int height);
 
-bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count, 
-    float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts, 
+bool check_projectile_hits(float shot_enemy_x[], float shot_enemy_y[], bool shot_is_active[], int shot_count,
+    float ghost_x[], float ghost_y[], bool ghost_active[], int total_ghosts,
     float skel_x[], float skel_y[], bool skel_active[], int total_skels,
     float invis_x[], float invis_y[], bool invis_active[], int total_invis,
     float chelnov_x[], float chelnov_y[], bool chelnov_active[], int total_chelnov,
     int& hit_projectile, int& hit_enemy_index, int& hit_enemy_type);
-    
+   
 // Level 2 helper functions
 bool is_platform_reachable(char** lvl, int x, int y, int width, int height);
 
@@ -76,12 +70,12 @@ bool check_level_complete(bool ghost_active[], int total_ghosts,
     {
         if(skel_active[i]) return false;
     }
-    
+   
     for(int i = 0; i < total_invis; i++)
     {
         if(invis_active[i]) return false;
     }
-    
+   
     for(int i = 0; i < total_chelnov; i++)
     {
         if(chelnov_active[i]) return false;
@@ -144,7 +138,6 @@ void change_to_level2(char** lvl, int height, int width)
 }
 void generate_random_slanted_platform(char** lvl, int height, int width, bool clearOld)
 {
-<<<<<<< HEAD
     cout << "[DEBUG] Starting platform generation (1:1 Slanted Tread Wedge)." << endl;
     // STEP 1: CLEAR OLD SLANTED PLATFORMS
     if(clearOld)
@@ -163,13 +156,9 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
    
     // STEP 2: DEFINE RAMP PROPERTIES
     int length = 5;
-=======
-    int start_x = -1;
-    int start_y = -1;
->>>>>>> e04ab792a9fab2c4e703eb89ec6051e652b8f303
     int attempts = 0;
+    bool placed = false;
    
-<<<<<<< HEAD
     // STEP 3 & 4: TRY TO PLACE AND VALIDATE
     while(attempts < 100 && !placed)
     {
@@ -218,7 +207,7 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
                 int y = start_y - i;
                
                 // FIXED: Slope on LEFT for /, slope on RIGHT for \
-                
+               
                 int x_slope = (direction == 0) ? start_x + i : start_x - i;
                 int x_block = (direction == 0) ? x_slope + 1 : x_slope - 1;  // SWAPPED!
                
@@ -231,25 +220,11 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
             cout << "[PLATFORM] ✓ Slanted ramp created! Direction: "
                  << (direction == 0 ? "/# (Up-Right)" : "#\\ (Up-Left)")
                  << " | Start: (" << start_x << ", " << start_y << ")" << endl;
-=======
-    while(attempts < 50 && start_x == -1)
-    {
-        int rand_x = 3 + rand() % 12;  // Random X between 3-14
-        int rand_y = 7 + rand() % 3;    // Random Y between 7-9 (accessible area)
-       
-        // Check if this position is valid (empty and has ground below)
-        if(rand_y + 1 < height && lvl[rand_y][rand_x] == ' ' && lvl[rand_y + 1][rand_x] == '#')
-        {
-            start_x = rand_x;
-            start_y = rand_y;
-            lvl[start_y][start_x] = '#';  // Place first block
->>>>>>> e04ab792a9fab2c4e703eb89ec6051e652b8f303
         }
        
         attempts++;
     }
    
-<<<<<<< HEAD
     // ===== STEP 6: BACKUP PLATFORM IF FAILED =====
     if(!placed)
     {
@@ -258,69 +233,8 @@ void generate_random_slanted_platform(char** lvl, int height, int width, bool cl
         for(int j = 7; j <= 10; ++j) {
             lvl[backup_y][j] = '#';
         }
-=======
-    if(start_x == -1)
-    {
-        cout << "[PLATFORM] Failed to find valid starting position!" << endl;
-        return;
->>>>>>> e04ab792a9fab2c4e703eb89ec6051e652b8f303
     }
-   
-    // ===== SLOPE FORMULA: y = mx + b =====
-    // We use: new_y = start_y + (slope * (new_x - start_x))
-    // Choose random slope direction and steepness
-   
-    int direction = rand() % 2;  // 0 = slope up-right, 1 = slope up-left
-    float slope = 0.5f + (rand() % 3) * 0.25f;  // Slope: 0.5, 0.75, or 1.0
-    int platform_length = 6 + rand() % 3;  // Length: 6-8 blocks
-   
-    cout << "[PLATFORM] Starting position: (" << start_x << ", " << start_y 
-         << ") | Direction: " << (direction == 0 ? "right" : "left") 
-         << " | Slope: " << slope << " | Length: " << platform_length << endl;
-   
-    // ===== PLACE BLOCKS USING SLOPE FORMULA =====
-    for(int step = 1; step < platform_length; step++)
-    {
-        int block_x;
-        int block_y;
-       
-        if(direction == 0)  // Up-right slope (moving right, going up)
-        {
-            block_x = start_x + step;
-            // Using slope formula: y = start_y - (slope * step)
-            // Negative because Y increases downward but we want to go UP
-            block_y = start_y - (int)(slope * step);
-        }
-        else  // Up-left slope (moving left, going up)
-        {
-            block_x = start_x - step;
-            block_y = start_y - (int)(slope * step);
-        }
-       
-        // ===== BOUNDS CHECK =====
-        if(block_x <= 1 || block_x >= width - 1 || block_y <= 1 || block_y >= height - 6)
-        {
-            cout << "[PLATFORM] Slope hit boundary at step " << step << endl;
-            break;
-        }
-       
-        // ===== CHECK FOR COLLISION WITH EXISTING BLOCKS =====
-        if(lvl[block_y][block_x] != ' ')
-        {
-            cout << "[PLATFORM] Slope hit existing block at (" << block_x << ", " << block_y << ")" << endl;
-            break;
-        }
-       
-        // ===== PLACE BLOCK =====
-        lvl[block_y][block_x] = '#';
-        
-        cout << "[BLOCK] Placed at (" << block_x << ", " << block_y << ")" << endl;
-    }
-   
-    cout << "[PLATFORM] Slanted platform generated successfully!" << endl;
 }
-   
-    
 
 
 // Next display level 2 window
@@ -364,7 +278,6 @@ void display_level(RenderWindow& window, char**lvl, Texture& bgTex,Sprite& bgSpr
         }
     }
 }
-
 
 
 // This functioin is to check if player is not standing on the blocks then it must fall
@@ -781,7 +694,7 @@ void update_vacuum(
 for (int i = 0; i < chelnov_count; i++)
 {
     if (!chelnov_active[i]) continue;
-    
+   
     // CRITICAL: Cannot capture during shooting phase
     if (chelnov_is_shooting[i])
     {
@@ -1461,7 +1374,7 @@ const int ghostFrameDelay = 10; // aniimation speed
 ghostWalkTextures[0].loadFromFile("ghost1.png");
 ghostWalkTextures[1].loadFromFile("ghost2.png");
 ghostWalkTextures[2].loadFromFile("ghost3.png");
-ghostWalkTextures[3].loadFromFile("ghost4.png");
+ghostWalkTextures[3].loadFromFile("ghost4.png");\
 
 // ===== SKELETON ANIMATION FRAMES =====
 const int skel =4;
@@ -1740,14 +1653,14 @@ for(int i = 0; i < chelnovs; i++)
     chelnov_stun_timer[i] = 0.0f;
     chelnov_speed[i] = 1.2f;
     chelnov_dir[i] = 1;
-    
+   
     chelnovSprite[i].setTexture(chelnovWalkTextures[0]);
     chelnovSprite[i].setScale(2, 2);
-    
+   
     chelnovCurrentFrame[i] = 0;
     chelnovFrameCounter[i] = 0;
     chelnovState[i] = WALKING;
-    
+   
     chelnov_shoot_timer[i] = 0.0f;
     chelnov_is_shooting[i] = false;
 }
@@ -1758,7 +1671,7 @@ for(int i = 0; i < chelnovs; i++)
     const float spawnInterval = 2.5f;  // Spawn an enemy every 2.5 seconds
     bool level2EnemiesSpawning = false;
     // Platform spawning for Level 2
-    
+   
 Clock platformChangeClock;
 bool platformNeedsRegen = true;
    
@@ -1916,7 +1829,7 @@ bool platformNeedsRegen = true;
             {
                 shoot_burst_mode(player_x, player_y, vacuumDirection, captured, cap_count,
                 shot_enemy_x, shot_enemy_y, shot_velocity_x, shot_velocity_y,
-                shot_enemy_type, shot_is_active, shot_lifetime, shot_projectile_count); 
+                shot_enemy_type, shot_is_active, shot_lifetime, shot_projectile_count);
             }
         }
 
@@ -2101,7 +2014,7 @@ for (int i = 0; i < 20; i++)
 for(int i = 0; i < invisible_men; i++)
 {
     if(!invis_active[i]) continue;
-    
+   
     // Update invisibility effect
     if(invis_is_invisible[i])
     {
@@ -2110,11 +2023,11 @@ for(int i = 0; i < invisible_men; i++)
         {
             invis_is_invisible[i] = false;
         }
-        
+       
         // DON'T DRAW when invisible - they disappear completely!
         continue;
     }
-    
+   
     // If stunned, show normal sprite
     if(invis_stunned[i])
     {
@@ -2122,15 +2035,15 @@ for(int i = 0; i < invisible_men; i++)
         window.draw(invisSprite[i]);
         continue;
     }
-    
+   
     // Update teleport timer
     invis_teleport_timer[i] += deltaTime;
-    
+   
     // Random teleportation event
     if(invis_teleport_timer[i] >= invis_teleport_interval)
     {
         invis_teleport_timer[i] = 0.0f;
-        
+       
         // 70% chance to teleport, 30% chance to go invisible
         if(rand() % 100 < 70)
         {
@@ -2140,7 +2053,7 @@ for(int i = 0; i < invisible_men; i++)
             {
                 int tx = 2 + rand() % 14;
                 int ty = 2 + rand() % 10;
-                
+               
                 if(lvl[ty][tx] != '#' && lvl[ty + 1][tx] == '#')
                 {
                     invis_x[i] = tx * cell_size;
@@ -2159,18 +2072,18 @@ for(int i = 0; i < invisible_men; i++)
             cout << "[INVISIBLE] Became invisible!" << endl;
         }
     }
-    
+   
     // Normal left-right movement
     invis_x[i] += invis_speed[i] * invis_dir[i];
-    
+   
     // Check boundaries and turn around
     int tile_x = invis_x[i] / cell_size;
-    
+   
     if(tile_x <= 1 || tile_x >= width-2)
     {
         invis_dir[i] *= -1;
     }
-    
+   
     invisSprite[i].setPosition(invis_x[i], invis_y[i]);
     window.draw(invisSprite[i]);
 }
@@ -2179,10 +2092,10 @@ for(int i = 0; i < invisible_men; i++)
 for(int i = 0; i < chelnovs; i++)
 {
     if(!chelnov_active[i]) continue;
-    
+   
     // Update shoot timer
     chelnov_shoot_timer[i] += deltaTime;
-    
+   
     // Check if it's time to shoot
     if(!chelnov_is_shooting[i] && chelnov_shoot_timer[i] >= chelnov_shoot_interval && !chelnov_stunned[i])
     {
@@ -2191,11 +2104,11 @@ for(int i = 0; i < chelnovs; i++)
         chelnov_shoot_timer[i] = 0.0f;
         chelnovState[i] = SHOOTING;
         chelnovCurrentFrame[i] = 0;
-        
+       
         // Fire projectile HORIZONTALLY - aim at player's X position only
         float player_dx = player_x - chelnov_x[i];
         int fire_direction = (player_dx > 0) ? 1 : -1;  // Left or right based on player
-        
+       
         for(int p = 0; p < max_chelnov_projectiles; p++)
         {
             if(!chelnov_proj_active[p])
@@ -2206,13 +2119,13 @@ for(int i = 0; i < chelnovs; i++)
                 chelnov_proj_vy[p] = 0.0f;  // NO vertical movement
                 chelnov_proj_active[p] = true;
                 chelnov_proj_lifetime[p] = 0.0f;
-                
+               
                 cout << "[CHELNOV] Chelnov " << i << " fired projectile!" << endl;
                 break;
             }
         }
     }
-    
+   
     // Handle shooting duration
     if(chelnov_is_shooting[i])
     {
@@ -2223,12 +2136,12 @@ for(int i = 0; i < chelnovs; i++)
             chelnov_shoot_timer[i] = 0.0f;
         }
     }
-    
+   
     // If stunned, show vacuum animation
     if(chelnov_stunned[i])
     {
         chelnovState[i] = VACUUMED;
-        
+       
         chelnovFrameCounter[i]++;
         if(chelnovFrameCounter[i] >= chelnovFrameDelay)
         {
@@ -2236,30 +2149,30 @@ for(int i = 0; i < chelnovs; i++)
             chelnovCurrentFrame[i] = (chelnovCurrentFrame[i] + 1) % chelnovVacuumFrames;
             chelnovSprite[i].setTexture(chelnovVacuumTextures[chelnovCurrentFrame[i]]);
         }
-        
+       
         chelnovSprite[i].setPosition(chelnov_x[i], chelnov_y[i]);
         window.draw(chelnovSprite[i]);
         continue;
     }
-    
+   
     // MOVEMENT - Only if NOT shooting
     if(!chelnov_is_shooting[i])
     {
         chelnov_x[i] += chelnov_speed[i] * chelnov_dir[i];
-        
+       
         int tile_x = chelnov_x[i] / cell_size;
         int tile_y = chelnov_y[i] / cell_size;
-        
+       
         // Check walls
         if(tile_x <= 1 || tile_x >= width-2)
         {
             chelnov_dir[i] *= -1;
         }
-        
+       
         // Check edges and turn around
         int next_tile_x = (chelnov_x[i] + chelnov_dir[i] * chelnov_speed[i] * 10) / cell_size;
         int check_ground_y = (chelnov_y[i] + 64 + 5) / cell_size;
-        
+       
         if(check_ground_y < height && next_tile_x >= 0 && next_tile_x < width)
         {
             if(lvl[check_ground_y][next_tile_x] != '#')
@@ -2267,7 +2180,7 @@ for(int i = 0; i < chelnovs; i++)
                 chelnov_dir[i] *= -1;
             }
         }
-        
+       
         // Animate walking
         chelnovFrameCounter[i]++;
         if(chelnovFrameCounter[i] >= chelnovFrameDelay)
@@ -2287,13 +2200,13 @@ for(int i = 0; i < chelnovs; i++)
             chelnovSprite[i].setTexture(chelnovShootTextures[chelnovCurrentFrame[i]]);
         }
     }
-    
+   
     // Flip sprite based on direction
     if(chelnov_dir[i] == 1)
         chelnovSprite[i].setScale(-2, 2);
     else
         chelnovSprite[i].setScale(2, 2);
-    
+   
     chelnovSprite[i].setPosition(chelnov_x[i], chelnov_y[i]);
     window.draw(chelnovSprite[i]);
 }
@@ -2302,7 +2215,7 @@ for(int i = 0; i < chelnovs; i++)
 for(int p = 0; p < max_chelnov_projectiles; p++)
 {
     if(!chelnov_proj_active[p]) continue;
-    
+   
     // Update lifetime
     chelnov_proj_lifetime[p] += deltaTime;
     if(chelnov_proj_lifetime[p] >= chelnov_proj_max_lifetime)
@@ -2310,10 +2223,10 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
         chelnov_proj_active[p] = false;
         continue;
     }
-    
+   
     // Move projectile HORIZONTALLY ONLY
     chelnov_proj_x[p] += chelnov_proj_vx[p];
-    
+   
     // Check screen bounds
     if(chelnov_proj_x[p] < 0 || chelnov_proj_x[p] > screen_x ||
        chelnov_proj_y[p] < 0 || chelnov_proj_y[p] > screen_y)
@@ -2321,14 +2234,14 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
         chelnov_proj_active[p] = false;
         continue;
     }
-    
+   
     // Check collision with player
     if(!playerDead)
     {
         float dx = chelnov_proj_x[p] - (player_x + PlayerWidth/2);
         float dy = chelnov_proj_y[p] - (player_y + PlayerHeight/2);
         float dist = sqrt(dx*dx + dy*dy);
-        
+       
         if(dist < 40)
         {
             // Hit player!
@@ -2339,12 +2252,12 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
             combo = 0;
             comboMultiplier = 1.0f;
             chelnov_proj_active[p] = false;
-            
+           
             cout << "[CHELNOV] Projectile hit player!" << endl;
             continue;
         }
     }
-    
+   
     // Draw projectile (red circle)
     CircleShape projShape(8);
     projShape.setFillColor(Color::Red);
@@ -2355,7 +2268,7 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
 for(int p = 0; p < max_chelnov_projectiles; p++)
 {
     if(!chelnov_proj_active[p]) continue;
-    
+   
     // Update lifetime
     chelnov_proj_lifetime[p] += deltaTime;
     if(chelnov_proj_lifetime[p] >= chelnov_proj_max_lifetime)
@@ -2363,11 +2276,11 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
         chelnov_proj_active[p] = false;
         continue;
     }
-    
+   
     // Move projectile
     chelnov_proj_x[p] += chelnov_proj_vx[p];
     chelnov_proj_y[p] += chelnov_proj_vy[p];
-    
+   
     // Check screen bounds
     if(chelnov_proj_x[p] < 0 || chelnov_proj_x[p] > screen_x ||
        chelnov_proj_y[p] < 0 || chelnov_proj_y[p] > screen_y)
@@ -2375,14 +2288,14 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
         chelnov_proj_active[p] = false;
         continue;
     }
-    
+   
     // Check collision with player
     if(!playerDead)
     {
         float dx = chelnov_proj_x[p] - (player_x + PlayerWidth/2);
         float dy = chelnov_proj_y[p] - (player_y + PlayerHeight/2);
         float dist = sqrt(dx*dx + dy*dy);
-        
+       
         if(dist < 40)
         {
             // Hit player!
@@ -2393,12 +2306,12 @@ for(int p = 0; p < max_chelnov_projectiles; p++)
             combo = 0;
             comboMultiplier = 1.0f;
             chelnov_proj_active[p] = false;
-            
+           
             cout << "[CHELNOV] Projectile hit player!" << endl;
             continue;
         }
     }
-    
+   
     // Draw projectile (red circle)
     CircleShape projShape(8);
     projShape.setFillColor(Color::Red);
@@ -2448,7 +2361,7 @@ for(int i = 0; i < ghosts; i++)
         {
             ghost_x[i] = nextX;
         }
-        
+       
         // ANIMATE GHOST
         ghostFrameCounter[i]++;
         if(ghostFrameCounter[i] >= ghostFrameDelay)
@@ -2491,13 +2404,13 @@ for(int j = 0; j < skel; j++)
     if(skel_velocityY[j] < 0)
     {
         int top_y = (int)(nextY) / cell_size;
-        
+       
         if(top_y <= 0)
         {
             int left_x = (int)(skel_x[j]) / cell_size;
             int mid_x = (int)(skel_x[j] + 32) / cell_size;
             int right_x = (int)(skel_x[j] + 64) / cell_size;
-            
+           
             if(lvl[0][left_x] == '#' || lvl[0][mid_x] == '#' || lvl[0][right_x] == '#')
             {
                 skel_velocityY[j] = 0;
@@ -2545,10 +2458,10 @@ for(int j = 0; j < skel; j++)
         {
             skel_velocityY[j] = -20.0f;
             skel_onGround[j] = false;
-            
+           
             skel_jump_timer[j] = 0.0f;
             skel_next_jump_time[j] = 10.0f + (rand() % 2);
-            
+           
             if(rand() % 2 == 0)
             {
                 skel_dir[j] *= -1;
@@ -2573,7 +2486,7 @@ for(int j = 0; j < skel; j++)
                 skel_x[j] = nextp;
             }
         }
-        
+       
         // ANIMATE SKELETON
         skelFrameCounter[j]++;
         if(skelFrameCounter[j] >= skelFrameDelay)
@@ -2853,7 +2766,7 @@ if(currentLevel == 2 && level2EnemiesSpawning)
                 }
             }
         }
-        
+       
         // Finally spawn skeletons (11-19) - now up to 9 skeletons in level 2
         else if(enemiesSpawned >= 11 && enemiesSpawned < 20)
         {
@@ -2881,7 +2794,7 @@ if(currentLevel == 2 && level2EnemiesSpawning)
                 }
             }
         }
-        
+       
        
         enemiesSpawned++;
        
@@ -2900,8 +2813,8 @@ if(!levelComplete && !playerDead)
     // For Level 1, pass empty arrays for invisible men and chelnov
     bool empty_invis[3] = {false, false, false};
     bool empty_chelnov[4] = {false, false, false, false};
-    
-    if(check_level_complete(ghost_active, ghosts, skel_active, skel, 
+   
+    if(check_level_complete(ghost_active, ghosts, skel_active, skel,
                            empty_invis, 0, empty_chelnov, 0))
     {
         levelComplete = true;
@@ -3015,7 +2928,7 @@ if(currentLevel == 2 && !levelComplete && !playerDead)
     {
         platformChangeClock.restart();
        
-        cout << "\n[PLATFORM]20 seconds elapsed - REGENERATING slanted platform!\n" << endl;
+        cout << "\n[PLATFORM] ⏰ 20 seconds elapsed - REGENERATING slanted platform!\n" << endl;
        
         // Clear old platform and generate new one
         generate_random_slanted_platform(lvl, height, width, false);
@@ -3036,5 +2949,6 @@ window.display();
 
        
    
+
 
 
